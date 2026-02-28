@@ -605,6 +605,51 @@
         เรียบร้อย
     </div>
 
+    <!-- Drill-down Modal -->
+    <div id="recModal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex-col justify-end md:justify-center items-center p-0 md:p-6 transition-opacity opacity-0 duration-300">
+        <div class="bg-white w-full md:w-[700px] lg:w-[900px] rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col h-[85vh] md:h-auto md:max-h-[90vh] overflow-hidden transform translate-y-full md:translate-y-10 transition-transform duration-300"
+            id="recModalContent">
+            <!-- Header -->
+            <div class="p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50 relative shrink-0">
+                <div class="pr-8">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span id="rm-title"
+                            class="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-widest leading-none font-jakarta"></span>
+                        <span id="rm-group"
+                            class="text-[10px] bg-white border border-slate-200 text-slate-500 px-2 py-0.5 rounded-full font-bold tracking-tighter shadow-sm"></span>
+                    </div>
+                    <p id="rm-desc" class="text-xs md:text-sm font-bold text-slate-500 line-clamp-2 leading-tight"></p>
+                </div>
+                <button onclick="closeRecModal()"
+                    class="absolute top-6 right-6 w-8 h-8 flex items-center justify-center bg-white rounded-full text-slate-400 hover:text-slate-800 hover:bg-slate-200 transition-colors shadow-sm">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 overflow-y-auto hide-scrollbar flex flex-col gap-6 flex-1">
+                <!-- Data point stats -->
+                <div id="rm-stats" class="grid grid-cols-2 lg:grid-cols-4 gap-4 shrink-0"></div>
+
+                <!-- Chart Container -->
+                <div id="rm-chart-container" class="hidden flex-col gap-2 flex-1 min-h-[250px] shrink-0">
+                    <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider"><i data-lucide="activity"
+                            class="w-4 h-4 inline mb-1"></i> Running Balance Projection</h4>
+                    <div class="flex-1 w-full border border-slate-100 rounded-2xl bg-slate-50 p-2 relative">
+                        <canvas id="recChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Open original usage stats button -->
+                <button onclick="gotoUsageStatsFromModal()"
+                    class="shrink-0 w-full py-4 rounded-xl bg-slate-800 text-white font-bold tracking-wider uppercase text-[11px] hover:bg-slate-900 transition-colors shadow-lg shadow-slate-900/20 active:scale-[0.98] mt-auto">
+                    เปิดดู Ledger ละเอียด (รายการออเดอร์)
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhA5Pgw2DjeL_JLpWHruLvV9bMs5Wk2IFU-FA1C5AFUFWkql48YxoS8fVb1ueuaeeG_PwIrFtTjyhi/pub?output=csv';
         let rawData = [];
@@ -1103,25 +1148,23 @@
             });
 
             // Populate Filters
-            const selGrp = document.getElementById('sel-rec-group');
-            if (selGrp && selGrp.options.length <= 1) {
-                selGrp.innerHTML = `<option value="ทั้งหมด">-- ทุกกลุ่มสินค้า --</option>` +
-                    Array.from(uniqueGroups).sort().map(g => `<option value="${g}">${g}</option>`).join('');
-            }
-            const selPlt = document.getElementById('sel-rec-plant');
-            if (selPlt && selPlt.options.length <= 1) {
-                selPlt.innerHTML = `<option value="ทั้งหมด">-- ทุกโรงงาน --</option>` +
-                    Array.from(uniquePlants).sort().map(p => `<option value="${p}">${p}</option>`).join('');
-            }
-            const selSales = document.getElementById('sel-rec-sales');
-            if (selSales && selSales.options.length <= 1) {
-                selSales.innerHTML = `<option value="ทั้งหมด">-- ทุกเซลล์ --</option>` +
-                    Array.from(uniqueSales).sort().map(s => `<option value="${s}">${s}</option>`).join('');
-            }
+            const buildPills = (items, activeVal, onClickFn) => {
+                let html = `<button onclick="${onClickFn}('ทั้งหมด')" class="shrink-0 px-4 py-1.5 text-[10px] font-black rounded-lg transition-all border ${activeVal === 'ทั้งหมด' ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}">ทั้งหมด</button>`;
+                items.forEach(i => {
+                    const isActive = activeVal === i;
+                    html += `<button onclick="${onClickFn}('${i}')" class="shrink-0 px-4 py-1.5 text-[10px] font-black rounded-lg transition-all border ${isActive ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}">${i}</button>`;
+                });
+                return html;
+            };
 
-            const activeGroup = selGrp ? selGrp.value : 'ทั้งหมด';
-            const activePlant = selPlt ? selPlt.value : 'ทั้งหมด';
-            const activeSales = selSales ? selSales.value : 'ทั้งหมด';
+            const divGrp = document.getElementById('filter-rec-group');
+            if (divGrp) divGrp.innerHTML = buildPills(Array.from(uniqueGroups).sort(), activeRecGroup, 'setRecGroup');
+
+            const divRole = document.getElementById('filter-rec-role');
+            if (divRole) {
+                if (currentRecTab === 'sales') divRole.innerHTML = buildPills(Array.from(uniqueSales).sort(), activeRecSales, 'setRecSales');
+                else divRole.innerHTML = buildPills(Array.from(uniquePlants).sort(), activeRecPlant, 'setRecPlant');
+            }
 
             let criticalCount = 0;
             let metricSum = 0;
@@ -1160,7 +1203,7 @@
                         insufficientList.push({
                             sortVal: myFinalBalance,
                             html: `
-                            <button onclick="openRecommendationSpec('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-rose-100 shadow-sm flex flex-col group hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-[0.98]">
+                            <button onclick="openRecommendationSpecPopup('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-rose-100 shadow-sm flex flex-col group hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-[0.98]">
                                 <div class="flex justify-between items-start w-full mb-2">
                                     <div class="w-[65%]">
                                         <div class="flex items-center gap-2 mb-1">
