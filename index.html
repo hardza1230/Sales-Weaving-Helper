@@ -187,7 +187,35 @@
         </div>
     </section>
 
-    <!-- 2. หน้าเมนูหลัก -->
+    <!-- 2. หน้าโหลดข้อมูล (Loading Screen) -->
+    <section id="page-loading"
+        class="hidden min-h-screen flex-col items-center justify-center p-8 text-center bg-slate-900 text-white relative overflow-hidden">
+        <div
+            class="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-sky-500 via-slate-900 to-slate-900">
+        </div>
+        <div class="relative z-10 flex flex-col items-center">
+            <div class="mb-8 relative">
+                <div class="w-24 h-24 rounded-full border-4 border-slate-700 border-t-emerald-500 animate-spin"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <i data-lucide="database" class="w-8 h-8 text-emerald-400 animate-pulse"></i>
+                </div>
+            </div>
+            <h2 class="text-2xl font-bold font-jakarta mb-2 tracking-tight">กำลังเชื่อมต่อฐานข้อมูล...</h2>
+            <p class="text-slate-400 text-sm font-light mb-8 max-w-xs">Connecting to True Running Balance System &
+                Syncing live records</p>
+
+            <div class="w-64 bg-slate-800 rounded-full h-2 mb-4 overflow-hidden border border-slate-700">
+                <div id="loading-progress-bar"
+                    class="bg-gradient-to-r from-emerald-500 to-sky-500 h-2 rounded-full w-0 transition-all duration-300">
+                </div>
+            </div>
+            <p id="loading-status-text"
+                class="text-xs font-bold text-emerald-500 uppercase tracking-widest animate-pulse">Initializing Data
+                Stream</p>
+        </div>
+    </section>
+
+    <!-- 3. หน้าเมนูหลัก -->
     <section id="page-menu" class="hidden min-h-screen flex-col p-6 overflow-y-auto hide-scrollbar">
         <div class="layout-container">
             <div class="mt-8 mb-12 flex justify-between items-end px-2 border-b border-slate-200 pb-8">
@@ -486,113 +514,187 @@
         </div>
     </section>
 
+    <section id="page-rec-role-select"
+        class="hidden min-h-screen flex-col p-6 overflow-y-auto hide-scrollbar bg-slate-50 pb-20">
+        <div class="layout-container max-w-4xl mx-auto">
+            <div class="flex items-center gap-4 mb-8">
+                <button onclick="navigate('menu')"
+                    class="p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800 border border-slate-100"><i
+                        data-lucide="arrow-left"></i></button>
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800 font-jakarta tracking-tight leading-none mb-1">
+                        แนะนำผืนผ้า</h2>
+                    <p class="text-[10px] text-slate-400 font-bold tracking-tight">เลือกมุมมองที่ต้องการใช้งาน</p>
+                </div>
+            </div>
+
+            <!-- Step 1: Role Selection -->
+            <div id="rec-step-1" class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <button onclick="selectRecRole('sales')"
+                        class="glass-card p-8 flex flex-col items-center justify-center gap-4 group hover:ring-2 hover:ring-sky-400 transition-all border-none shadow-xl active:scale-[0.98]">
+                        <div
+                            class="w-20 h-20 bg-sky-100 text-sky-600 rounded-[2rem] flex items-center justify-center group-hover:bg-sky-500 group-hover:text-white transition-all shadow-inner">
+                            <i data-lucide="briefcase" class="w-10 h-10"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800 font-jakarta mt-2">👔 มุมมองฝ่ายขาย</h3>
+                        <p class="text-xs text-slate-500 text-center">ดูยอดค้างส่ง และสถานะผ้าที่สั่งผลิตเฉพาะของตัวเอง
+                        </p>
+                    </button>
+
+                    <button onclick="selectRecRole('planner')"
+                        class="glass-card p-8 flex flex-col items-center justify-center gap-4 group hover:ring-2 hover:ring-emerald-400 transition-all border-none shadow-xl active:scale-[0.98]">
+                        <div
+                            class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-[2rem] flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-inner">
+                            <i data-lucide="factory" class="w-10 h-10"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800 font-jakarta mt-2">🏭 มุมมองฝ่ายวางแผน</h3>
+                        <p class="text-xs text-slate-500 text-center">ดูภาระเครื่องทอ และจำลอง Running Balance ของโรงงาน
+                        </p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Name Selection (Hidden Initially) -->
+            <div id="rec-step-2" class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 id="rec-step-2-title"
+                        class="text-sm font-bold text-slate-800 tracking-tight uppercase tracking-widest italic flex items-center gap-2">
+                        <i data-lucide="user" class="w-4 h-4 text-emerald-500"></i> เลือกรายชื่อ
+                    </h3>
+                    <button
+                        onclick="document.getElementById('rec-step-1').classList.remove('hidden'); document.getElementById('rec-step-2').classList.add('hidden');"
+                        class="text-[10px] text-slate-400 font-bold hover:text-slate-600 transition-colors uppercase tracking-widest bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                        ย้อนกลับ
+                    </button>
+                </div>
+                <div id="rec-name-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id='page-stock-recommend'
         class="hidden min-h-screen flex-col p-6 overflow-y-auto hide-scrollbar bg-slate-50">
         <div class="layout-container">
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6">
                 <div class="flex items-center gap-4">
-                    <button onclick="navigate('menu')"
+                    <button onclick="openRecRoleSelection()"
                         class="p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800 border border-slate-100"><i
                             data-lucide="arrow-left"></i></button>
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-800 font-jakarta tracking-tight leading-none mb-1">
+                        <h2 id="rec-dashboard-title"
+                            class="text-2xl font-bold text-slate-800 font-jakarta tracking-tight leading-none mb-1">
                             แนะนำผืนผ้า</h2>
-                    </div>
-                    <!-- Role Tabs -->
-                    <div class="flex items-center gap-2 mb-6 border-b border-slate-100 pb-2">
-                        <button onclick="switchRecTab('sales')" id="tab-btn-sales"
-                            class="px-4 py-2 text-[11px] font-bold uppercase tracking-wider rounded-t-xl transition-all border-b-2 border-transparent text-slate-400 hover:text-slate-600">👔
-                            มุมมองฝ่ายขาย</button>
-                        <button onclick="switchRecTab('planner')" id="tab-btn-planner"
-                            class="px-4 py-2 text-[11px] font-bold uppercase tracking-wider rounded-t-xl transition-all border-b-2 border-transparent text-slate-400 hover:text-slate-600">🏭
-                            มุมมองฝ่ายวางแผน</button>
-                    </div>
-
-                    <!-- Filters & Dashboards -->
-                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
-                        <!-- Mini Dashboards -->
-                        <div class="flex gap-4">
-                            <div class="text-right">
-                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                                    สเปกผ้าแจ้งเตือน</p>
-                                <p id="dash-rec-critical"
-                                    class="text-xl font-black text-rose-600 font-jakarta leading-none drop-shadow-sm">0
-                                </p>
-                            </div>
-                            <div class="w-px h-8 bg-slate-200"></div>
-                            <div class="text-right">
-                                <p id="dash-rec-metric-lbl"
-                                    class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                                    รวมยอดผ้าค้างส่ง</p>
-                                <p id="dash-rec-metric-val"
-                                    class="text-xl font-black text-slate-700 font-jakarta leading-none drop-shadow-sm">0
-                                </p>
-                            </div>
+                        <div id="rec-dashboard-subtitle"
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-200 text-slate-600 text-[10px] font-bold mt-1">
+                            <i data-lucide="user" class="w-3 h-3"></i> <span>-</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Role Tabs & Filters -->
-                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 w-full overflow-hidden mb-8">
-                    <div class="flex flex-col gap-3 min-w-0">
-                        <!-- Group Button Filters -->
-                        <div class="flex items-center gap-2 w-full">
-                            <span
-                                class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider w-16 shrink-0 pt-0.5 whitespace-nowrap">กลุ่มสินค้า</span>
-                            <div id="filter-rec-group"
-                                class="flex overflow-x-auto hide-scrollbar gap-2 pb-1 pr-4 w-full"></div>
-                        </div>
-                        <!-- Role Button Filters -->
-                        <div class="flex items-center gap-2 w-full">
-                            <span id="filter-rec-role-lbl"
-                                class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider w-16 shrink-0 pt-0.5 whitespace-nowrap">รายบุคคล</span>
-                            <div id="filter-rec-role"
-                                class="flex overflow-x-auto hide-scrollbar gap-2 pb-1 pr-4 w-full"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-20">
-                    <!-- ขาดแคลน (Insufficient) -->
-                    <div
-                        class="bg-white rounded-[2rem] p-6 shadow-xl border border-rose-100 flex flex-col relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-bl-[4rem] -z-0"></div>
-                        <div class="flex items-center gap-3 mb-6 relative z-10">
-                            <div
-                                class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shadow-inner">
-                                <i data-lucide="trending-down" class="w-6 h-6"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-rose-700 font-jakarta leading-none">สต็อกไม่พอผลิต
-                                </h3>
-                                <p class="text-[10px] text-slate-400 font-bold tracking-tight">
-                                    ผ้าที่มียอดสั่งทอเกินสต็อก
-                                    (Top 10)</p>
-                            </div>
-                        </div>
-                        <div id="rec-insufficient-list" class="space-y-3 relative z-10 flex-1"></div>
+                <!-- Mini Dashboards - New Smart Dashboard Layout -->
+                <div class="flex flex-wrap gap-4 w-full">
+                    <div class="flex-1 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 min-w-[140px]">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1"><i
+                                data-lucide="bell-ring" class="w-3 h-3 inline-block -mt-0.5 mr-1"></i> แจ้งเตือน</p>
+                        <p id="dash-rec-critical" class="text-2xl font-black text-rose-500 font-jakarta leading-none">0
+                        </p>
                     </div>
 
-                    <!-- เหลือเยอะ (Abundant) -->
-                    <div
-                        class="bg-white rounded-[2rem] p-6 shadow-xl border border-emerald-100 flex flex-col relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-[4rem] -z-0"></div>
-                        <div class="flex items-center gap-3 mb-6 relative z-10">
-                            <div
-                                class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
-                                <i data-lucide="trending-up" class="w-6 h-6"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-emerald-700 font-jakarta leading-none">สต็อกเหลือเยอะ
-                                </h3>
-                                <p class="text-[10px] text-slate-400 font-bold tracking-tight">
-                                    ผ้าที่ผลิตทิ้งไว้แต่ไม่มีออเดอร์ (Top 10)</p>
-                            </div>
+                    <div class="flex-1 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 min-w-[140px]">
+                        <p id="dash-rec-metric-lbl"
+                            class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1"><i
+                                data-lucide="activity" class="w-3 h-3 inline-block -mt-0.5 mr-1"></i> มูลค่า / เป้าหมาย
+                        </p>
+                        <p id="dash-rec-metric-val"
+                            class="text-2xl font-black text-slate-700 font-jakarta leading-none">0</p>
+                    </div>
+
+                    <div id="dash-smart-card"
+                        class="flex-[2] bg-gradient-to-r from-slate-900 to-slate-800 p-4 rounded-2xl shadow-md border border-slate-700 min-w-[280px] text-white overflow-hidden relative group">
+                        <div
+                            class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
+                            <i data-lucide="zap" class="w-24 h-24"></i>
                         </div>
-                        <div id="rec-abundant-list" class="space-y-3 relative z-10 flex-1"></div>
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start mb-2">
+                                <p id="smart-insight-title"
+                                    class="text-[9px] font-bold text-emerald-400 uppercase tracking-widest"><i
+                                        data-lucide="sparkles"
+                                        class="w-3 h-3 inline-block -mt-0.5 mr-1 animate-pulse"></i> AI Insights</p>
+                                <div id="smart-health-badge"
+                                    class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[8px] font-bold uppercase tracking-widest">
+                                    Normal</div>
+                            </div>
+                            <h4 id="smart-insight-value"
+                                class="text-lg font-bold font-jakarta leading-tight mb-1 text-white">
+                                ระบบกำลังประมวลผล...</h4>
+                            <p id="smart-insight-desc" class="text-[10px] text-slate-400 font-light line-clamp-1">
+                                รอการเลือกตัวแปร</p>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Main Content Container with CSS Grid -->
+        <div class="flex flex-col gap-6">
+
+            <!-- Row 1: Filters (Full width) -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 overflow-hidden">
+                <!-- Group Button Filters -->
+                <div class="flex items-center gap-2">
+                    <span
+                        class="text-[10px] font-bold text-slate-400 uppercase tracking-widest w-16 shrink-0 pt-0.5 whitespace-nowrap"><i
+                            data-lucide="filter" class="w-3 h-3 inline-block mr-1"></i> ตัวกรอง</span>
+                    <div id="filter-rec-group" class="flex overflow-x-auto hide-scrollbar gap-2 pb-1 pr-4 w-full">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-20">
+                <!-- ขาดแคลน (Insufficient) -->
+                <div
+                    class="bg-white rounded-[2rem] p-6 shadow-xl border border-rose-100 flex flex-col relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-bl-[4rem] -z-0"></div>
+                    <div class="flex items-center gap-3 mb-6 relative z-10">
+                        <div
+                            class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shadow-inner">
+                            <i data-lucide="trending-down" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-rose-700 font-jakarta leading-none">สต็อกไม่พอผลิต
+                            </h3>
+                            <p class="text-[10px] text-slate-400 font-bold tracking-tight">
+                                ผ้าที่มียอดสั่งทอเกินสต็อก
+                                (Top 10)</p>
+                        </div>
+                    </div>
+                    <div id="rec-insufficient-list" class="space-y-3 relative z-10 flex-1"></div>
+                </div>
+
+                <!-- เหลือเยอะ (Abundant) -->
+                <div
+                    class="bg-white rounded-[2rem] p-6 shadow-xl border border-emerald-100 flex flex-col relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-[4rem] -z-0"></div>
+                    <div class="flex items-center gap-3 mb-6 relative z-10">
+                        <div
+                            class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
+                            <i data-lucide="trending-up" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-emerald-700 font-jakarta leading-none">สต็อกเหลือเยอะ
+                            </h3>
+                            <p class="text-[10px] text-slate-400 font-bold tracking-tight">
+                                ผ้าที่ผลิตทิ้งไว้แต่ไม่มีออเดอร์ (Top 10)</p>
+                        </div>
+                    </div>
+                    <div id="rec-abundant-list" class="space-y-3 relative z-10 flex-1"></div>
+                </div>
+            </div>
+        </div>
     </section>
 
     <div id="toast"
@@ -1048,34 +1150,81 @@
         }
 
         let currentRecTab = 'sales';
+        let recRoleSelection = null; // Store the selected name (e.g. Sales person name or Plant name)
 
-        function switchRecTab(tab) {
-            currentRecTab = tab;
-            const btnSales = document.getElementById('tab-btn-sales');
-            const btnPlanner = document.getElementById('tab-btn-planner');
-            const selSales = document.getElementById('sel-rec-sales');
-            const selPlant = document.getElementById('sel-rec-plant');
-            const metricLbl = document.getElementById('dash-rec-metric-lbl');
+        function openRecRoleSelection() {
+            showPage('page-rec-role-select');
+            document.getElementById('rec-step-1').classList.remove('hidden');
+            document.getElementById('rec-step-2').classList.add('hidden');
 
-            if (tab === 'sales') {
-                btnSales.classList.add('text-sky-600', 'border-sky-600');
-                btnSales.classList.remove('text-slate-400', 'border-transparent');
-                btnPlanner.classList.remove('text-emerald-600', 'border-emerald-600');
-                btnPlanner.classList.add('text-slate-400', 'border-transparent');
+            // Generate lists based on available data
+            const uniquePlants = new Set();
+            const uniqueSales = new Set();
 
-                selSales.classList.remove('hidden');
-                selPlant.classList.add('hidden');
-                metricLbl.textContent = "รวมยอดผ้าค้างส่ง";
-            } else {
-                btnPlanner.classList.add('text-emerald-600', 'border-emerald-600');
-                btnPlanner.classList.remove('text-slate-400', 'border-transparent');
-                btnSales.classList.remove('text-sky-600', 'border-sky-600');
-                btnSales.classList.add('text-slate-400', 'border-transparent');
-
-                selPlant.classList.remove('hidden');
-                selSales.classList.add('hidden');
-                metricLbl.textContent = "เครื่องทอรองรับทั้งหมด";
+            if (rawData) {
+                rawData.forEach(item => {
+                    const plant = item['Plant'] || '-';
+                    const sales = item['ฝ่ายขาย'] || '-';
+                    if (plant && plant !== '-') uniquePlants.add(plant);
+                    if (sales && sales !== '-') uniqueSales.add(sales);
+                });
             }
+
+            window.avaiableRecSales = Array.from(uniqueSales).sort();
+            window.avaiableRecPlants = Array.from(uniquePlants).sort();
+        }
+
+        function selectRecRole(roleType) {
+            currentRecTab = roleType;
+            document.getElementById('rec-step-1').classList.add('hidden');
+            document.getElementById('rec-step-2').classList.remove('hidden');
+
+            const titleEl = document.getElementById('rec-step-2-title');
+            const listEl = document.getElementById('rec-name-list');
+
+            let html = `<button onclick="confirmRecRoleSelection('ทั้งหมด')" class="p-4 rounded-xl bg-slate-900 text-white font-bold text-sm shadow-md hover:bg-slate-800 transition-colors uppercase tracking-widest flex items-center justify-center gap-2"><i data-lucide="globe" class="w-4 h-4"></i> ทั้งหมด</button>`;
+
+            if (roleType === 'sales') {
+                titleEl.innerHTML = `<i data-lucide="briefcase" class="w-4 h-4 text-sky-500"></i> เลือกพนักงานฝ่ายขาย`;
+                window.avaiableRecSales.forEach(name => {
+                    html += `<button onclick="confirmRecRoleSelection('${name}')" class="p-4 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm hover:border-sky-400 hover:text-sky-600 transition-colors line-clamp-1">${name}</button>`;
+                });
+            } else {
+                titleEl.innerHTML = `<i data-lucide="factory" class="w-4 h-4 text-emerald-500"></i> เลือกโรงงานผลิต`;
+                window.avaiableRecPlants.forEach(name => {
+                    html += `<button onclick="confirmRecRoleSelection('${name}')" class="p-4 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm hover:border-emerald-400 hover:text-emerald-600 transition-colors line-clamp-1">${name}</button>`;
+                });
+            }
+
+            listEl.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function confirmRecRoleSelection(name) {
+            recRoleSelection = name;
+
+            // Set up Dashboard UI Titles based on selection
+            const titleEl = document.getElementById('rec-dashboard-title');
+            const subtitleEl = document.getElementById('rec-dashboard-subtitle');
+
+            if (currentRecTab === 'sales') {
+                titleEl.textContent = "หน้าจัดการฝ่ายขาย";
+                subtitleEl.innerHTML = `<i data-lucide="briefcase" class="w-3 h-3 text-sky-600"></i> <span class="text-sky-800">${name}</span>`;
+                subtitleEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-100 text-[10px] font-bold mt-1";
+                activeRecSales = name;
+                document.getElementById('filter-rec-role-lbl').textContent = "ฝ่ายขาย";
+            } else {
+                titleEl.textContent = "แผงควบคุมการผลิต";
+                subtitleEl.innerHTML = `<i data-lucide="factory" class="w-3 h-3 text-emerald-600"></i> <span class="text-emerald-800">${name}</span>`;
+                subtitleEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-100 text-[10px] font-bold mt-1";
+                activeRecPlant = name;
+                document.getElementById('filter-rec-role-lbl').textContent = "โรงงาน";
+            }
+
+            // Hide filter elements that are not needed visually since we handled the preselection
+            document.getElementById('filter-rec-role-lbl')?.parentElement.classList.add('hidden');
+
+            showPage('page-stock-recommend');
             renderStockRecommendations();
         }
 
@@ -1167,18 +1316,26 @@
             const insufficientList = [];
             const abundantList = [];
 
+            // Smart KPI Tracking Variables
+            let totalShortageAmount = 0;
+            let totalRiskValue = 0;
+            let criticalDelayedCount = 0;
+            let totalWaitMachines = 0;
+            let totalRunningMachines = 0;
+            let maxCapacityDeficit = 0;
+
             Object.values(fabrics).forEach(f => {
                 f.jobs.sort((a, b) => a._sortDate - b._sortDate);
                 f.final = parseNum(f.jobs[f.jobs.length - 1]['Stock คงเหลือ']);
                 f.maxMc = Math.max(...f.jobs.map(j => parseNum(j['เกิดจริง'])), 0);
 
-                if (activeGroup !== 'ทั้งหมด' && f.group !== activeGroup) return;
+                if (activeRecGroup !== 'ทั้งหมด' && f.group !== activeRecGroup) return;
 
                 if (currentRecTab === 'sales') {
                     // SALES VIEW: Filter jobs down to just this sales portfolio
                     let portfolioJobs = f.jobs;
-                    if (activeSales !== 'ทั้งหมด') {
-                        portfolioJobs = f.jobs.filter(j => (j['ฝ่ายขาย'] || '-') === activeSales);
+                    if (activeRecSales !== 'ทั้งหมด') {
+                        portfolioJobs = f.jobs.filter(j => (j['ฝ่ายขาย'] || '-') === activeRecSales);
                         if (portfolioJobs.length === 0) return;
                     }
 
@@ -1188,6 +1345,14 @@
                     if (myFinalBalance < 0) {
                         criticalCount++;
                         metricSum += Math.abs(myFinalBalance);
+                        const deficitAmount = Math.abs(myFinalBalance);
+                        totalShortageAmount += deficitAmount;
+
+                        // Weighted risk based on how much is missing and if machines are running
+                        let riskMulti = f.maxMc === 0 ? 1.5 : 0.8;
+                        totalRiskValue += (deficitAmount * riskMulti);
+                        if (f.maxMc === 0) criticalDelayedCount++;
+
                         const supplyPlants = Array.from(new Set(f.jobs.map(j => j['Plant'] || '-').filter(p => p !== '-')));
                         const plantStr = supplyPlants.length > 0 ? supplyPlants.join(', ') : 'ส่วนกลาง';
 
@@ -1251,9 +1416,11 @@
 
                 } else {
                     // PLANNER VIEW: True Daily Running Balance across filtered plants
-                    if (activePlant !== 'ทั้งหมด' && !f.jobs.some(j => (j['Plant'] || '-') === activePlant)) return;
+                    if (activeRecPlant !== 'ทั้งหมด' && !f.jobs.some(j => (j['Plant'] || '-') === activeRecPlant)) return;
 
-                    const runningSim = calculateDailyRunningBalance(f.jobs, f.start, f.maxMc, activePlant);
+                    const runningSim = calculateDailyRunningBalance(f.jobs, f.start, f.maxMc, activeRecPlant);
+
+                    totalRunningMachines += f.maxMc;
 
                     if (runningSim.isBottleneck) {
                         criticalCount++;
@@ -1261,6 +1428,7 @@
 
                         const deficit = Math.abs(runningSim.minBalance);
                         const extraMcNeeded = Math.ceil(deficit / 2500); // Very rough, assuming we need it in 1 day, user can adjust
+                        maxCapacityDeficit += extraMcNeeded;
 
                         const impactedNames = Array.from(new Set(f.jobs.map(j => j['Name'] || j['ฝ่ายขาย']).filter(n => n && n !== '-')));
                         const impactText = impactedNames.length > 0 ? (impactedNames.length > 2 ? impactedNames.slice(0, 2).join(', ') + ' และอื่นๆ' : impactedNames.join(', ')) : 'หลายฝ่าย';
@@ -1328,9 +1496,73 @@
                 }
             });
 
-            // Update Dashboards
-            document.getElementById('dash-rec-critical').textContent = criticalCount.toLocaleString();
-            document.getElementById('dash-rec-metric-val').textContent = metricSum.toLocaleString();
+            // Process Smart Dashboards based on Role View
+            const smartCard = document.getElementById('dash-smart-card');
+            const smartTitle = document.getElementById('smart-insight-title');
+            const smartBadge = document.getElementById('smart-health-badge');
+            const smartVal = document.getElementById('smart-insight-value');
+            const smartDesc = document.getElementById('smart-insight-desc');
+
+            animateValue("dash-rec-critical", 0, criticalCount, 300);
+
+            if (currentRecTab === 'sales') {
+                animateValue("dash-rec-metric-val", 0, metricSum, 500);
+                document.getElementById('dash-rec-metric-lbl').innerHTML = '<i data-lucide="activity" class="w-3 h-3 inline-block -mt-0.5 mr-1"></i> รวมยอดผ้าค้างส่ง';
+
+                // Risk Algorithm for Sales
+                if (criticalCount === 0) {
+                    smartCard.className = "flex-[2] bg-gradient-to-r from-emerald-500 to-emerald-400 p-4 rounded-2xl shadow-md border border-emerald-400 min-w-[280px] text-white overflow-hidden relative group";
+                    smartBadge.className = "px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 text-[8px] font-bold uppercase tracking-widest";
+                    smartBadge.textContent = "Safe Zone";
+                    smartVal.textContent = "ไม่มีรายการจัดส่งล่าช้า";
+                    smartDesc.textContent = "ยอดเยี่ยม! สต็อกของคุณเพียงพอต่อการจัดส่งลูกค้าทั้งหมด";
+                } else {
+                    let riskLevel = totalRiskValue > 200000 ? 'High Risk' : (totalRiskValue > 50000 ? 'Warning' : 'Low Risk');
+                    let colorProfile = totalRiskValue > 200000 ? "from-rose-600 to-rose-500 border-rose-500" : "from-amber-600 to-amber-500 border-amber-500";
+                    smartCard.className = `flex-[2] bg-gradient-to-r ${colorProfile} p-4 rounded-2xl shadow-md border min-w-[280px] text-white overflow-hidden relative group`;
+                    smartBadge.className = "px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 text-[8px] font-bold uppercase tracking-widest";
+                    smartBadge.textContent = riskLevel;
+
+                    if (criticalDelayedCount > 0) {
+                        smartVal.textContent = `${criticalDelayedCount} สเปกค้างส่ง และไม่มีเครื่องทอ!`;
+                        smartDesc.textContent = `กรุณาเร่งประสานฝ่ายวางแผนเพื่อขอเครื่องทอด่วน`;
+                    } else {
+                        smartVal.textContent = `ลูกค้ามีความเสี่ยงรอผ้า ${criticalCount} รายการ`;
+                        smartDesc.textContent = `โรงงานเปิดเครื่องให้แล้วแต่ยอดทอผลิตอาจจะไม่ทันส่ง`;
+                    }
+                }
+            } else {
+                animateValue("dash-rec-metric-val", 0, totalRunningMachines, 500);
+                document.getElementById('dash-rec-metric-lbl').innerHTML = '<i data-lucide="activity" class="w-3 h-3 inline-block -mt-0.5 mr-1"></i> รวมจำนวนเครื่องที่รัน';
+
+                // Stress Algorithm for Planner
+                let capacityStressRaw = (maxCapacityDeficit / (totalRunningMachines || 1)) * 100;
+                let capacityStress = Math.min(Math.round(capacityStressRaw), 100);
+
+                if (capacityStress > 50) {
+                    smartCard.className = "flex-[2] bg-gradient-to-r from-rose-600 to-orange-500 p-4 rounded-2xl shadow-md border border-rose-500 min-w-[280px] text-white overflow-hidden relative group";
+                    smartBadge.className = "px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 text-[8px] font-bold uppercase tracking-widest pulse-fast";
+                    smartBadge.textContent = `Stress: ${capacityStress}%`;
+                    smartVal.textContent = `ทอไม่ทัน ต้องการ +${maxCapacityDeficit} เครื่องด่วน`;
+                    if (abundantList.length > 0) {
+                        smartDesc.textContent = `พบสเปกที่สต็อกอุดมสมบูรณ์ ปลดออกได้ ${abundantList.length} รายการ`;
+                    } else {
+                        smartDesc.textContent = `เครื่องทอไม่พออย่างรุนแรง จำเป็นต้องเจรจาเลื่อนส่ง`;
+                    }
+                } else if (abundantList.length > 0) {
+                    smartCard.className = "flex-[2] bg-gradient-to-r from-sky-500 to-sky-400 p-4 rounded-2xl shadow-md border border-sky-400 min-w-[280px] text-white overflow-hidden relative group";
+                    smartBadge.className = "px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 text-[8px] font-bold uppercase tracking-widest";
+                    smartBadge.textContent = "Optimization";
+                    smartVal.textContent = `พบ ${abundantList.length} สเปกที่ปลดเครื่องได้`;
+                    smartDesc.textContent = `ประหยัดต้นทุนโดยลดการทอผ้าที่สต็อกเหลือล้น > 50,000m`;
+                } else {
+                    smartCard.className = "flex-[2] bg-gradient-to-r from-slate-900 to-slate-800 p-4 rounded-2xl shadow-md border border-slate-700 min-w-[280px] text-white overflow-hidden relative group";
+                    smartBadge.className = "px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[8px] font-bold uppercase tracking-widest";
+                    smartBadge.textContent = `Stress: ${capacityStress}%`;
+                    smartVal.textContent = "ภาระเครื่องอยู่ในระดับควบคุมได้";
+                    smartDesc.textContent = `ปัจจุบันเปิดเครื่องรองรับงานอยู่ทั้งหมด ${totalRunningMachines} เครื่อง`;
+                }
+            }
 
             // Render Lists
             const insContainer = document.getElementById('rec-insufficient-list');
