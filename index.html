@@ -7,12 +7,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         
         body { 
             font-family: 'Kanit', sans-serif; 
-            background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             color: #334155;
             letter-spacing: -0.01em;
             min-height: 100vh;
@@ -22,86 +23,80 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: 2rem;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
         .btn-gradient {
-            background: linear-gradient(135deg, #059669 0%, #0284c7 100%);
+            background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
             color: white;
             transition: all 0.3s;
         }
-        .btn-gradient:active { transform: scale(0.98); }
+        .btn-gradient:active { transform: scale(0.96); }
 
         select { 
-            -webkit-appearance: none; 
-            appearance: none; 
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
+            -webkit-appearance: none; appearance: none; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 0.75rem center;
         }
 
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        
-        .collapsible-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
-            opacity: 0;
-        }
-        
-        .collapsible-content.show {
-            max-height: 5000px;
-            opacity: 1;
-        }
-
+        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, opacity 0.3s; opacity: 0; }
+        .collapsible-content.show { max-height: 5000px; opacity: 1; }
         .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .layout-container { transition: max-width 0.5s ease; width: 100%; margin: 0 auto; }
-        .view-mobile .layout-container { max-width: 36rem; } 
-        .view-desktop .layout-container { max-width: 80rem; }
 
-        .ledger-table th { position: sticky; top: 0; z-index: 10; }
-        .ledger-row:nth-child(even) { background-color: rgba(248, 250, 252, 0.3); }
+        .layout-container { transition: max-width 0.4s ease; width: 100%; margin: 0 auto; }
+        .view-mobile .layout-container { max-width: 100%; } 
+        .view-desktop .layout-container { max-width: 85rem; }
+
+        /* ปรับปรุงตารางสำหรับมือถือ */
+        @media (max-width: 640px) {
+            .ledger-table { font-size: 10px; }
+            .mobile-stack { flex-direction: column; align-items: flex-start; gap: 2px; }
+            .hide-on-mobile { display: none; }
+            .ledger-row td { padding: 12px 8px !important; }
+        }
     </style>
 </head>
 <body class="view-mobile">
 
     <!-- 1. หน้าเริ่มต้น -->
-    <section id="page-start" class="page-active min-h-screen flex-col items-center justify-center p-8 text-center">
+    <section id="page-start" class="page-active min-h-screen flex-col items-center justify-center p-8 text-center bg-white">
         <div class="mb-10 relative">
             <div class="w-24 h-24 btn-gradient rounded-[2.8rem] flex items-center justify-center shadow-2xl rotate-3">
-                <i data-lucide="layout-dashboard" class="text-white w-12 h-12"></i>
+                <i data-lucide="bar-chart-big" class="text-white w-12 h-12"></i>
             </div>
-            <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center border-4 border-[#f0fdf4]">
+            <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center border-4 border-slate-50">
                 <span class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></span>
             </div>
         </div>
         
-        <h1 class="text-3xl font-bold text-slate-800 mb-3 leading-tight tracking-tight">Planner Want to tell you<br>About Weaving</h1>
+        <h1 class="text-4xl font-extrabold text-slate-900 mb-3 tracking-tight font-jakarta">SackMaster <span class="text-emerald-500">Pro</span></h1>
         <p class="text-slate-500 text-sm font-light max-w-xs mb-10 leading-relaxed">
-            เลือกรูปแบบการแสดงผลที่ต้องการใช้งาน
+            เลือกรูปแบบการแสดงผลที่ต้องการใช้งาน เพื่อเริ่มต้นวิเคราะห์แผนงานทอ
         </p>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
-            <button onclick="navigate('menu', 'mobile')" class="glass-card p-6 border-emerald-100 hover:border-emerald-400 transition-all flex flex-col items-center gap-4 group shadow-sm">
+            <button onclick="navigate('menu', 'mobile')" class="glass-card p-6 hover:border-emerald-400 transition-all flex flex-col items-center gap-4 group">
                 <div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                     <i data-lucide="smartphone" class="w-8 h-8"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-slate-800">มุมมองมือถือ</h3>
-                    <p class="text-[10px] text-slate-400 font-light">แสดงผลแนวตั้งสำหรับมือถือ</p>
+                    <h3 class="font-bold text-slate-800">โหมดมือถือ</h3>
+                    <p class="text-[10px] text-slate-400 font-light">แสดงผลแนวตั้ง เน้นดูคิวงานรายตัว</p>
                 </div>
             </button>
 
-            <button onclick="navigate('menu', 'desktop')" class="glass-card p-6 border-sky-100 hover:border-sky-400 transition-all flex flex-col items-center gap-4 group shadow-sm">
+            <button onclick="navigate('menu', 'desktop')" class="glass-card p-6 hover:border-sky-400 transition-all flex flex-col items-center gap-4 group">
                 <div class="p-4 bg-sky-50 text-sky-600 rounded-2xl group-hover:bg-sky-600 group-hover:text-white transition-colors">
                     <i data-lucide="monitor" class="w-8 h-8"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-slate-800">มุมมองคอมพิวเตอร์</h3>
-                    <p class="text-[10px] text-slate-400 font-light">แสดงผลหน้ากว้างสำหรับคอมพิวเตอร์</p>
+                    <h3 class="font-bold text-slate-800">โหมดคอมพิวเตอร์</h3>
+                    <p class="text-[10px] text-slate-400 font-light">แสดงผลเต็มจอ พร้อมกราฟวิเคราะห์ครบครัน</p>
                 </div>
             </button>
         </div>
@@ -110,64 +105,58 @@
     <!-- 2. หน้าเมนูหลัก -->
     <section id="page-menu" class="hidden min-h-screen flex-col p-6 overflow-y-auto hide-scrollbar">
         <div class="layout-container">
-            <div class="mt-8 mb-8 flex justify-between items-end px-2 border-b border-slate-100 pb-6">
+            <div class="mt-8 mb-8 flex justify-between items-end px-2 border-b border-slate-200 pb-6">
                 <div>
-                    <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Weaving Operations</p>
-                    <h2 class="text-2xl font-bold text-slate-800 italic font-semibold leading-none">เมนูหลัก</h2>
-                    <div class="flex items-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase mt-1">
-                        <i data-lucide="clock" class="w-2.5 h-2.5"></i> อัปเดตล่าสุด: <span id="sync-time-menu">--:--</span>
+                    <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Planning Engine</p>
+                    <h2 class="text-3xl font-bold text-slate-900 font-jakarta leading-none mb-2">เมนูหลัก</h2>
+                    <div class="flex items-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase">
+                        <i data-lucide="history" class="w-3 h-3"></i> ซิงค์ล่าสุด: <span id="sync-time-menu">--:--</span>
                     </div>
                 </div>
-                <button onclick="refreshData()" class="p-2.5 bg-white border border-slate-100 rounded-2xl shadow-sm text-emerald-600 active:scale-95 transition-all">
+                <button onclick="refreshData()" class="p-3 bg-white rounded-2xl shadow-sm text-emerald-600 active:scale-95 transition-all border border-slate-100">
                     <i data-lucide="refresh-cw" class="w-5 h-5" id="refresh-icon-menu"></i>
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="menu-grid">
-                <button onclick="navigate('fabric-check')" class="glass-card p-5 w-full flex items-center gap-5 text-left active:scale-[0.98] transition-all group shadow-sm">
-                    <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-inner shrink-0">
-                        <i data-lucide="table-2" class="w-5 h-5"></i>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="menu-grid">
+                <button onclick="navigate('fabric-check')" class="glass-card p-6 w-full flex flex-col gap-4 active:scale-[0.98] transition-all group">
+                    <div class="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-inner">
+                        <i data-lucide="layers-3"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800 text-base leading-tight">เช็คม้วนผืนผ้า</h3>
-                        <p class="text-[10px] text-slate-500 font-light italic">Running Balance บัญชีตัดสต็อก</p>
+                        <h3 class="font-bold text-slate-800 text-lg leading-tight">เช็คม้วนผืนผ้า</h3>
+                        <p class="text-[10px] text-slate-400 font-medium mt-1">ดูบัญชีตัดสต็อกรายสเปก</p>
                     </div>
                 </button>
                 
-                <button onclick="navigate('usage-stats-group')" class="glass-card p-5 w-full flex items-center gap-5 text-left active:scale-[0.98] transition-all group shadow-sm">
-                    <div class="w-12 h-12 bg-sky-50 rounded-2xl flex items-center justify-center text-sky-600 group-hover:bg-sky-600 group-hover:text-white transition-all shadow-inner shrink-0">
-                        <i data-lucide="package" class="w-5 h-5"></i>
+                <button onclick="navigate('usage-stats-group')" class="glass-card p-6 w-full flex flex-col gap-4 active:scale-[0.98] transition-all group">
+                    <div class="w-14 h-14 bg-sky-100 rounded-2xl flex items-center justify-center text-sky-600 group-hover:bg-sky-600 group-hover:text-white transition-all shadow-inner">
+                        <i data-lucide="pie-chart"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800 text-base leading-tight">แยกตามกลุ่มสินค้า</h3>
-                        <p class="text-[10px] text-slate-500 font-light italic">Product Group Analysis</p>
+                        <h3 class="font-bold text-slate-800 text-lg leading-tight">วิเคราะห์กลุ่มสินค้า</h3>
+                        <p class="text-[10px] text-slate-400 font-medium mt-1">Allocation by ItemGroup</p>
                     </div>
                 </button>
 
-                <button onclick="navigate('usage-stats-sales')" class="glass-card p-5 w-full flex items-center gap-5 text-left active:scale-[0.98] transition-all group shadow-sm">
-                    <div class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-inner shrink-0">
-                        <i data-lucide="users" class="w-5 h-5"></i>
+                <button onclick="navigate('usage-stats-sales')" class="glass-card p-6 w-full flex flex-col gap-4 active:scale-[0.98] transition-all group">
+                    <div class="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all shadow-inner">
+                        <i data-lucide="user-square-2"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800 text-base leading-tight">แยกตามฝ่ายขาย</h3>
-                        <p class="text-[10px] text-slate-500 font-light italic">Sales Team Allocation</p>
+                        <h3 class="font-bold text-slate-800 text-lg leading-tight">วิเคราะห์ฝ่ายขาย</h3>
+                        <p class="text-[10px] text-slate-400 font-medium mt-1">Sales Workload Summary</p>
                     </div>
                 </button>
 
-                <button onclick="navigate('usage-stats-customer')" class="glass-card p-5 w-full flex items-center gap-5 text-left active:scale-[0.98] transition-all group shadow-sm">
-                    <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-inner shrink-0">
-                        <i data-lucide="user-check" class="w-5 h-5"></i>
+                <button onclick="navigate('usage-stats-customer')" class="glass-card p-6 w-full flex flex-col gap-4 active:scale-[0.98] transition-all group">
+                    <div class="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-all shadow-inner">
+                        <i data-lucide="factory"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800 text-base leading-tight">แยกตามรายลูกค้า</h3>
-                        <p class="text-[10px] text-slate-500 font-light italic">Customer Demand Summary</p>
+                        <h3 class="font-bold text-slate-800 text-lg leading-tight">วิเคราะห์รายลูกค้า</h3>
+                        <p class="text-[10px] text-slate-400 font-medium mt-1">Customer Demand Analysis</p>
                     </div>
-                </button>
-            </div>
-            
-            <div class="text-center mt-12">
-                <button onclick="navigate('start')" class="py-4 text-slate-400 text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 mx-auto hover:text-slate-600 transition-colors">
-                    <i data-lucide="log-out" class="w-3 h-3"></i> ออกจากระบบ
                 </button>
             </div>
         </div>
@@ -175,22 +164,19 @@
 
     <!-- 3. หน้าบัญชีสถานะผืนผ้า -->
     <section id="page-fabric-check" class="hidden min-h-screen flex-col pb-12">
-        <header class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-30 p-5 shadow-sm">
+        <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 p-5 shadow-sm">
             <div class="layout-container">
                 <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2">
-                        <button onclick="navigate('menu')" class="p-2 -ml-2 text-slate-400"><i data-lucide="arrow-left"></i></button>
+                    <div class="flex items-center gap-3">
+                        <button onclick="navigate('menu')" class="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-800"><i data-lucide="chevron-left"></i></button>
                         <div>
-                            <h2 class="text-lg font-bold text-slate-800 leading-none">บัญชีสถานะผืนผ้า</h2>
-                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">ซิงค์: <span id="sync-time-ledger">--:--</span></span>
+                            <h2 class="text-xl font-bold text-slate-800 leading-none">บัญชีสถานะผืนผ้า</h2>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Last Sync: <span id="sync-time-ledger">--:--</span></span>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                         <button onclick="refreshData()" class="p-2 bg-white border border-slate-100 rounded-xl shadow-sm text-emerald-600 active:scale-95 transition-all">
-                            <i data-lucide="refresh-cw" class="w-4 h-4" id="refresh-icon-ledger"></i>
-                        </button>
-                        <button onclick="toggleFilters()" class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl flex items-center gap-1.5 border border-emerald-100 shadow-sm">
-                            <i data-lucide="filter" class="w-3 h-3"></i> <span id="filter-status-text">ซ่อนตัวกรอง</span>
+                        <button onclick="toggleFilters()" class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-3 py-2 rounded-xl flex items-center gap-1.5 border border-emerald-100">
+                            <i data-lucide="filter" class="w-3.5 h-3.5"></i> <span id="filter-status-text">ซ่อนตัวกรอง</span>
                         </button>
                     </div>
                 </div>
@@ -198,24 +184,24 @@
                 <div id="filter-container" class="transition-all duration-300 overflow-hidden">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">หน้ากว้าง (Wildth)</label>
-                            <select id="sel-width" onchange="updateFilters()" class="w-full bg-slate-50 border-none rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600 shadow-inner"></select>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Wildth</label>
+                            <select id="sel-width" onchange="updateFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600"></select>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">ดีเนียร์ (Denia)</label>
-                            <select id="sel-denia" onchange="updateFilters()" class="w-full bg-slate-50 border-none rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600 shadow-inner"></select>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Denia</label>
+                            <select id="sel-denia" onchange="updateFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600"></select>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">ความถี่ (Freq.)</label>
-                            <select id="sel-frequency" onchange="updateFilters()" class="w-full bg-slate-50 border-none rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600 shadow-inner"></select>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Frequency</label>
+                            <select id="sel-frequency" onchange="updateFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600"></select>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">รูปแบบการทอ</label>
-                            <select id="sel-pattern" onchange="updateFilters()" class="w-full bg-slate-50 border-none rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600 shadow-inner"></select>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Pattern</label>
+                            <select id="sel-pattern" onchange="updateFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600"></select>
                         </div>
                     </div>
-                    <button onclick="processLedger(); closeFiltersOnSearch();" class="w-full py-3.5 btn-gradient rounded-2xl text-sm font-bold shadow-lg">
-                        วิเคราะห์บัญชีทอ
+                    <button onclick="processLedger(); closeFiltersOnSearch();" class="w-full py-4 btn-gradient rounded-2xl text-sm font-bold shadow-lg flex items-center justify-center gap-2">
+                        <i data-lucide="zap" class="w-4 h-4 fill-current"></i> วิเคราะห์ข้อมูลตามสเปก
                     </button>
                 </div>
             </div>
@@ -224,68 +210,71 @@
         <main class="p-5 w-full">
             <div class="layout-container space-y-6">
                 <div id="loading-area" class="hidden flex-col items-center py-20">
-                    <div class="w-8 h-8 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest italic">กำลังประมวลผลข้อมูล...</p>
+                    <div class="w-10 h-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest italic">กำลังวิเคราะห์สต็อกสะสม...</p>
                 </div>
 
                 <div id="result-view" class="hidden space-y-6">
-                    <!-- Dashboard -->
-                    <div class="glass-card p-6 bg-gradient-to-br from-white to-emerald-50 shadow-sm border-white">
-                        <div class="flex justify-between items-center mb-6">
-                            <span id="dash-item-code" class="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-3 py-1.5 rounded-full uppercase tracking-widest font-jakarta shadow-sm">#ITEM_NAME</span>
+                    <!-- Dashboard สรุปรวม -->
+                    <div class="glass-card p-6 bg-white border-slate-200 overflow-hidden relative">
+                        <div class="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+                            <i data-lucide="factory" class="w-32 h-32"></i>
+                        </div>
+                        <div class="flex justify-between items-center mb-8 pb-4 border-b border-slate-50">
+                            <div>
+                                <span id="dash-item-code" class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg uppercase tracking-widest font-jakarta">#ITEM_NAME</span>
+                                <h3 class="text-xl font-bold text-slate-800 mt-2 font-jakarta">สรุปภาพรวมแผนงานทอ</h3>
+                            </div>
                             <div class="text-right">
-                                <p class="text-[9px] text-slate-400 font-bold uppercase mb-0.5 tracking-tighter italic leading-none">กำลังผลิตสูงสุด/วัน</p>
-                                <p id="dash-capacity" class="text-sm font-black text-emerald-600 leading-none font-jakarta">0 ม.</p>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase mb-1 italic">Cap/Day (MAX)</p>
+                                <p id="dash-capacity" class="text-lg font-black text-emerald-600 leading-none font-jakarta">0 ม.</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-y-6">
-                            <div>
-                                <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase tracking-tighter italic">สต็อกยกมา (ม.)</span>
-                                <span id="dash-total-stock" class="text-3xl font-black text-slate-800 font-jakarta leading-none">0</span>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
+                            <div class="space-y-1">
+                                <span class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter">สต็อกยกมา (ม.)</span>
+                                <span id="dash-total-stock" class="text-3xl font-black text-slate-800 font-jakarta">0</span>
                             </div>
-                            <div>
-                                <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase tracking-tighter italic">ทอจริง (MAX)</span>
-                                <span id="dash-actual-mc" class="text-3xl font-black text-slate-800 font-jakarta leading-none">0</span>
+                            <div class="space-y-1">
+                                <span class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter">ทอเกิดจริง (เครื่อง)</span>
+                                <span id="dash-actual-mc" class="text-3xl font-black text-blue-600 font-jakarta">0</span>
+                                <p class="text-[9px] text-slate-300 font-bold tracking-tight">เป้าหมาย: <span id="dash-target-mc">0</span> M/C</p>
                             </div>
-                            <div>
-                                <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase tracking-tighter text-sky-600 italic">งานค้างผลิต</span>
-                                <span id="dash-jobs" class="text-3xl font-black text-sky-600 font-jakarta leading-none">0</span>
+                            <div class="space-y-1">
+                                <span class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter text-sky-600">ยอดจองรวม (ม.)</span>
+                                <span id="dash-required" class="text-3xl font-black text-sky-600 font-jakarta">0</span>
                             </div>
-                            <div>
-                                <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase tracking-tighter text-orange-500 italic">ยอดใช้รวม</span>
-                                <span id="dash-required" class="text-3xl font-black text-orange-500 font-jakarta leading-none">0</span>
+                            <div class="space-y-1">
+                                <span class="text-[10px] text-emerald-600 block font-bold uppercase tracking-tighter">ผ้าว่าง (ม.)</span>
+                                <span id="dash-final-balance" class="text-3xl font-black text-emerald-500 font-jakarta italic">0</span>
+                                <p class="text-[9px] text-slate-300 font-bold tracking-tight">สำหรับการจองใหม่</p>
                             </div>
-                        </div>
-                        <div class="mt-4 pt-4 border-t border-slate-100">
-                             <span class="text-[10px] text-slate-400 font-bold uppercase italic tracking-widest flex items-center gap-1.5">
-                                 <i data-lucide="target" class="w-3 h-3"></i> แผนเป้าหมาย: <span id="dash-target-mc" class="text-slate-800">0</span> เครื่อง
-                             </span>
                         </div>
                     </div>
 
-                    <!-- Ledger Table -->
+                    <!-- ตาราง Ledger -->
                     <div class="space-y-3">
-                        <div class="flex justify-between items-center px-2 mb-1">
+                        <div class="flex justify-between items-center px-2">
                             <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <i data-lucide="calendar-check" class="w-4 h-4 text-emerald-600"></i> ตารางบัญชีคิวงานรายลำดับ
+                                <i data-lucide="align-left" class="w-3.5 h-3.5"></i> ตารางวิเคราะห์ยอด Running Down
                             </h3>
-                            <span class="text-[9px] bg-slate-900 text-white px-3 py-1 rounded-full font-bold shadow-sm uppercase tracking-widest italic">Running Down</span>
+                            <span class="text-[9px] bg-slate-900 text-white px-3 py-1 rounded-full font-bold shadow-sm uppercase tracking-widest italic">Sorted by Shipping Priority</span>
                         </div>
                         
-                        <div class="glass-card overflow-hidden border-slate-100 shadow-md bg-white">
+                        <div class="glass-card overflow-hidden border-slate-100 shadow-xl bg-white">
                             <div class="overflow-x-auto hide-scrollbar">
-                                <table class="w-full text-left ledger-table min-w-[750px]">
+                                <table class="w-full text-left ledger-table min-w-[900px]">
                                     <thead class="bg-slate-50 border-b border-slate-100">
-                                        <tr class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                            <th class="px-5 py-4 bg-emerald-100 text-emerald-800 border-r border-emerald-200 w-32 text-center italic">วันขึ้นของ</th>
-                                            <th class="px-5 py-4">ฝ่ายขาย / รายการงาน / Item</th>
-                                            <th class="px-3 py-4 text-right w-28 italic">Stock ยกมา</th>
-                                            <th class="px-3 py-4 text-right w-24">ใช้ผ้า (ม.)</th>
-                                            <th class="px-5 py-4 text-right bg-slate-50 border-l border-slate-100 w-36 tracking-wider">สต็อกคงเหลือ</th>
+                                        <tr class="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                                            <th class="px-6 py-4 bg-emerald-50 text-emerald-800 border-r border-emerald-100 w-36 text-center italic">วันขึ้นของ</th>
+                                            <th class="px-6 py-4">ฝ่ายขาย / รายการงาน / รหัสสินค้า</th>
+                                            <th class="px-4 py-4 text-right w-32 italic">Stock ยกมา (ม.)</th>
+                                            <th class="px-4 py-4 text-right w-28">ใช้ผ้า (ม.)</th>
+                                            <th class="px-6 py-4 text-right bg-slate-900 text-emerald-400 w-40 tracking-wider font-jakarta italic">สต็อกคงเหลือ</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="ledger-body" class="divide-y divide-slate-50 text-[11px]">
-                                        <!-- JS Inject -->
+                                    <tbody id="ledger-body" class="divide-y divide-slate-100 text-[12px]">
+                                        <!-- Row data here -->
                                     </tbody>
                                 </table>
                             </div>
@@ -296,50 +285,90 @@
         </main>
     </section>
 
-    <!-- 4. หน้าวิเคราะห์ภาพรวม -->
-    <section id="page-usage-stats" class="hidden min-h-screen flex-col p-6 overflow-y-auto hide-scrollbar">
+    <!-- 4. หน้าวิเคราะห์ภาพรวม (พร้อมกราฟ) -->
+    <section id="page-usage-stats" class="hidden min-h-screen flex-col p-6 overflow-y-auto hide-scrollbar bg-slate-50">
         <div class="layout-container">
-            <div class="flex items-center gap-3 mb-8">
-                <button onclick="navigate('menu')" class="p-2 -ml-2 text-slate-400 hover:text-slate-800 transition-colors"><i data-lucide="arrow-left"></i></button>
-                <h2 id="stats-page-title" class="text-xl font-bold text-slate-800 leading-tight italic font-jakarta font-semibold tracking-tight text-emerald-800">วิเคราะห์ภาพรวม</h2>
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center gap-4">
+                    <button onclick="navigate('menu')" class="p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800"><i data-lucide="arrow-left"></i></button>
+                    <div>
+                        <h2 id="stats-page-title" class="text-2xl font-bold text-slate-800 font-jakarta leading-none tracking-tight">วิเคราะห์ภาพรวม</h2>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Live Allocation Data</span>
+                    </div>
+                </div>
+                <button onclick="refreshData()" class="p-2.5 bg-white rounded-2xl shadow-sm text-emerald-600 active:rotate-180 transition-transform">
+                    <i data-lucide="refresh-cw"></i>
+                </button>
             </div>
 
-            <div id="stats-view-main" class="grid grid-cols-1 gap-4"></div>
-
-            <div id="stats-view-detail" class="hidden space-y-4 animate-in fade-in">
-                <button onclick="showStatsMain()" class="text-xs font-bold text-sky-600 flex items-center gap-1 mb-4">
-                    <i data-lucide="chevron-left" class="w-3 h-3"></i> กลับไปหน้าภาพรวม
-                </button>
-                <div class="glass-card p-5 bg-gradient-to-r from-emerald-50 to-sky-50 border-emerald-100 mb-6 shadow-sm">
-                    <h3 id="drilldown-group-name" class="font-bold text-slate-800 text-lg tracking-tight uppercase font-jakarta leading-none">หัวข้อ: -</h3>
+            <!-- กราฟสรุป (Visible only in Desktop or on top of stats list) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="glass-card p-6 md:col-span-2">
+                    <h3 class="text-sm font-bold text-slate-700 mb-6 flex items-center gap-2">
+                        <i data-lucide="bar-chart-2" class="w-4 h-4 text-sky-500"></i> สัดส่วนความต้องการใช้ผืนผ้าแยกตามรายการ
+                    </h3>
+                    <div class="h-64 relative">
+                        <canvas id="demandChart"></canvas>
+                    </div>
                 </div>
-                <div id="drilldown-content" class="grid grid-cols-1 gap-4"></div>
+                <div class="glass-card p-6 flex flex-col justify-center items-center text-center">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">สถานะเครื่องทอภาพรวม</h3>
+                    <div class="w-40 h-40 relative mb-4">
+                        <canvas id="mcChart"></canvas>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-xs font-bold text-slate-500">รวมเกิดจริงในหมวดนี้</p>
+                        <p id="total-stats-mc" class="text-3xl font-black text-emerald-600 font-jakarta">0</p>
+                        <p class="text-[10px] font-bold text-slate-300 uppercase">Machines Operating</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- สถิติตัวเลขรวมด้านบน -->
+            <div id="stats-summary-header" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <!-- Summary cards from JS -->
+            </div>
+
+            <!-- รายการหลัก -->
+            <div id="stats-view-main" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20"></div>
+
+            <!-- รายละเอียดเจาะลึก (Drill-down) -->
+            <div id="stats-view-detail" class="hidden space-y-6 animate-in fade-in pb-20">
+                <button onclick="showStatsMain()" class="text-xs font-bold text-sky-600 flex items-center gap-1 mb-4 bg-sky-50 px-4 py-2 rounded-xl">
+                    <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i> กลับไปหน้าสรุป
+                </button>
+                <div class="glass-card p-6 bg-gradient-to-r from-emerald-600 to-sky-600 border-none shadow-xl text-white">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1 italic">Drill-down Analysis</p>
+                            <h3 id="drilldown-group-name" class="font-bold text-2xl tracking-tight uppercase font-jakarta font-semibold leading-none">หัวข้อ: -</h3>
+                        </div>
+                        <i data-lucide="trending-up" class="w-10 h-10 opacity-20"></i>
+                    </div>
+                </div>
+                <div id="drilldown-content" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
             </div>
         </div>
     </section>
 
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl text-[11px] font-bold shadow-2xl opacity-0 transition-all pointer-events-none z-50 uppercase tracking-widest font-jakarta">
-        คัดลอกรายงานเรียบร้อย
+        Copied Report Data
     </div>
 
     <script>
-        // แก้ไข URL เป็นเวอร์ชันที่ส่งมา
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhA5Pgw2DjeL_JLpWHruLvV9bMs5Wk2IFU-FA1C5AFUFWkql48YxoS8fVb1ueuaeeG_PwIrFtTjyhi/pub?output=csv';
         let rawData = [];
         let isFilterOpen = true;
         let currentStatsType = 'group'; 
         let viewMode = 'mobile';
+        let charts = {}; // To store chart instances
         const filterFields = ['Wildth', 'Denia', 'Frequency', 'Pattern'];
 
-        const parseNum = (v) => {
-            if (!v) return 0;
-            return parseFloat(String(v).replace(/,/g, '')) || 0;
-        };
+        const parseNum = (v) => parseFloat(String(v || '0').replace(/,/g, '')) || 0;
         
-        // Date Logic
         const dateParser = (dateStr) => {
             if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '' || dateStr === '-') return new Date(2099, 11, 31);
-            const cleanStr = dateStr.trim().split(' ')[0]; // ตัดเวลาออกถ้ามี
+            const cleanStr = dateStr.trim().split(' ')[0];
             const parts = cleanStr.split(/[\/\-\.]/);
             if (parts.length < 3) return new Date(2099, 11, 31);
             let day, month, year;
@@ -354,22 +383,20 @@
             if (dateObj.getFullYear() === 2099) return { text: "-", label: "", diff: 999 };
             const day = String(dateObj.getDate()).padStart(2, '0');
             const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            const target = new Date(dateObj);
-            target.setHours(0,0,0,0);
+            const today = new Date(); today.setHours(0,0,0,0);
+            const target = new Date(dateObj); target.setHours(0,0,0,0);
             const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
             let label = "";
-            if (diffDays === 0) label = "(วันนี้)";
-            else if (diffDays > 0) label = `(อีก ${diffDays} วัน)`;
-            else label = `(เลย ${Math.abs(diffDays)} วัน)`;
+            if (diffDays === 0) label = " (วันนี้)";
+            else if (diffDays > 0) label = ` (${diffDays} วัน)`;
+            else label = ` (เลย ${Math.abs(diffDays)} วัน)`;
             return { text: `${day}/${month}`, label, diff: diffDays };
         };
 
         const getBalanceColorClass = (val) => {
             if (val < 0) return 'text-rose-600 font-bold';
-            if (val <= 2000) return 'text-orange-500 font-bold';
-            return 'text-emerald-600 font-bold';
+            if (val <= 2500) return 'text-orange-500 font-bold';
+            return 'text-slate-600 font-medium';
         };
 
         async function refreshData() {
@@ -380,42 +407,25 @@
             const ledgerIcon = document.getElementById('refresh-icon-ledger');
 
             [menuIcon, ledgerIcon].forEach(icon => icon?.classList.add('animate-spin'));
-            if (menuStatus) menuStatus.textContent = 'กำลังดึงข้อมูล...';
+            if (menuStatus) menuStatus.textContent = 'ซิงค์ข้อมูลล่าสุด...';
             
             Papa.parse(CSV_URL, {
                 download: true,
                 header: true,
                 skipEmptyLines: true,
                 complete: (results) => {
-                    if (results.errors.length > 0) {
-                        console.error("PapaParse Errors:", results.errors);
-                    }
-
-                    // Mapping ข้อมูลใหม่ 21 คอลัมน์
                     rawData = results.data.filter(r => r['Weaving Item'] || r['เลขที่ CO']).map(row => {
                         const dateObj = dateParser(row['วันขึ้นของ']);
-                        return {
-                            ...row,
-                            _sortDate: dateObj.getTime(),
-                            _dateObj: dateObj
-                        };
+                        return { ...row, _sortDate: dateObj.getTime(), _dateObj: dateObj };
                     });
-
                     updateFilters();
-                    
                     const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
                     [menuTime, ledgerTime].forEach(el => { if(el) el.textContent = now; });
                     [menuIcon, ledgerIcon].forEach(icon => icon?.classList.remove('animate-spin'));
-                    
                     if (menuStatus) {
-                        menuStatus.textContent = 'เชื่อมต่อแล้ว';
+                        menuStatus.textContent = 'ONLINE';
                         menuStatus.className = 'text-[10px] bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full font-bold border border-emerald-100 shadow-sm';
                     }
-                },
-                error: (err) => {
-                    console.error("Fetch Error:", err);
-                    [menuIcon, ledgerIcon].forEach(icon => icon?.classList.remove('animate-spin'));
-                    if (menuStatus) menuStatus.textContent = 'เกิดข้อผิดพลาด';
                 }
             });
         }
@@ -489,14 +499,16 @@
         function renderLedger(items) {
             const body = document.getElementById('ledger-body');
             if (items.length === 0) {
-                body.innerHTML = `<tr><td colspan="5" class="text-center py-20 text-slate-300 italic font-bold uppercase tracking-widest text-xs">ไม่พบข้อมูลตามเงื่อนไขที่ระบุ</td></tr>`;
+                body.innerHTML = `<tr><td colspan="5" class="text-center py-20 text-slate-300 italic font-bold uppercase tracking-widest text-xs">Target Lost: ข้อมูลว่าง</td></tr>`;
                 return;
             }
             const first = items[0];
             const maxActualMc = Math.max(...items.map(i => parseNum(i['เกิดจริง'])), 0);
             const maxTargetMc = Math.max(...items.map(i => parseNum(i['ต้องการ'])), 0);
             const totalRequired = items.reduce((sum, i) => sum + parseNum(i['ใช้ผ้า']), 0);
-            
+            const lastItem = items[items.length - 1];
+            const finalBalance = parseNum(lastItem['Stock คงเหลือ']);
+
             document.getElementById('dash-item-code').textContent = `#${first['Weaving Item'] || 'N/A'}`;
             document.getElementById('dash-total-stock').textContent = parseNum(items[0]['Stock ยกมา']).toLocaleString();
             document.getElementById('dash-actual-mc').textContent = maxActualMc.toLocaleString();
@@ -504,48 +516,48 @@
             document.getElementById('dash-capacity').textContent = `${(maxActualMc * 2500).toLocaleString()} ม.`;
             document.getElementById('dash-jobs').textContent = items.length;
             document.getElementById('dash-required').textContent = totalRequired.toLocaleString();
+            document.getElementById('dash-final-balance').textContent = finalBalance.toLocaleString();
 
             body.innerHTML = items.map((item, idx) => {
-                const stockBrought = parseNum(item['Stock ยกมา']);
-                const usage = parseNum(item['ใช้ผ้า']);
-                const stockRemain = parseNum(item['Stock คงเหลือ']);
                 const dateInfo = formatDateDisplay(item._dateObj);
+                const stockRemain = parseNum(item['Stock คงเหลือ']);
+                const useFabric = parseNum(item['ใช้ผ้า']);
+                const stockBrought = parseNum(item['Stock ยกมา']);
 
                 return `
-                    <tr class="ledger-row border-b border-slate-50 hover:bg-emerald-50/50 transition-colors group">
-                        <td class="px-5 py-5 bg-emerald-50/20 border-r border-emerald-50 align-middle text-center">
+                    <tr class="ledger-row border-b border-slate-100 hover:bg-emerald-50 transition-colors group">
+                        <td class="px-5 py-5 bg-emerald-50/20 border-r border-emerald-100 align-middle text-center">
                             <div class="flex flex-col items-center">
                                 <span class="text-sm font-black ${dateInfo.diff < 0 ? 'text-rose-600 underline' : 'text-emerald-700'} font-jakarta leading-none mb-1">${dateInfo.text}</span>
-                                <span class="text-[8px] ${dateInfo.diff < 0 ? 'text-rose-500' : 'text-slate-400'} font-bold uppercase tracking-tighter leading-none">${dateInfo.label}</span>
+                                <span class="text-[8px] font-bold uppercase tracking-tighter leading-none text-slate-400">${dateInfo.label}</span>
                             </div>
                         </td>
                         <td class="px-5 py-5">
-                            <div class="flex flex-col">
+                            <div class="flex flex-col mobile-stack">
                                 <div class="flex items-center gap-2 mb-1.5 leading-none">
-                                    <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none">${item['ฝ่ายขาย'] || 'N/A'}</span>
-                                    <span class="text-[9px] text-slate-400 font-bold bg-slate-50 px-1 rounded leading-none">REQ: ${item['Request Date'] || '-'}</span>
+                                    <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">${item['ฝ่ายขาย'] || 'N/A'}</span>
+                                    <span class="text-[8px] text-slate-300 font-bold uppercase">Req: ${item['Request Date']}</span>
                                 </div>
                                 <div class="flex items-center gap-1.5 mb-1.5">
                                     <span class="text-xs font-black text-slate-800 font-jakarta uppercase italic leading-none">CO: ${item['เลขที่ CO']} / ${item['Line']}</span>
-                                    <span class="text-[9px] border border-slate-100 px-1 rounded font-bold text-slate-400 uppercase tracking-tighter leading-none">FG: ${item['Item']}</span>
+                                    <span class="text-[9px] border border-slate-200 px-1 rounded font-bold text-slate-400 uppercase tracking-tighter shrink-0">FG: ${item['Item']}</span>
                                 </div>
-                                <p class="text-[10px] text-slate-500 font-bold leading-tight line-clamp-1 mb-1 italic tracking-tight">${item['Name'] || '-'}</p>
-                                <p class="text-[10px] text-slate-400 truncate leading-none">${item['Description']}</p>
+                                <p class="text-[10px] text-slate-500 font-bold leading-tight line-clamp-1 italic tracking-tight">${item['Name'] || '-'}</p>
                             </div>
                         </td>
-                        <td class="px-3 py-5 text-right align-middle font-jakarta text-slate-400 font-bold">
+                        <td class="px-3 py-5 text-right align-middle font-jakarta text-slate-400 font-bold text-[11px]">
                             ${stockBrought.toLocaleString()}
                         </td>
                         <td class="px-3 py-5 text-right align-middle">
                             <div class="flex flex-col items-end">
-                                <span class="text-xs font-black text-orange-500 font-jakarta leading-none">-${usage.toLocaleString()}</span>
-                                <span class="text-[8px] text-slate-300 uppercase font-bold tracking-widest mt-1 italic">Meters</span>
+                                <span class="text-xs font-black text-orange-500 font-jakarta leading-none">-${useFabric.toLocaleString()}</span>
+                                <span class="text-[8px] text-slate-300 uppercase font-bold tracking-widest mt-1 italic">Used</span>
                             </div>
                         </td>
-                        <td class="px-5 py-5 text-right bg-slate-50/50 align-middle transition-all border-l border-slate-100">
+                        <td class="px-6 py-5 text-right bg-slate-900/5 align-middle border-l border-slate-100 group-hover:bg-slate-900 group-hover:text-emerald-400 transition-all">
                             <div class="flex flex-col items-end">
-                                <span class="text-sm font-jakarta ${getBalanceColorClass(stockRemain)}">${stockRemain.toLocaleString()}</span>
-                                <span class="text-[8px] text-slate-300 uppercase font-bold tracking-tighter leading-none mt-1">Balance</span>
+                                <span class="text-sm font-jakarta font-black ${getBalanceColorClass(stockRemain)} group-hover:text-emerald-400">${stockRemain.toLocaleString()}</span>
+                                <span class="text-[8px] text-slate-300 uppercase font-bold tracking-tighter leading-none mt-1 group-hover:text-slate-500">Balance</span>
                             </div>
                         </td>
                     </tr>
@@ -557,42 +569,148 @@
         function renderUsageStats() {
             const container = document.getElementById('stats-view-main');
             const titleEl = document.getElementById('stats-page-title');
+            const headerContainer = document.getElementById('stats-summary-header');
             const groups = {};
             let headerName = "ItemGroup";
-            if (currentStatsType === 'group') { titleEl.textContent = "วิเคราะห์แยกกลุ่มสินค้า"; headerName = "ItemGroup"; }
-            if (currentStatsType === 'sales') { titleEl.textContent = "วิเคราะห์แยกฝ่ายขาย"; headerName = "ฝ่ายขาย"; }
-            if (currentStatsType === 'customer') { titleEl.textContent = "วิเคราะห์แยกรายลูกค้า"; headerName = "Name"; }
+
+            if (currentStatsType === 'group') { titleEl.textContent = "วิเคราะห์ตามกลุ่มสินค้า"; headerName = "ItemGroup"; }
+            if (currentStatsType === 'sales') { titleEl.textContent = "วิเคราะห์ตามฝ่ายขาย"; headerName = "ฝ่ายขาย"; }
+            if (currentStatsType === 'customer') { titleEl.textContent = "วิเคราะห์ตามชื่อลูกค้า"; headerName = "Name"; }
+
+            // Aggregate Data for Header
+            let totalJobs = 0;
+            let totalDemand = 0;
+            const uniqueFabrics = new Set();
+            const machineStats = {}; // To find max machine per fabric in this stats view
+
             rawData.forEach(item => {
                 const key = item[headerName] || 'ไม่ระบุ';
                 const demand = parseNum(item['ใช้ผ้า']);
-                if (!groups[key]) groups[key] = { total: 0, items: 0 };
+                if (!groups[key]) groups[key] = { total: 0, items: 0, fabrics: new Set(), mc: 0 };
                 groups[key].total += demand;
                 groups[key].items += 1;
+                groups[key].fabrics.add(item['Weaving Item']);
+                
+                uniqueFabrics.add(item['Weaving Item']);
+                totalJobs++;
+                totalDemand += demand;
             });
+
+            // Calculate Total Machines based on MAX real for each fabric
+            let grandTotalMc = 0;
+            const uniqueFabricsList = [...uniqueFabrics];
+            uniqueFabricsList.forEach(fid => {
+                const fabricRows = rawData.filter(r => r['Weaving Item'] === fid);
+                const maxMc = Math.max(...fabricRows.map(r => parseNum(r['เกิดจริง'])), 0);
+                grandTotalMc += maxMc;
+            });
+
+            headerContainer.innerHTML = `
+                <div class="glass-card p-5 border-l-4 border-emerald-500">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">รวมเครื่องทอจริง</p>
+                    <p class="text-2xl font-black text-slate-800 font-jakarta">${grandTotalMc.toLocaleString()} <span class="text-xs">M/C</span></p>
+                </div>
+                <div class="glass-card p-5 border-l-4 border-sky-500">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">รวมจองใช้ผ้า</p>
+                    <p class="text-2xl font-black text-slate-800 font-jakarta">${totalDemand.toLocaleString()} <span class="text-xs">ม.</span></p>
+                </div>
+                <div class="glass-card p-5 border-l-4 border-purple-500">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">จำนวนคิวงาน</p>
+                    <p class="text-2xl font-black text-slate-800 font-jakarta">${totalJobs.toLocaleString()} <span class="text-xs">รายการ</span></p>
+                </div>
+                <div class="glass-card p-5 border-l-4 border-amber-500">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">สเปกผ้าที่ใช้</p>
+                    <p class="text-2xl font-black text-slate-800 font-jakarta">${uniqueFabrics.size.toLocaleString()} <span class="text-xs">สเปก</span></p>
+                </div>
+            `;
+
             const sorted = Object.entries(groups).sort((a,b) => b[1].total - a[1].total);
-            container.className = viewMode === 'desktop' ? "grid grid-cols-2 gap-4" : "grid grid-cols-1 gap-4";
+            container.className = viewMode === 'desktop' ? "grid grid-cols-3 gap-6 pb-20" : "grid grid-cols-1 gap-4 pb-20";
+            
             container.innerHTML = sorted.map(([name, data]) => `
-                <div onclick="drilldownGroup('${name}')" class="glass-card p-6 border-white active:scale-[0.98] transition-all cursor-pointer group hover:bg-white shadow-sm flex flex-col justify-between h-full">
-                    <div class="flex justify-between items-start mb-4">
+                <div onclick="drilldownGroup('${name}')" class="glass-card p-6 border-white active:scale-[0.98] transition-all cursor-pointer group hover:bg-white shadow-md flex flex-col h-full">
+                    <div class="flex justify-between items-start mb-6">
                         <h3 class="font-bold text-slate-800 group-hover:text-emerald-600 transition-colors text-lg uppercase font-jakarta line-clamp-1 leading-none tracking-tight">${name}</h3>
-                        <span class="text-[9px] bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full font-black italic border border-emerald-100 shrink-0 uppercase tracking-tighter">${data.items} คิวงาน</span>
+                        <span class="text-[9px] bg-slate-900 text-white px-3 py-1 rounded-full font-black italic shadow-sm uppercase tracking-tighter shrink-0">${data.items} JOBS</span>
                     </div>
-                    <div class="flex items-end justify-between mt-auto border-t border-slate-50 pt-4">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none italic">ใช้ผ้าสะสม</p>
-                        <p class="text-3xl font-black text-slate-800 leading-none font-jakarta">${data.total.toLocaleString()} <span class="text-[10px]">ม.</span></p>
+                    <div class="mt-auto pt-6 border-t border-slate-50 flex justify-between items-end">
+                        <div>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1">Demand Meter</p>
+                            <p class="text-3xl font-black text-slate-800 leading-none font-jakarta">${data.total.toLocaleString()}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[9px] text-slate-300 font-bold block uppercase">${data.fabrics.size} Specs</span>
+                        </div>
                     </div>
                 </div>
             `).join('');
+
+            // Render Charts
+            updateCharts(sorted.slice(0, 10)); // Take top 10 for better visualization
             lucide.createIcons();
+        }
+
+        function updateCharts(data) {
+            // Cleanup existing charts
+            if (charts.demand) charts.demand.destroy();
+            if (charts.mc) charts.mc.destroy();
+
+            const labels = data.map(d => d[0]);
+            const values = data.map(d => d[1].total);
+            const mcs = data.map(d => d[1].items); // Simplified for MC visualization
+
+            const ctxDemand = document.getElementById('demandChart').getContext('2d');
+            charts.demand = new Chart(ctxDemand, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'ความต้องการใช้ (เมตร)',
+                        data: values,
+                        backgroundColor: '#10b981',
+                        borderRadius: 8,
+                        barThickness: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+                }
+            });
+
+            const ctxMc = document.getElementById('mcChart').getContext('2d');
+            charts.mc = new Chart(ctxMc, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ['#10b981', '#0ea5e9', '#8b5cf6', '#f59e0b', '#ef4444', '#64748b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: { legend: { display: false } }
+                }
+            });
+            
+            document.getElementById('total-stats-mc').textContent = data.reduce((s,d)=>s+d[1].items, 0); // Simplified view
         }
 
         function drilldownGroup(groupName) {
             document.getElementById('stats-view-main').classList.add('hidden');
             document.getElementById('stats-view-detail').classList.remove('hidden');
+            document.getElementById('stats-summary-header').classList.add('hidden');
             document.getElementById('drilldown-group-name').textContent = `${groupName}`;
             let headerName = currentStatsType === 'group' ? "ItemGroup" : (currentStatsType === 'sales' ? "ฝ่ายขาย" : "Name");
             const filtered = rawData.filter(i => (i[headerName] || 'ไม่ระบุ') === groupName);
             filtered.sort((a, b) => a._sortDate - b._sortDate);
+            
             const fabrics = {};
             filtered.forEach(i => {
                 const fid = i['Weaving Item'] || 'Unknown';
@@ -602,52 +720,54 @@
                 fabrics[fid].maxMc = Math.max(fabrics[fid].maxMc, parseNum(i['เกิดจริง']));
                 fabrics[fid].stock = Math.max(fabrics[fid].stock, parseNum(i['Stock คงเหลือ']));
             });
+
             const sorted = Object.entries(fabrics).sort((a,b) => b[1].totalUse - a[1].totalUse);
             const drillContent = document.getElementById('drilldown-content');
-            drillContent.className = viewMode === 'desktop' ? "grid grid-cols-2 gap-4" : "grid grid-cols-1 gap-4";
+            drillContent.className = viewMode === 'desktop' ? "grid grid-cols-2 gap-6 pb-20" : "grid grid-cols-1 gap-4 pb-20";
+            
             drillContent.innerHTML = sorted.map(([id, data]) => {
                 const remainder = data.stock;
                 const safeId = id.replace(/[^a-zA-Z0-9]/g, '');
                 return `
-                <div class="glass-card p-6 border-white shadow-md bg-white flex flex-col h-full">
-                    <div class="flex justify-between items-start mb-5 pb-4 border-b border-slate-50">
-                        <div class="max-w-[70%]">
-                            <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1 block leading-none tracking-tighter italic leading-none">FABRIC: ${id}</span>
-                            <h4 class="font-bold text-slate-800 leading-tight text-base uppercase font-jakarta line-clamp-1 leading-none">${data.desc}</h4>
+                <div class="glass-card p-6 border-slate-200 bg-white shadow-xl flex flex-col h-full">
+                    <div class="flex justify-between items-start mb-6 pb-4 border-b border-slate-100">
+                        <div class="max-w-[75%]">
+                            <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest block mb-1 italic">WEAVING_FABRIC: ${id}</span>
+                            <h4 class="font-bold text-slate-900 leading-tight text-base uppercase font-jakarta line-clamp-1">${data.desc}</h4>
                         </div>
                         <div class="text-right">
-                             <p class="text-[8px] text-slate-400 font-bold uppercase tracking-tighter leading-none mb-1 italic leading-none">ทอจริง</p>
+                             <p class="text-[8px] text-slate-400 font-bold uppercase mb-1">ทอจริง</p>
                              <p class="text-sm font-black text-sky-600 leading-none">${data.maxMc} M/C</p>
                         </div>
                     </div>
-                    <div class="grid grid-cols-3 gap-2 mb-6">
-                        <div class="text-center p-2 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner">
-                             <span class="text-[8px] text-slate-400 block font-bold uppercase mb-1 tracking-tighter leading-none italic leading-none">ยกมา</span>
+                    <div class="grid grid-cols-3 gap-3 mb-6">
+                        <div class="text-center p-3 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner">
+                             <span class="text-[8px] text-slate-400 block font-bold uppercase mb-1 tracking-tighter leading-none italic">ยกมา</span>
                              <span class="text-xs font-black text-slate-800 font-jakarta leading-none">${(data.totalUse + remainder).toLocaleString()}</span>
                         </div>
-                        <div class="text-center p-2 rounded-2xl bg-amber-50 border border-amber-100 shadow-inner">
-                             <span class="text-[8px] text-amber-500 block font-bold uppercase mb-1 tracking-tighter leading-none italic leading-none">ใช้รวม</span>
+                        <div class="text-center p-3 rounded-2xl bg-amber-50 border border-amber-100 shadow-inner">
+                             <span class="text-[8px] text-amber-500 block font-bold uppercase mb-1 tracking-tighter leading-none italic">จองรวม</span>
                              <span class="text-xs font-black text-orange-500 font-jakarta leading-none">${data.totalUse.toLocaleString()}</span>
                         </div>
-                        <div class="text-center p-2 rounded-2xl bg-emerald-50 border border-emerald-100 shadow-inner">
-                             <span class="text-[8px] text-emerald-600 block font-bold uppercase mb-1 tracking-tighter leading-none italic leading-none">คงเหลือ</span>
+                        <div class="text-center p-3 rounded-2xl bg-emerald-50 border border-emerald-100 shadow-inner">
+                             <span class="text-[8px] text-emerald-600 block font-bold uppercase mb-1 tracking-tighter leading-none italic">สุทธิ</span>
                              <span class="text-xs ${getBalanceColorClass(remainder)} font-jakarta leading-none">${remainder.toLocaleString()}</span>
                         </div>
                     </div>
-                    <button onclick="toggleCollapsible('${safeId}')" class="w-full flex items-center justify-between py-2.5 px-4 bg-slate-50 rounded-2xl text-[9px] font-black text-slate-400 uppercase tracking-widest hover:bg-slate-100 transition-all mt-auto shadow-sm">
-                        <span>ดูคิวงานในสเปก (${data.jobs.length})</span>
-                        <i data-lucide="chevron-down" id="icon-${safeId}" class="w-3 h-3 transition-transform duration-300"></i>
+                    <button onclick="toggleCollapsible('${safeId}')" class="w-full flex items-center justify-between py-3 px-4 bg-slate-900 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all mt-auto shadow-sm">
+                        <span>ดูคิวงานตามความด่วน (${data.jobs.length})</span>
+                        <i data-lucide="chevron-down" id="icon-${safeId}" class="w-4 h-4 transition-transform duration-300"></i>
                     </button>
-                    <div id="collapse-${safeId}" class="collapsible-content pt-4 px-1 space-y-3">
+                    <div id="collapse-${safeId}" class="collapsible-content pt-4 px-2 space-y-3">
                         ${data.jobs.map(job => `
-                            <div class="flex justify-between items-start text-[10px] py-2 border-b border-slate-50 last:border-0">
+                            <div class="flex justify-between items-start text-[11px] py-3 border-b border-slate-50 last:border-0">
                                 <div class="flex flex-col max-w-[65%]">
-                                    <span class="font-black text-slate-800 italic uppercase leading-none mb-1 tracking-tighter">CO: ${job['เลขที่ CO']}</span>
+                                    <span class="font-black text-slate-800 italic uppercase tracking-tighter">CO: ${job['เลขที่ CO']}</span>
                                     <span class="text-[9px] text-slate-400 font-bold truncate leading-none">${job['Name'] || '-'}</span>
                                 </div>
                                 <div class="text-right shrink-0">
                                     <span class="font-black text-slate-900 leading-none">${parseNum(job['ใช้ผ้า']).toLocaleString()} ม.</span>
-                                    <p class="text-[9px] text-rose-500 font-black uppercase tracking-tighter leading-none mt-1 italic">SHIP: ${formatDateDisplay(job._dateObj).text}</p>
+                                    <p class="text-[9px] text-rose-500 font-black uppercase tracking-tighter leading-none mt-1 italic">Ship: ${formatDateDisplay(job._dateObj).text}</p>
                                 </div>
                             </div>
                         `).join('')}
@@ -657,7 +777,11 @@
             lucide.createIcons();
         }
 
-        function showStatsMain() { document.getElementById('stats-view-main').classList.remove('hidden'); document.getElementById('stats-view-detail').classList.add('hidden'); }
+        function showStatsMain() { 
+            document.getElementById('stats-view-main').classList.remove('hidden'); 
+            document.getElementById('stats-view-detail').classList.add('hidden'); 
+            document.getElementById('stats-summary-header').classList.remove('hidden');
+        }
         function toggleCollapsible(id) { const content = document.getElementById(`collapse-${id}`); const icon = document.getElementById(`icon-${id}`); content.classList.toggle('show'); icon.style.transform = content.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)'; }
         
         window.onload = () => { lucide.createIcons(); refreshData(); };
