@@ -101,13 +101,13 @@
 
         @media (max-width: 640px) {
             .ledger-table {
-                font-size: 10px;
+                font-size: 9px;
             }
 
             .mobile-stack {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 4px;
+                gap: 2px;
             }
 
             .hide-on-mobile {
@@ -115,11 +115,25 @@
             }
 
             .ledger-row td {
-                padding: 12px 8px !important;
+                padding: 8px 4px !important;
+            }
+
+            th {
+                padding: 8px 4px !important;
+                font-size: 8px !important;
             }
 
             .stats-grid {
                 grid-template-columns: 1fr !important;
+            }
+
+            .collapsible-table {
+                font-size: 8px !important;
+            }
+
+            .collapsible-table td,
+            .collapsible-table th {
+                padding: 4px 2px !important;
             }
         }
     </style>
@@ -220,6 +234,21 @@
                     </div>
                     <i data-lucide="arrow-right"
                         class="absolute right-8 text-slate-200 group-hover:text-sky-400 transition-colors w-6 h-6 hide-on-mobile"></i>
+                </button>
+
+                <button onclick="navigate('stock-recommend')"
+                    class="glass-card p-8 w-full flex items-center gap-6 active:scale-[0.98] transition-all group overflow-hidden relative border-none ring-1 ring-slate-200 hover:ring-2 hover:ring-amber-400 md:col-span-2">
+                    <div
+                        class="w-16 h-16 bg-amber-100 rounded-[1.5rem] flex items-center justify-center text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-all shrink-0 shadow-sm">
+                        <i data-lucide="sparkles" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-xl leading-tight text-left">แนะนำผืนผ้า</h3>
+                        <p class="text-xs text-slate-500 mt-1 italic text-left">วิเคราะห์ผ้าที่ควรผลิตเพิ่ม
+                            และผ้าที่สต็อกล้น</p>
+                    </div>
+                    <i data-lucide="arrow-right"
+                        class="absolute right-8 text-slate-200 group-hover:text-amber-400 transition-colors w-6 h-6 hide-on-mobile"></i>
                 </button>
             </div>
         </div>
@@ -354,9 +383,9 @@
                                 Status</span>
                         </div>
 
-                        <div class="glass-card overflow-hidden border-slate-100 shadow-xl bg-white">
-                            <div class="overflow-x-auto hide-scrollbar">
-                                <table class="w-full text-left ledger-table min-w-[950px]">
+                        <div class="glass-card overflow-hidden border-slate-100 shadow-xl bg-white w-full">
+                            <div class="overflow-x-auto hide-scrollbar w-full">
+                                <table class="w-full text-left ledger-table">
                                     <thead class="bg-slate-50 border-b border-slate-100">
                                         <tr class="text-[9px] font-black text-slate-500 uppercase tracking-widest">
                                             <th
@@ -461,6 +490,61 @@
         </div>
     </section>
 
+    <section id='page-stock-recommend'
+        class="hidden min-h-screen flex-col p-6 overflow-y-auto hide-scrollbar bg-slate-50">
+        <div class="layout-container">
+            <div class="flex items-center gap-4 mb-8">
+                <button onclick="navigate('menu')"
+                    class="p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800 border border-slate-100"><i
+                        data-lucide="arrow-left"></i></button>
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800 font-jakarta tracking-tight leading-none mb-1">
+                        แนะนำผืนผ้า</h2>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider italic">Stock Balance
+                        Analysis</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-20">
+                <!-- ขาดแคลน (Insufficient) -->
+                <div
+                    class="bg-white rounded-[2rem] p-6 shadow-xl border border-rose-100 flex flex-col relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-bl-[4rem] -z-0"></div>
+                    <div class="flex items-center gap-3 mb-6 relative z-10">
+                        <div
+                            class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shadow-inner">
+                            <i data-lucide="trending-down" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-rose-700 font-jakarta leading-none">สต็อกไม่พอผลิต</h3>
+                            <p class="text-[10px] text-slate-400 font-bold tracking-tight">ผ้าที่มียอดสั่งทอเกินสต็อก
+                                (Top 10)</p>
+                        </div>
+                    </div>
+                    <div id="rec-insufficient-list" class="space-y-3 relative z-10 flex-1"></div>
+                </div>
+
+                <!-- เหลือเยอะ (Abundant) -->
+                <div
+                    class="bg-white rounded-[2rem] p-6 shadow-xl border border-emerald-100 flex flex-col relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-[4rem] -z-0"></div>
+                    <div class="flex items-center gap-3 mb-6 relative z-10">
+                        <div
+                            class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
+                            <i data-lucide="trending-up" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-emerald-700 font-jakarta leading-none">สต็อกเหลือเยอะ</h3>
+                            <p class="text-[10px] text-slate-400 font-bold tracking-tight">
+                                ผ้าที่ผลิตทิ้งไว้แต่ไม่มีออเดอร์ (Top 10)</p>
+                        </div>
+                    </div>
+                    <div id="rec-abundant-list" class="space-y-3 relative z-10 flex-1"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <div id="toast"
         class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl text-[11px] font-bold shadow-2xl opacity-0 transition-all pointer-events-none z-50 uppercase tracking-widest font-jakarta">
         เรียบร้อย
@@ -532,11 +616,12 @@
 
         function navigate(pageId, mode) {
             if (mode) { viewMode = mode; document.body.className = `view-${mode}`; }
-            const sections = ['page-start', 'page-menu', 'page-fabric-check', 'page-usage-stats'];
+            const sections = ['page-start', 'page-menu', 'page-fabric-check', 'page-usage-stats', 'page-stock-recommend'];
             sections.forEach(id => document.getElementById(id).classList.replace('page-active', 'hidden'));
             document.getElementById(`page-${pageId}`).classList.replace('hidden', 'page-active');
             if (pageId === 'menu' && rawData.length === 0) refreshData();
             if (pageId === 'usage-stats') { showStatsMain(); renderUsageStats(); }
+            if (pageId === 'stock-recommend') renderStockRecommendations();
             lucide.createIcons();
             window.scrollTo(0, 0);
         }
@@ -825,15 +910,15 @@
                     </button>
                     <div id="collapse-${safeId}" class="collapsible-content pt-5 px-1">
                         <div class="overflow-x-auto hide-scrollbar">
-                            <table class="w-full text-[10px] text-left">
+                            <table class="w-full text-[10px] text-left collapsible-table max-w-full">
                                 <thead class="text-slate-400 uppercase tracking-tighter border-b border-slate-100 font-black italic">
-                                    <tr><th class="pb-2 px-1">วันขึ้นของ</th><th class="pb-2 px-1">CO-Line</th><th class="pb-2 text-right">ยกมา</th><th class="pb-2 text-right">ใช้</th><th class="pb-2 text-right">คงเหลือ</th></tr>
+                                    <tr><th class="pb-2 px-1">วันขึ้นของ</th><th class="pb-2 px-1">Description</th><th class="pb-2 text-right">ยกมา</th><th class="pb-2 text-right">ใช้</th><th class="pb-2 text-right">คงเหลือ</th></tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-50">
                                     ${data.jobs.map(job => `
                                         <tr class="hover:bg-slate-50/50">
-                                            <td class="py-2.5 px-1 font-bold text-slate-700">${formatDateDisplay(job._dateObj).text}</td>
-                                            <td class="py-2.5 px-1 text-slate-500 font-jakarta">#${job['เลขที่ CO']}</td>
+                                            <td class="py-2.5 px-1 font-bold text-slate-700 whitespace-nowrap">${formatDateDisplay(job._dateObj).text}</td>
+                                            <td class="py-2.5 px-1 text-slate-500 font-jakarta line-clamp-2 max-w-[120px] md:max-w-xs break-words">${job['Description'] || '-'}</td>
                                             <td class="py-2.5 text-right text-slate-400 font-jakarta">${parseNum(job['Stock ยกมา']).toLocaleString()}</td>
                                             <td class="py-2.5 text-right font-black text-orange-500 font-jakarta">-${parseNum(job['ใช้ผ้า']).toLocaleString()}</td>
                                             <td class="py-2.5 text-right font-black ${getBalanceColorClass(parseNum(job['Stock คงเหลือ']))} font-jakarta">${parseNum(job['Stock คงเหลือ']).toLocaleString()}</td>
@@ -857,8 +942,104 @@
 
         function toggleCollapsible(id) { const c = document.getElementById(`collapse-${id}`); const i = document.getElementById(`icon-${id}`); c.classList.toggle('show'); i.style.transform = c.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)'; }
 
+        function renderStockRecommendations() {
+            const fabrics = {};
+            rawData.forEach(item => {
+                const fid = item['Weaving Item'] || 'Unknown';
+                if (!fabrics[fid]) fabrics[fid] = { id: fid, desc: item['Description'] || '-', start: parseNum(item['Stock ยกมา']), final: 0, jobs: [] };
+                fabrics[fid].jobs.push(item);
+            });
+
+            Object.values(fabrics).forEach(f => {
+                f.jobs.sort((a, b) => a._sortDate - b._sortDate);
+                f.final = parseNum(f.jobs[f.jobs.length - 1]['Stock คงเหลือ']);
+            });
+
+            const sortedFabrics = Object.values(fabrics).sort((a, b) => a.final - b.final);
+
+            // Render Insufficient (Negative / Lowest stock)
+            const insufficient = sortedFabrics.filter(f => f.final < 0).slice(0, 10);
+            const insList = document.getElementById('rec-insufficient-list');
+            if (insufficient.length === 0) {
+                insList.innerHTML = `<div class="p-8 text-center text-slate-300 font-bold italic border-2 border-dashed border-slate-100 rounded-2xl">ไม่มีผ้าที่สต็อกติดลบ 🎉</div>`;
+            } else {
+                insList.innerHTML = insufficient.map(f => `
+                    <div class="p-4 rounded-xl bg-rose-50/50 border border-rose-100 flex justify-between items-center group hover:bg-rose-50 transition-colors">
+                        <div class="w-[70%]">
+                            <span class="text-[9px] font-black text-rose-500 uppercase tracking-widest block leading-none mb-1">${f.id}</span>
+                            <p class="text-xs font-bold text-slate-700 line-clamp-1 leading-tight w-full">${f.desc}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-black text-rose-600 font-jakarta drop-shadow-sm">${f.final.toLocaleString()}</span>
+                            <span class="text-[8px] block text-slate-400 font-bold tracking-tighter uppercase mt-0.5">เมตร</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Render Abundant (Highest positive stock)
+            const abundant = [...sortedFabrics].reverse().filter(f => f.final > 0).slice(0, 10);
+            const abnList = document.getElementById('rec-abundant-list');
+            if (abundant.length === 0) {
+                abnList.innerHTML = `<div class="p-8 text-center text-slate-300 font-bold italic border-2 border-dashed border-slate-100 rounded-2xl">ไม่มีข้อมูลสต็อกเหลือ</div>`;
+            } else {
+                abnList.innerHTML = abundant.map(f => `
+                    <div class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-100 flex justify-between items-center group hover:bg-emerald-50 transition-colors">
+                        <div class="w-[70%]">
+                            <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest block leading-none mb-1">${f.id}</span>
+                            <p class="text-xs font-bold text-slate-700 line-clamp-1 leading-tight w-full">${f.desc}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-black text-emerald-600 font-jakarta drop-shadow-sm">+${f.final.toLocaleString()}</span>
+                            <span class="text-[8px] block text-slate-400 font-bold tracking-tighter uppercase mt-0.5">เมตร</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
         window.onload = () => { lucide.createIcons(); refreshData(); changeStatsType('group'); };
     </script>
+    <section id='page-stock-recommend' class="page hidden">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-2xl font-black text-slate-800 font-jakarta leading-none">Stock Recommendations</h2>
+            <button onclick="navigate('page-usage-stats')"
+                class="text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors flex items-center gap-1">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Back to Usage Stats</span>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="glass-card p-6 bg-white shadow-xl flex flex-col h-full border-rose-200">
+                <div class="flex justify-between items-start mb-6 pb-4 border-b border-rose-100">
+                    <h3
+                        class="font-bold text-rose-600 leading-tight text-lg uppercase font-jakarta line-clamp-1 leading-none tracking-tight">
+                        Insufficient Stock</h3>
+                    <span
+                        class="text-[9px] bg-rose-50 text-rose-700 px-3 py-1 rounded-full font-black italic border border-rose-100 uppercase tracking-tighter shrink-0">Top
+                        10</span>
+                </div>
+                <div id="rec-insufficient-list" class="flex flex-col gap-3">
+                    <!-- Insufficient stock items will be rendered here -->
+                </div>
+            </div>
+
+            <div class="glass-card p-6 bg-white shadow-xl flex flex-col h-full border-emerald-200">
+                <div class="flex justify-between items-start mb-6 pb-4 border-b border-emerald-100">
+                    <h3
+                        class="font-bold text-emerald-600 leading-tight text-lg uppercase font-jakarta line-clamp-1 leading-none tracking-tight">
+                        Abundant Stock</h3>
+                    <span
+                        class="text-[9px] bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full font-black italic border border-emerald-100 uppercase tracking-tighter shrink-0">Top
+                        10</span>
+                </div>
+                <div id="rec-abundant-list" class="flex flex-col gap-3">
+                    <!-- Abundant stock items will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </section>
 </body>
 
 </html>
