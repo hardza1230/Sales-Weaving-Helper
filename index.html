@@ -913,7 +913,7 @@
 
         function navigate(pageId, mode) {
             if (mode) { viewMode = mode; document.body.className = `view-${mode}`; }
-            const sections = ['page-start', 'page-menu', 'page-fabric-check', 'page-usage-stats', 'page-rec-role-select', 'page-stock-recommend'];
+            const sections = ['page-start', 'page-loading', 'page-menu', 'page-fabric-check', 'page-usage-stats', 'page-rec-role-select', 'page-stock-recommend'];
             sections.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.replace('page-active', 'hidden');
