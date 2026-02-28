@@ -385,22 +385,18 @@
 
                         <div class="glass-card overflow-hidden border-slate-100 shadow-xl bg-white w-full">
                             <div class="overflow-x-auto hide-scrollbar w-full">
-                                <table class="w-full text-left ledger-table">
-                                    <thead class="bg-slate-50 border-b border-slate-100">
-                                        <tr class="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                                            <th
-                                                class="px-6 py-5 bg-emerald-50 text-emerald-800 border-r border-emerald-100 w-36 text-center italic">
-                                                วันขึ้นของ</th>
-                                            <th class="px-6 py-4">ฝ่ายขาย / รายการงาน FG / รหัสสินค้า</th>
-                                            <th class="px-4 py-4 text-right w-32 italic border-l border-slate-50">Stock
-                                                ยกมา</th>
-                                            <th class="px-4 py-4 text-right w-28 italic">ใช้ผ้า (ม.)</th>
-                                            <th
-                                                class="px-6 py-5 text-right bg-slate-900 text-emerald-400 w-44 tracking-wider">
-                                                คงเหลือสะสม</th>
+                                <table class="w-full text-[10px] text-left max-w-full">
+                                    <thead
+                                        class="text-slate-400 uppercase tracking-tighter border-b border-slate-100 font-black italic bg-slate-50">
+                                        <tr>
+                                            <th class="py-3 px-2 w-[60px]">วันขึ้นของ</th>
+                                            <th class="py-3 px-2">Description</th>
+                                            <th class="py-3 text-right px-2 w-[70px]">ยกมา</th>
+                                            <th class="py-3 text-right px-2 w-[60px]">ใช้</th>
+                                            <th class="py-3 text-right px-2 w-[70px]">คงเหลือ</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="ledger-body" class="divide-y divide-slate-100 text-[12px]"></tbody>
+                                    <tbody id="ledger-body" class="divide-y divide-slate-50"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -707,33 +703,22 @@
                 const d = formatDateDisplay(item._dateObj);
                 const rm = parseNum(item['Stock คงเหลือ']);
                 return `
-                    <tr class="ledger-row border-b border-slate-100 hover:bg-emerald-50 transition-colors group">
-                        <td class="px-5 py-5 bg-emerald-50/20 border-r border-emerald-50 align-middle text-center">
-                            <div class="flex flex-col items-center">
-                                <span class="text-sm font-black ${d.diff < 0 ? 'text-rose-600 underline' : 'text-emerald-700'} font-jakarta leading-none mb-1">${d.text}</span>
-                                <span class="text-[8px] font-bold uppercase tracking-tighter leading-none text-slate-400">${d.label}</span>
+                    <tr class="hover:bg-slate-50/50 transition-colors group">
+                        <td class="py-3 px-2 font-bold text-[10px] align-top whitespace-nowrap">
+                            <span class="${d.diff < 0 ? 'text-rose-600 underline' : 'text-emerald-700'}">${d.text}</span>
+                            <span class="block text-[8px] text-slate-400 mt-0.5">${d.label}</span>
+                        </td>
+                        <td class="py-3 px-2 align-top">
+                            <span class="text-[11px] font-black text-slate-700 font-jakarta line-clamp-2 leading-tight">${item['Description'] || '-'}</span>
+                            <div class="flex flex-wrap items-center gap-1.5 mt-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                                <span class="text-[8px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded leading-none shrink-0">${item['ฝ่ายขาย'] || 'N/A'}</span>
+                                <span class="text-[8px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded leading-none shrink-0">${item['Item']}</span>
+                                <span class="text-[8px] italic text-slate-400 leading-none shrink-0">${item['Name'] || '-'}</span>
                             </div>
                         </td>
-                        <td class="px-5 py-5">
-                            <div class="flex flex-col mobile-stack leading-tight">
-                                <div class="flex items-center gap-2 mb-1.5 leading-none">
-                                    <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">${item['ฝ่ายขาย'] || 'N/A'}</span>
-                                    <span class="text-[8px] text-slate-300 font-bold uppercase italic">เปิดงาน: ${item['Request Date']}</span>
-                                </div>
-                                <div class="flex items-center gap-1.5 mb-1.5 mt-0.5">
-                                    <span class="text-[13px] font-black text-slate-900 font-jakarta uppercase line-clamp-2 leading-tight">${item['Description'] || '-'}</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <p class="text-[10px] text-slate-500 font-bold line-clamp-1 italic tracking-tight leading-none">${item['Name'] || '-'}</p>
-                                    <span class="text-[8px] bg-slate-50 text-slate-400 px-1.5 py-0.5 rounded-md font-bold uppercase shrink-0 border border-slate-100">FG: ${item['Item']}</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-4 py-5 text-right align-middle font-jakarta text-slate-400 font-bold text-[11px] border-l border-slate-50">${parseNum(item['Stock ยกมา']).toLocaleString()}</td>
-                        <td class="px-4 py-5 text-right align-middle text-xs font-black text-orange-500 font-jakarta">-${parseNum(item['ใช้ผ้า']).toLocaleString()}</td>
-                        <td class="px-6 py-5 text-right bg-slate-900/5 align-middle border-l border-slate-100 group-hover:bg-slate-900 transition-all">
-                            <span class="text-sm font-jakarta font-black ${getBalanceColorClass(rm)} group-hover:text-emerald-400">${rm.toLocaleString()}</span>
-                        </td>
+                        <td class="py-3 text-right px-2 text-slate-400 font-jakarta font-bold text-[10px] align-top">${parseNum(item['Stock ยกมา']).toLocaleString()}</td>
+                        <td class="py-3 text-right px-2 font-black text-orange-500 font-jakarta text-[10px] align-top">-${parseNum(item['ใช้ผ้า']).toLocaleString()}</td>
+                        <td class="py-3 text-right px-2 font-black ${getBalanceColorClass(rm)} font-jakarta text-[10px] align-top">${rm.toLocaleString()}</td>
                     </tr>
                 `;
             }).join('');
