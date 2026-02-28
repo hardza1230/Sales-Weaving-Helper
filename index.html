@@ -12,7 +12,7 @@
         
         body { 
             font-family: 'Kanit', sans-serif; 
-            background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%);
+            background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
             color: #334155;
             letter-spacing: -0.01em;
             min-height: 100vh;
@@ -22,19 +22,18 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             border-radius: 2rem;
         }
 
         .btn-gradient {
-            background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
+            background: linear-gradient(135deg, #059669 0%, #0284c7 100%);
             color: white;
             transition: all 0.3s;
         }
-        .btn-gradient:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn-gradient:active { transform: translateY(0); scale: 0.98; }
+        .btn-gradient:active { transform: scale(0.98); }
 
         select { 
             -webkit-appearance: none; 
@@ -44,29 +43,47 @@
             background-position: right 0.75rem center;
         }
 
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+            opacity: 0;
+        }
+        
+        .collapsible-content.show {
+            max-height: 3000px;
+            opacity: 1;
+        }
+
+        .status-badge {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 99px;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
 
     <!-- 1. Start Page -->
     <section id="page-start" class="page-active min-h-screen flex-col items-center justify-center p-8 text-center">
-        <div class="mb-8 relative scale-110">
-            <div class="w-24 h-24 btn-gradient rounded-[2.5rem] flex items-center justify-center shadow-2xl rotate-6">
-                <i data-lucide="waves" class="text-white w-12 h-12"></i>
+        <div class="mb-10 relative">
+            <div class="w-24 h-24 btn-gradient rounded-[2.8rem] flex items-center justify-center shadow-2xl rotate-3">
+                <i data-lucide="layout-dashboard" class="text-white w-12 h-12"></i>
             </div>
-            <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center border-4 border-[#f0fdfa]">
-                <span class="w-3 h-3 bg-emerald-500 rounded-full animate-ping"></span>
+            <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center border-4 border-[#f0fdf4]">
+                <span class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></span>
             </div>
         </div>
         
-        <h1 class="text-3xl font-bold text-slate-800 mb-2 leading-tight">Planner Want to tell you<br>About Weaving</h1>
+        <h1 class="text-3xl font-bold text-slate-800 mb-3 leading-tight tracking-tight">Planner Want to tell you<br>About Weaving</h1>
         <p class="text-slate-500 text-sm font-light max-w-xs mb-10 leading-relaxed">
-            วิเคราะห์งานทอและการจัดการคลังสินค้า<br>เพื่อแผนงานที่แม่นยำและรวดเร็ว
+            วิเคราะห์แผนงานทอและสต็อกผืนผ้าสะสม<br>ข้อมูลซิงค์ตรงจากระบบ Power BI
         </p>
         
-        <button onclick="navigate('menu')" class="w-full max-w-xs btn-gradient py-4 rounded-2xl font-bold text-base shadow-xl shadow-sky-200">
-            เริ่มต้นใช้งาน
+        <button onclick="navigate('menu')" class="w-full max-w-xs btn-gradient py-4 rounded-2xl font-bold text-base shadow-xl shadow-emerald-100">
+            เริ่มต้นตรวจสอบ
         </button>
     </section>
 
@@ -74,50 +91,50 @@
     <section id="page-menu" class="hidden min-h-screen flex-col p-6 max-w-xl mx-auto">
         <div class="mt-8 mb-10 flex justify-between items-end px-2">
             <div>
-                <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">สวัสดีครับ</p>
-                <h2 class="text-2xl font-bold text-slate-800 italic font-jakarta">Main Dashboard</h2>
+                <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Planning Tools</p>
+                <h2 class="text-2xl font-bold text-slate-800 italic">หน้าหลัก</h2>
             </div>
-            <div id="sync-status" class="text-[10px] bg-white/50 border border-slate-100 text-slate-400 px-3 py-1 rounded-full font-bold">
-                ซิงค์ข้อมูล...
+            <div id="sync-status" class="text-[10px] bg-white border border-slate-100 text-slate-400 px-3 py-1.5 rounded-full font-bold">
+                กำลังเชื่อมต่อ...
             </div>
         </div>
 
         <div class="space-y-4">
             <button onclick="navigate('fabric-check')" class="glass-card p-6 w-full flex items-center gap-6 text-left active:scale-[0.98] transition-all group">
-                <div class="w-14 h-14 bg-sky-100 rounded-3xl flex items-center justify-center text-sky-600 group-hover:bg-sky-600 group-hover:text-white transition-all">
+                <div class="w-14 h-14 bg-emerald-50 rounded-3xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-inner">
                     <i data-lucide="scroll-text"></i>
                 </div>
                 <div>
                     <h3 class="font-bold text-slate-800 text-lg">เช็คม้วนผืนผ้า</h3>
-                    <p class="text-xs text-slate-500 font-light italic">Running Balance & Machine Stats</p>
+                    <p class="text-xs text-slate-500 font-light">ดู Running Balance ตามลำดับ Due Date</p>
                 </div>
             </button>
             
             <button onclick="navigate('usage-stats')" class="glass-card p-6 w-full flex items-center gap-6 text-left active:scale-[0.98] transition-all group">
-                <div class="w-14 h-14 bg-emerald-100 rounded-3xl flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                    <i data-lucide="pie-chart"></i>
+                <div class="w-14 h-14 bg-sky-50 rounded-3xl flex items-center justify-center text-sky-600 group-hover:bg-sky-600 group-hover:text-white transition-all shadow-inner">
+                    <i data-lucide="bar-chart-3"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-slate-800 text-lg leading-tight">ภาพรวมการใช้ผืนผ้า<br>แยกกลุ่มสินค้า</h3>
-                    <p class="text-xs text-slate-500 font-light">Inventory Allocation Analysis</p>
+                    <h3 class="font-bold text-slate-800 text-lg">ภาพรวมการใช้ผืนผ้าแยกกลุ่มสินค้า</h3>
+                    <p class="text-xs text-slate-500 font-light">วิเคราะห์การจัดสรรผ้าให้แต่ละกลุ่มงาน</p>
                 </div>
             </button>
         </div>
         
         <button onclick="navigate('start')" class="mt-auto py-8 text-slate-400 text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
-            <i data-lucide="log-out" class="w-3 h-3"></i> ออกจากระบบ
+            <i data-lucide="chevron-left" class="w-3 h-3"></i> กลับหน้าแรก
         </button>
     </section>
 
     <!-- 3. Fabric Check Page -->
     <section id="page-fabric-check" class="hidden min-h-screen flex-col pb-12">
-        <header class="bg-white/70 backdrop-blur-md border-b border-slate-100 sticky top-0 z-30 p-5">
+        <header class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-30 p-5">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-2">
-                    <button onclick="navigate('menu')" class="p-2 -ml-2 text-slate-400 hover:text-slate-800"><i data-lucide="arrow-left"></i></button>
+                    <button onclick="navigate('menu')" class="p-2 -ml-2 text-slate-400"><i data-lucide="arrow-left"></i></button>
                     <h2 class="text-lg font-bold text-slate-800">เช็คสถานะผืนผ้า</h2>
                 </div>
-                <button id="btn-toggle-filter" onclick="toggleFilters()" class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-emerald-100 transition-all">
+                <button onclick="toggleFilters()" class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-emerald-100">
                     <i data-lucide="filter" class="w-3 h-3"></i> <span id="filter-status-text">ซ่อนตัวกรอง</span>
                 </button>
             </div>
@@ -137,12 +154,12 @@
                         <select id="sel-frequency" onchange="updateFilters()" class="w-full bg-slate-50 border-none rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600"></select>
                     </div>
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">รูปแบบทอ (Pattern)</label>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">รูปแบบทอ</label>
                         <select id="sel-pattern" onchange="updateFilters()" class="w-full bg-slate-50 border-none rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600"></select>
                     </div>
                 </div>
-                <button onclick="processLedger(); closeFiltersOnSearch();" class="w-full py-3.5 btn-gradient rounded-2xl text-sm font-bold shadow-lg shadow-sky-100">
-                    ค้นหาข้อมูล
+                <button onclick="processLedger(); closeFiltersOnSearch();" class="w-full py-3.5 btn-gradient rounded-2xl text-sm font-bold shadow-lg">
+                    วิเคราะห์งานทอ
                 </button>
             </div>
         </header>
@@ -150,42 +167,45 @@
         <main class="p-5 max-w-xl mx-auto w-full space-y-6">
             <div id="loading-area" class="hidden flex-col items-center py-20">
                 <div class="w-8 h-8 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
-                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest italic">กำลังประมวลผลข้อมูล...</p>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest italic">กำลังประมวลผลสต็อก...</p>
             </div>
 
             <div id="result-view" class="hidden space-y-6">
                 <!-- Overview Dashboard -->
                 <div class="glass-card p-6 bg-gradient-to-br from-white to-emerald-50 shadow-sm border-white">
-                    <div class="flex justify-between items-center mb-5">
-                        <span id="dash-item-code" class="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-3 py-1 rounded-full uppercase tracking-widest">#ITEM</span>
+                    <div class="flex justify-between items-center mb-6">
+                        <span id="dash-item-code" class="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-3 py-1.5 rounded-full uppercase tracking-widest font-jakarta">#FABRIC_ITEM</span>
                         <div class="text-right">
-                            <p class="text-[9px] text-slate-400 font-bold uppercase mb-0.5">กลุ่มสินค้าหลัก</p>
-                            <p id="dash-major-group" class="text-xs font-bold text-slate-700">-</p>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase mb-0.5">ใช้หลักกับงาน</p>
+                            <p id="dash-major-group" class="text-xs font-bold text-slate-700 leading-none">-</p>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-y-6">
                         <div>
-                            <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase">สต็อกเริ่มต้น</span>
-                            <span id="dash-total-stock" class="text-2xl font-bold text-slate-800">0</span> <span class="text-[10px] font-bold text-slate-400 uppercase">Yds</span>
+                            <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase tracking-tighter">สต็อกเริ่มต้น (เมตร)</span>
+                            <span id="dash-total-stock" class="text-2xl font-bold text-slate-800 font-jakarta">0</span>
                         </div>
                         <div>
-                            <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase">เครื่องที่กำลังทอ</span>
-                            <span id="dash-machines" class="text-2xl font-bold text-slate-800">0</span> <span class="text-[10px] font-bold text-slate-400 uppercase">M/C</span>
+                            <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase tracking-tighter">จำนวนเครื่องทอ</span>
+                            <span id="dash-machines" class="text-2xl font-bold text-slate-800 font-jakarta">0</span>
                         </div>
                         <div>
-                            <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase">คิวงานรอลำดับ</span>
-                            <span id="dash-jobs" class="text-2xl font-bold text-slate-800 text-sky-500">0</span> <span class="text-[10px] font-bold text-slate-400 uppercase">Orders</span>
+                            <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase tracking-tighter">งานค้างผลิตรวม</span>
+                            <span id="dash-jobs" class="text-2xl font-bold text-slate-800 text-sky-600 font-jakarta">0</span>
                         </div>
                         <div>
-                            <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase">ยอดต้องการใช้ผ้า</span>
-                            <span id="dash-required" class="text-2xl font-bold text-slate-800">0</span> <span class="text-[10px] font-bold text-slate-400 uppercase">Yds</span>
+                            <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase tracking-tighter">ความต้องการใช้รวม</span>
+                            <span id="dash-required" class="text-2xl font-bold text-slate-800 font-jakarta">0</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Ledger List -->
-                <div class="space-y-3">
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">การตัดสต็อกรายรายการ (Descending Balance)</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center px-2">
+                        <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">การหักลบสต็อกตามลำดับคิว (เมตร)</h3>
+                        <span class="text-[9px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full font-bold">Data from Power BI</span>
+                    </div>
                     <div id="ledger-container" class="space-y-4"></div>
                 </div>
             </div>
@@ -196,28 +216,26 @@
     <section id="page-usage-stats" class="hidden min-h-screen flex-col p-6 max-w-xl mx-auto">
         <div class="flex items-center gap-3 mb-8">
             <button onclick="navigate('menu')" class="p-2 -ml-2 text-slate-400"><i data-lucide="arrow-left"></i></button>
-            <h2 class="text-xl font-bold text-slate-800">ภาพรวมการใช้ผืนผ้าแยกกลุ่มสินค้า</h2>
+            <h2 class="text-xl font-bold text-slate-800 leading-tight">ภาพรวมการใช้ผืนผ้าแยกกลุ่มสินค้า</h2>
         </div>
 
-        <div id="stats-view-main" class="space-y-4">
-            <!-- Groups will be injected here -->
-        </div>
+        <div id="stats-view-main" class="space-y-4"></div>
 
-        <!-- Drill-down Details Area (Hidden by default) -->
+        <!-- Drill-down View -->
         <div id="stats-view-detail" class="hidden space-y-4 animate-in fade-in">
             <button onclick="showStatsMain()" class="text-xs font-bold text-sky-600 flex items-center gap-1 mb-4">
                 <i data-lucide="chevron-left" class="w-3 h-3"></i> กลับไปดูภาพรวมกลุ่มสินค้า
             </button>
-            <div id="detail-title-card" class="glass-card p-5 bg-sky-50 border-sky-100 mb-4">
-                <h3 id="drilldown-group-name" class="font-bold text-slate-800 text-lg">กลุ่มงาน: -</h3>
+            <div class="glass-card p-5 bg-gradient-to-r from-emerald-50 to-sky-50 border-emerald-100 mb-6 shadow-sm">
+                <h3 id="drilldown-group-name" class="font-bold text-slate-800 text-lg tracking-tight">กลุ่มสินค้า: -</h3>
             </div>
-            <div id="drilldown-content" class="space-y-4"></div>
+            <div id="drilldown-content" class="space-y-6"></div>
         </div>
     </section>
 
-    <!-- Notification Toast -->
+    <!-- Message Toast -->
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl text-[11px] font-bold shadow-2xl opacity-0 transition-all pointer-events-none z-50 uppercase tracking-widest">
-        บันทึกข้อมูลเรียบร้อย
+        คัดลอกข้อมูลเรียบร้อย
     </div>
 
     <script>
@@ -228,42 +246,54 @@
 
         async function refreshData() {
             const status = document.getElementById('sync-status');
-            status.textContent = 'กำลังโหลด...';
-            status.className = 'text-[10px] bg-sky-100 text-sky-600 px-3 py-1 rounded-full font-bold animate-pulse';
-
+            status.textContent = 'กำลังซิงค์...';
+            
             Papa.parse(CSV_URL, {
                 download: true,
                 header: true,
                 complete: (results) => {
                     rawData = results.data;
                     updateFilters();
-                    status.textContent = 'ออนไลน์';
-                    status.className = 'text-[10px] bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full font-bold';
+                    status.textContent = 'ระบบพร้อม';
+                    status.className = 'text-[10px] bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full font-bold border border-emerald-100';
                 }
             });
         }
 
-        // --- UI TOGGLES ---
+        // --- UTILS ---
+        const parseNum = (v) => parseFloat(String(v || '0').replace(/,/g, '')) || 0;
+        
+        function navigate(pageId) {
+            const sections = ['page-start', 'page-menu', 'page-fabric-check', 'page-usage-stats'];
+            sections.forEach(id => document.getElementById(id).classList.replace('page-active', 'hidden'));
+            document.getElementById(`page-${pageId}`).classList.replace('hidden', 'page-active');
+            
+            if (pageId === 'menu' && rawData.length === 0) refreshData();
+            if (pageId === 'usage-stats') { showStatsMain(); renderUsageStats(); }
+            
+            lucide.createIcons();
+            window.scrollTo(0, 0);
+        }
+
         function toggleFilters() {
             const container = document.getElementById('filter-container');
             const text = document.getElementById('filter-status-text');
             isFilterOpen = !isFilterOpen;
-            if (isFilterOpen) {
-                container.style.maxHeight = '600px';
-                container.style.opacity = '1';
-                text.textContent = 'ซ่อนตัวกรอง';
-            } else {
-                container.style.maxHeight = '0px';
-                container.style.opacity = '0';
-                text.textContent = 'แสดงตัวกรอง';
-            }
+            container.style.maxHeight = isFilterOpen ? '600px' : '0px';
+            container.style.opacity = isFilterOpen ? '1' : '0';
+            text.textContent = isFilterOpen ? 'ซ่อนตัวกรอง' : 'แสดงตัวกรอง';
         }
 
-        function closeFiltersOnSearch() {
-            if (isFilterOpen) toggleFilters();
+        function closeFiltersOnSearch() { if (isFilterOpen) toggleFilters(); }
+
+        function toggleCollapsible(id) {
+            const content = document.getElementById(`collapse-${id}`);
+            const icon = document.getElementById(`icon-${id}`);
+            content.classList.toggle('show');
+            icon.style.transform = content.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
         }
 
-        // --- DROPDOWN LOGIC ---
+        // --- FILTER LOGIC ---
         function updateFilters() {
             const selections = {};
             filterFields.forEach(f => selections[f] = document.getElementById(getFieldId(f)).value);
@@ -293,7 +323,7 @@
             return map[f];
         }
 
-        // --- SEARCH & BALANCE LOGIC ---
+        // --- CALCULATION & RENDER ---
         function processLedger() {
             const selections = {};
             filterFields.forEach(f => selections[f] = document.getElementById(getFieldId(f)).value);
@@ -318,15 +348,14 @@
         function renderLedger(items) {
             const container = document.getElementById('ledger-container');
             if (items.length === 0) {
-                container.innerHTML = `<div class="text-center py-20 text-slate-300 text-xs font-bold uppercase tracking-widest">ไม่พบรายการที่ตรงกับสเปกนี้</div>`;
+                container.innerHTML = `<div class="text-center py-20 text-slate-300 text-xs font-bold uppercase tracking-widest italic">Target Spec Not Found</div>`;
                 return;
             }
 
-            const parseNum = (v) => parseFloat(String(v || '0').replace(/,/g, '')) || 0;
-
-            // 1. DASHBOARD
+            // 1. DASHBOARD - แสดงยอดภาพรวม
             const first = items[0];
-            const initialStock = parseNum(first['Stock คงเหลือ']);
+            const maxStock = Math.max(...items.map(i => parseNum(i['Stock คงเหลือ']))); // สต็อกเริ่มต้น (ค่าสูงสุดในคิว)
+            const minStock = Math.min(...items.map(i => parseNum(i['Stock คงเหลือ']))); // สต็อกปลายทาง
             const mcs = [...new Set(items.map(i => i['Weaving Machine No.']).filter(m => m && m !== '-'))];
             const totalRequired = items.reduce((sum, i) => sum + parseNum(i['Weaving Use']), 0);
             
@@ -337,60 +366,59 @@
             });
             const majorGroup = Object.entries(groupCounts).sort((a,b) => b[1] - a[1])[0];
 
-            document.getElementById('dash-item-code').textContent = `#${first['Item'] || 'N/A'}`;
+            document.getElementById('dash-item-code').textContent = `#${first['Weaving Item'] || 'N/A'}`;
             document.getElementById('dash-major-group').textContent = majorGroup ? `${majorGroup[0]} (${majorGroup[1]})` : '-';
-            document.getElementById('dash-total-stock').textContent = initialStock.toLocaleString();
+            document.getElementById('dash-total-stock').textContent = maxStock.toLocaleString();
             document.getElementById('dash-machines').textContent = mcs.length;
             document.getElementById('dash-jobs').textContent = items.length;
             document.getElementById('dash-required').textContent = totalRequired.toLocaleString();
 
-            // 2. RUNNING LIST
-            let currentBalance = initialStock;
+            // 2. RUNNING LIST - แสดงตามข้อมูล Power BI
             container.innerHTML = items.map((item, idx) => {
-                const used = parseNum(item['Weaving Use']);
-                const before = currentBalance;
-                currentBalance -= used;
-                const after = currentBalance;
+                const usage = parseNum(item['Weaving Use']);
+                const balance = parseNum(item['Stock คงเหลือ']);
+                const rolls = parseNum(item['มีม้วนเท่าไร']);
 
                 return `
                     <div class="glass-card p-5 border-slate-100 shadow-sm relative overflow-hidden transition-all hover:border-emerald-200">
                         <div class="absolute top-0 right-0 p-3 flex gap-2">
-                             <span class="text-[9px] font-bold text-slate-300 uppercase tracking-tighter">Opened: ${item['Request Date'] || '-'}</span>
+                             <span class="text-[9px] font-bold text-slate-300 italic">เปิด: ${item['Request Date'] || '-'}</span>
                         </div>
                         
                         <div class="mb-4">
-                            <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Sale: ${item['ฝ่ายขาย'] || 'ยังไม่ระบุ'}</p>
-                            <h4 class="text-sm font-bold text-slate-800 leading-tight pr-12">${item['Description'] || 'ไม่ระบุสเปก'}</h4>
+                            <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Sale: ${item['ฝ่ายขาย'] || 'N/A'} | Order: ${item['Order'] || '-'}</p>
+                            <h4 class="text-sm font-bold text-slate-800 leading-tight pr-12">#${item['Item']} - ${item['Description'] || 'ไม่ระบุสเปก'}</h4>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3 mb-5 text-[11px]">
+                        <div class="grid grid-cols-2 gap-3 mb-4 text-[11px]">
                             <div class="bg-white/50 rounded-xl p-3 border border-white">
                                 <span class="text-[9px] text-slate-400 block uppercase font-bold mb-0.5 tracking-tight">ItemGroup</span>
                                 <span class="font-bold text-slate-700">${item['ItemGroup'] || '-'}</span>
                             </div>
                             <div class="bg-white/50 rounded-xl p-3 border border-white">
-                                <span class="text-[9px] text-slate-400 block uppercase font-bold mb-0.5 tracking-tight">Due Date</span>
+                                <span class="text-[9px] text-slate-400 block uppercase font-bold mb-0.5 tracking-tight">กำหนดส่ง</span>
                                 <span class="font-bold text-sky-600">${item['Due Date'] || '-'}</span>
                             </div>
                         </div>
 
-                        <div class="bg-slate-900 rounded-[1.5rem] p-4 flex items-center justify-between text-white shadow-xl shadow-slate-100">
+                        <div class="bg-slate-900 rounded-[1.5rem] p-4 flex items-center justify-between text-white shadow-xl">
                              <div class="text-center pl-2">
-                                <span class="text-[8px] text-slate-500 block font-bold uppercase mb-0.5">ใช้ทอ</span>
-                                <span class="text-base font-bold text-orange-400">-${used.toLocaleString()}</span>
+                                <span class="text-[8px] text-slate-500 block font-bold uppercase mb-0.5">ยอดใช้เมตร</span>
+                                <span class="text-base font-bold text-orange-400">-${usage.toLocaleString()}</span>
                              </div>
-                             <div class="h-8 w-px bg-slate-800 mx-2"></div>
+                             <div class="h-8 w-px bg-slate-700 mx-2"></div>
                              <div class="text-center pr-2">
-                                <span class="text-[8px] text-slate-500 block font-bold uppercase mb-0.5">Running Balance</span>
-                                <span class="text-lg font-bold ${after < 0 ? 'text-rose-400' : 'text-emerald-400'}">${after.toLocaleString()}</span>
+                                <span class="text-[8px] text-slate-500 block font-bold uppercase mb-0.5">Stock คงเหลือ (Running)</span>
+                                <span class="text-lg font-bold ${balance < 0 ? 'text-rose-400' : 'text-emerald-400'}">${balance.toLocaleString()} ม.</span>
                              </div>
                         </div>
 
                         <div class="mt-4 flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                             <span class="flex items-center gap-1.5">
-                                <i data-lucide="cpu" class="w-3 h-3 text-emerald-500"></i> MC: ${item['Weaving Machine No.'] || 'OFF'}
+                             <span class="flex items-center gap-3">
+                                <span class="flex items-center gap-1"><i data-lucide="cpu" class="w-3 h-3 text-emerald-500"></i> MC: ${item['Weaving Machine No.'] || 'OFF'}</span>
+                                <span class="flex items-center gap-1"><i data-lucide="layers" class="w-3 h-3 text-sky-500"></i> ${rolls} ม้วน</span>
                              </span>
-                             <button onclick="copyRow('${item['Item']}', ${after})" class="text-sky-600 hover:underline">Copy Result</button>
+                             <button onclick="copyReport('${item['Item']}', ${balance})" class="text-sky-600 hover:underline">Copy</button>
                         </div>
                     </div>
                 `;
@@ -398,14 +426,14 @@
             lucide.createIcons();
         }
 
-        // --- DRILL-DOWN USAGE STATS ---
+        // --- USAGE STATS ---
         function renderUsageStats() {
             const container = document.getElementById('stats-view-main');
             const groups = {};
 
             rawData.forEach(item => {
                 const group = item['ItemGroup'] || 'อื่นๆ';
-                const demand = parseFloat(String(item['Weaving Use'] || '0').replace(/,/g, '')) || 0;
+                const demand = parseNum(item['Weaving Use']);
                 if (!groups[group]) groups[group] = { total: 0, items: 0 };
                 groups[group].total += demand;
                 groups[group].items += 1;
@@ -414,17 +442,14 @@
             const sorted = Object.entries(groups).sort((a,b) => b[1].total - a[1].total);
 
             container.innerHTML = sorted.map(([name, data]) => `
-                <div onclick="drilldownGroup('${name}')" class="glass-card p-6 border-white active:scale-[0.98] transition-all cursor-pointer group">
+                <div onclick="drilldownGroup('${name}')" class="glass-card p-6 border-white active:scale-[0.98] transition-all cursor-pointer group hover:bg-white shadow-sm">
                     <div class="flex justify-between items-start mb-3">
                         <h3 class="font-bold text-slate-800 group-hover:text-emerald-600 transition-colors">${name}</h3>
-                        <span class="text-[10px] bg-sky-100 text-sky-600 px-3 py-1 rounded-full font-bold italic tracking-tighter">${data.items} รายการงาน</span>
+                        <span class="status-badge bg-sky-50 text-sky-600 border border-sky-100">${data.items} รายการงาน</span>
                     </div>
                     <div class="flex items-end justify-between">
-                        <p class="text-[9px] text-slate-400 font-bold uppercase">ความต้องการใช้ผ้าสะสม</p>
-                        <p class="text-2xl font-bold text-slate-800">${data.total.toLocaleString()} <span class="text-[10px] font-bold text-slate-400">YDS</span></p>
-                    </div>
-                    <div class="mt-4 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                         <div class="h-full btn-gradient" style="width: ${Math.min(100, (data.total / 20000) * 100)}%"></div>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase leading-none">รวมยอดต้องการใช้ผ้าทอ</p>
+                        <p class="text-2xl font-bold text-slate-800 leading-none font-jakarta">${data.total.toLocaleString()} <span class="text-[10px] font-bold text-slate-400">ม.</span></p>
                     </div>
                 </div>
             `).join('');
@@ -434,44 +459,78 @@
         function drilldownGroup(groupName) {
             document.getElementById('stats-view-main').classList.add('hidden');
             document.getElementById('stats-view-detail').classList.remove('hidden');
-            document.getElementById('drilldown-group-name').textContent = `กลุ่มงาน: ${groupName}`;
+            document.getElementById('drilldown-group-name').textContent = `กลุ่มสินค้า: ${groupName}`;
 
             const filtered = rawData.filter(i => (i['ItemGroup'] || 'อื่นๆ') === groupName);
             const fabrics = {};
             
             filtered.forEach(i => {
-                const id = i['Item'] || 'Unknown';
-                if (!fabrics[id]) fabrics[id] = { total: 0, desc: i['Description'], items: [] };
-                fabrics[id].total += parseFloat(String(i['Weaving Use'] || '0').replace(/,/g, '')) || 0;
-                fabrics[id].items.push(i);
+                const fid = i['Weaving Item'] || 'Unknown';
+                if (!fabrics[fid]) {
+                    fabrics[fid] = { totalUse: 0, desc: i['Description'], stock: parseNum(i['Stock คงเหลือ']), jobs: [], mcs: new Set() };
+                }
+                fabrics[fid].totalUse += parseNum(i['Weaving Use']);
+                fabrics[fid].jobs.push(i);
+                if(i['Weaving Machine No.'] && i['Weaving Machine No.'] !== '-') fabrics[fid].mcs.add(i['Weaving Machine No.']);
+                // อัปเดตสต็อกให้เป็นค่าล่าสุด (สมมติว่าเป็นค่าที่มีอยู่ในชีท)
+                fabrics[fid].stock = Math.max(fabrics[fid].stock, parseNum(i['Stock คงเหลือ']));
             });
 
-            const sortedFabrics = Object.entries(fabrics).sort((a,b) => b[1].total - a[1].total);
+            const sorted = Object.entries(fabrics).sort((a,b) => b[1].totalUse - a[1].totalUse);
 
-            document.getElementById('drilldown-content').innerHTML = sortedFabrics.map(([id, data]) => `
-                <div class="bg-white/80 rounded-3xl p-5 border border-white shadow-sm">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <span class="text-[10px] font-black text-sky-500 uppercase tracking-widest">FABRIC: ${id}</span>
-                            <h4 class="font-bold text-slate-800 leading-tight">${data.desc}</h4>
+            document.getElementById('drilldown-content').innerHTML = sorted.map(([id, data]) => {
+                const remainder = data.stock - data.totalUse;
+                const safeId = id.replace(/[^a-zA-Z0-9]/g, '');
+                
+                return `
+                <div class="glass-card p-5 border-white shadow-md bg-white">
+                    <div class="flex justify-between items-start mb-5 pb-4 border-b border-slate-50">
+                        <div class="max-w-[70%]">
+                            <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">ผืนผ้า: ${id}</span>
+                            <h4 class="font-bold text-slate-800 leading-tight text-sm uppercase">${data.desc}</h4>
                         </div>
                         <div class="text-right">
-                             <p class="text-[9px] text-slate-400 font-bold uppercase">รวมยอดใช้</p>
-                             <p class="text-base font-bold text-slate-800">${data.total.toLocaleString()} Yds</p>
+                             <p class="text-[9px] text-slate-400 font-bold uppercase mb-0.5">เครื่องทอ</p>
+                             <p class="text-sm font-bold text-sky-600">${data.mcs.size} M/C</p>
                         </div>
                     </div>
-                    <div class="mt-4 space-y-2">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-1">รายการงานในกลุ่มนี้ (${data.items.length})</p>
-                        ${data.items.slice(0, 5).map(job => `
-                            <div class="flex justify-between items-center text-[11px] py-1 border-b border-slate-50 last:border-0">
-                                <span class="text-slate-600 truncate mr-4">${job['Name'] || job['ฝ่ายขาย'] || '-'}</span>
-                                <span class="font-bold text-slate-800">${parseFloat(String(job['Weaving Use'] || '0').replace(/,/g, '')).toLocaleString()}</span>
+
+                    <div class="grid grid-cols-3 gap-2 mb-6">
+                        <div class="text-center p-2 rounded-2xl bg-slate-50 border border-slate-100">
+                             <span class="text-[8px] text-slate-400 block font-bold uppercase mb-0.5 tracking-tighter">สต็อกผ้า</span>
+                             <span class="text-xs font-bold text-slate-700 font-jakarta">${data.stock.toLocaleString()}</span>
+                        </div>
+                        <div class="text-center p-2 rounded-2xl bg-slate-50 border border-slate-100">
+                             <span class="text-[8px] text-slate-400 block font-bold uppercase mb-0.5 tracking-tighter">รวมยอดใช้</span>
+                             <span class="text-xs font-bold text-orange-500 font-jakarta">${data.totalUse.toLocaleString()}</span>
+                        </div>
+                        <div class="text-center p-2 rounded-2xl bg-emerald-50 border border-emerald-100">
+                             <span class="text-[8px] text-emerald-600 block font-bold uppercase mb-0.5 tracking-tighter">สุทธิ</span>
+                             <span class="text-xs font-bold ${remainder < 0 ? 'text-rose-500' : 'text-emerald-700'} font-jakarta">${remainder.toLocaleString()}</span>
+                        </div>
+                    </div>
+
+                    <button onclick="toggleCollapsible('${safeId}')" class="w-full flex items-center justify-between py-2.5 px-4 bg-slate-50 rounded-xl text-[10px] font-bold text-slate-400 uppercase tracking-widest transition-all">
+                        <span>ดูรายละเอียดไอเทมงาน (${data.jobs.length})</span>
+                        <i data-lucide="chevron-down" id="icon-${safeId}" class="w-3.5 h-3.5 transition-transform duration-300"></i>
+                    </button>
+
+                    <div id="collapse-${safeId}" class="collapsible-content pt-4 px-2 space-y-3">
+                        ${data.jobs.map(job => `
+                            <div class="flex justify-between items-start text-[11px] py-2 border-b border-slate-50 last:border-0">
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-slate-700">#${job['Item']}</span>
+                                    <span class="text-[9px] text-slate-400">${job['Name'] || job['ฝ่ายขาย'] || '-'}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-bold text-slate-800">${parseNum(job['Weaving Use']).toLocaleString()} ม.</span>
+                                    <p class="text-[8px] text-slate-300 uppercase">${job['Due Date'] || '-'}</p>
+                                </div>
                             </div>
                         `).join('')}
-                        ${data.items.length > 5 ? `<p class="text-[9px] text-slate-300 italic text-center pt-1">...และรายการอื่นๆ อีก ${data.items.length - 5} งาน</p>` : ''}
                     </div>
                 </div>
-            `).join('');
+            `;}).join('');
             lucide.createIcons();
         }
 
@@ -480,23 +539,8 @@
             document.getElementById('stats-view-detail').classList.add('hidden');
         }
 
-        // --- NAVIGATION ---
-        function navigate(pageId) {
-            const sections = ['page-start', 'page-menu', 'page-fabric-check', 'page-usage-stats'];
-            sections.forEach(id => document.getElementById(id).classList.replace('page-active', 'hidden'));
-            
-            const activePage = document.getElementById(`page-${pageId}`);
-            activePage.classList.replace('hidden', 'page-active');
-            
-            if (pageId === 'menu' && rawData.length === 0) refreshData();
-            if (pageId === 'usage-stats') { showStatsMain(); renderUsageStats(); }
-            
-            lucide.createIcons();
-            window.scrollTo(0, 0);
-        }
-
-        function copyRow(id, bal) {
-            const msg = `📊 [PLANNER-WEAVING REPORT]\nITEM: ${id}\nREM-BAL: ${bal.toLocaleString()} หลา\nUpdate: ${new Date().toLocaleTimeString('th-TH')}`;
+        function copyReport(item, bal) {
+            const msg = `📊 [WEAVING REPORT]\nID: ${item}\nSTOCK_BAL: ${bal.toLocaleString()} ม.\nTIME: ${new Date().toLocaleTimeString('th-TH')}`;
             const ta = document.createElement("textarea"); ta.value = msg; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
             const toast = document.getElementById('toast'); toast.classList.replace('opacity-0', 'opacity-100');
             setTimeout(() => toast.classList.replace('opacity-100', 'opacity-0'), 2000);
