@@ -1317,21 +1317,30 @@
             const titleEl = document.getElementById('rec-step-2-title');
             const listEl = document.getElementById('rec-name-list');
 
-            let html = `<button onclick="confirmRecRoleSelection('ทั้งหมด')" class="p-4 rounded-xl bg-slate-900 text-white font-bold text-sm shadow-md hover:bg-slate-800 transition-colors uppercase tracking-widest flex items-center justify-center gap-2"><i data-lucide="globe" class="w-4 h-4"></i> ทั้งหมด</button>`;
-
+            let names = [];
             if (roleType === 'sales') {
                 titleEl.innerHTML = `<i data-lucide="briefcase" class="w-4 h-4 text-sky-500"></i> เลือกพนักงานฝ่ายขาย`;
-                window.avaiableRecSales.forEach(name => {
-                    html += `<button onclick="confirmRecRoleSelection('${name}')" class="p-4 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm hover:border-sky-400 hover:text-sky-600 transition-colors line-clamp-1">${name}</button>`;
-                });
+                names = window.avaiableRecSales || [];
             } else {
                 titleEl.innerHTML = `<i data-lucide="factory" class="w-4 h-4 text-emerald-500"></i> เลือกโรงงานผลิต`;
-                window.avaiableRecPlants.forEach(name => {
-                    html += `<button onclick="confirmRecRoleSelection('${name}')" class="p-4 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-sm shadow-sm hover:border-emerald-400 hover:text-emerald-600 transition-colors line-clamp-1">${name}</button>`;
-                });
+                names = window.avaiableRecPlants || [];
             }
 
-            listEl.innerHTML = html;
+            const colorClass = roleType === 'sales'
+                ? 'hover:border-sky-400 hover:text-sky-600'
+                : 'hover:border-emerald-400 hover:text-emerald-600';
+
+            const btns = [{ n: 'ทั้งหมด', icon: 'globe', cls: 'bg-slate-900 text-white hover:bg-slate-800 uppercase tracking-widest' }, ...names.map(n => ({ n, icon: null, cls: 'bg-white border border-slate-200 text-slate-700 ' + colorClass }))];
+
+            listEl.innerHTML = btns.map(b =>
+                `<button data-name="${b.n.replace(/"/g, '&quot;')}" class="rec-name-btn p-4 rounded-xl font-bold text-sm shadow-sm transition-colors line-clamp-1 ${b.cls}">${b.icon ? `<i data-lucide="${b.icon}" class="w-4 h-4 inline-block mr-1"></i>` : ''}${b.n}</button>`
+            ).join('');
+
+            // Event delegation — safe against apostrophes/quotes in names
+            listEl.querySelectorAll('.rec-name-btn').forEach(btn => {
+                btn.addEventListener('click', () => confirmRecRoleSelection(btn.dataset.name));
+            });
+
             lucide.createIcons();
         }
 
@@ -1359,9 +1368,10 @@
             // Hide filter elements that are not needed visually since we handled the preselection
             document.getElementById('filter-rec-role-lbl')?.parentElement.classList.add('hidden');
 
-            showPage('page-stock-recommend');
+            navigate('stock-recommend');
             renderStockRecommendations();
         }
+
 
         function calculateDailyRunningBalance(jobs, startBalance, currentMachines, activePlant) {
             // Find valid timeframe
