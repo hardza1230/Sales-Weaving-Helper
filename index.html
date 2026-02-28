@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,17 +13,31 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
-        
-        body { 
-            font-family: 'Kanit', sans-serif; 
+
+        body {
+            font-family: 'Kanit', sans-serif;
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             color: #334155;
             letter-spacing: -0.01em;
             min-height: 100vh;
         }
 
-        .page-active { display: flex; animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .page-active {
+            display: flex;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
@@ -37,53 +52,105 @@
             color: white;
             transition: all 0.3s;
         }
-        .btn-gradient:active { transform: scale(0.96); }
 
-        select { 
-            -webkit-appearance: none; appearance: none; 
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 0.75rem center;
+        .btn-gradient:active {
+            transform: scale(0.96);
         }
 
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, opacity 0.3s; opacity: 0; }
-        .collapsible-content.show { max-height: 5000px; opacity: 1; }
-        .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+        select {
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+        }
 
-        .layout-container { transition: max-width 0.4s ease; width: 100%; margin: 0 auto; }
-        .view-mobile .layout-container { max-width: 100%; } 
-        .view-desktop .layout-container { max-width: 85rem; }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, opacity 0.3s;
+            opacity: 0;
+        }
+
+        .collapsible-content.show {
+            max-height: 5000px;
+            opacity: 1;
+        }
+
+        .font-jakarta {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .layout-container {
+            transition: max-width 0.4s ease;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .view-mobile .layout-container {
+            max-width: 100%;
+        }
+
+        .view-desktop .layout-container {
+            max-width: 85rem;
+        }
 
         @media (max-width: 640px) {
-            .ledger-table { font-size: 10px; }
-            .mobile-stack { flex-direction: column; align-items: flex-start; gap: 4px; }
-            .hide-on-mobile { display: none; }
-            .ledger-row td { padding: 12px 8px !important; }
-            .stats-grid { grid-template-columns: 1fr !important; }
+            .ledger-table {
+                font-size: 10px;
+            }
+
+            .mobile-stack {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            .hide-on-mobile {
+                display: none;
+            }
+
+            .ledger-row td {
+                padding: 12px 8px !important;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr !important;
+            }
         }
     </style>
 </head>
+
 <body class="view-mobile">
 
     <!-- 1. หน้าเริ่มต้น -->
-    <section id="page-start" class="page-active min-h-screen flex-col items-center justify-center p-8 text-center bg-white">
+    <section id="page-start"
+        class="page-active min-h-screen flex-col items-center justify-center p-8 text-center bg-white">
         <div class="mb-10 relative">
             <div class="w-24 h-24 btn-gradient rounded-[2.8rem] flex items-center justify-center shadow-2xl rotate-3">
                 <i data-lucide="bar-chart-big" class="text-white w-12 h-12"></i>
             </div>
-            <div class="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center border-4 border-slate-50">
+            <div
+                class="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center border-4 border-slate-50">
                 <span class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></span>
             </div>
         </div>
-        
-        <h1 class="text-4xl font-extrabold text-slate-900 mb-3 tracking-tight font-jakarta leading-tight">Planner Want to tell you<br><span class="text-emerald-500">About Weaving</span></h1>
+
+        <h1 class="text-4xl font-extrabold text-slate-900 mb-3 tracking-tight font-jakarta leading-tight">Planner Want
+            to tell you<br><span class="text-emerald-500">About Weaving</span></h1>
         <p class="text-slate-500 text-sm font-light max-w-xs mb-10 leading-relaxed">
             เลือกรูปแบบการแสดงผลที่ต้องการใช้งาน
         </p>
-        
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg px-4">
-            <button onclick="navigate('menu', 'mobile')" class="glass-card p-6 hover:border-emerald-400 transition-all flex flex-col items-center gap-4 group">
-                <div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            <button onclick="navigate('menu', 'mobile')"
+                class="glass-card p-6 hover:border-emerald-400 transition-all flex flex-col items-center gap-4 group">
+                <div
+                    class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                     <i data-lucide="smartphone" class="w-8 h-8"></i>
                 </div>
                 <div>
@@ -92,8 +159,10 @@
                 </div>
             </button>
 
-            <button onclick="navigate('menu', 'desktop')" class="glass-card p-6 hover:border-sky-400 transition-all flex flex-col items-center gap-4 group">
-                <div class="p-4 bg-sky-50 text-sky-600 rounded-2xl group-hover:bg-sky-600 group-hover:text-white transition-colors">
+            <button onclick="navigate('menu', 'desktop')"
+                class="glass-card p-6 hover:border-sky-400 transition-all flex flex-col items-center gap-4 group">
+                <div
+                    class="p-4 bg-sky-50 text-sky-600 rounded-2xl group-hover:bg-sky-600 group-hover:text-white transition-colors">
                     <i data-lucide="monitor" class="w-8 h-8"></i>
                 </div>
                 <div>
@@ -109,38 +178,48 @@
         <div class="layout-container">
             <div class="mt-8 mb-12 flex justify-between items-end px-2 border-b border-slate-200 pb-8">
                 <div>
-                    <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-1 italic">Planning Intelligence</p>
+                    <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-1 italic">Planning
+                        Intelligence</p>
                     <h2 class="text-3xl font-bold text-slate-900 font-jakarta leading-none">แผงควบคุม</h2>
                     <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase mt-2">
                         <i data-lucide="clock" class="w-3 h-3"></i> อัปเดตล่าสุด: <span id="sync-time-menu">--:--</span>
                     </div>
                 </div>
-                <button onclick="refreshData()" class="p-3.5 bg-white rounded-2xl shadow-sm text-emerald-600 active:scale-95 transition-all border border-slate-100">
+                <button onclick="refreshData()"
+                    class="p-3.5 bg-white rounded-2xl shadow-sm text-emerald-600 active:scale-95 transition-all border border-slate-100">
                     <i data-lucide="refresh-cw" class="w-5 h-5" id="refresh-icon-menu"></i>
                 </button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 px-2" id="menu-grid">
-                <button onclick="navigate('fabric-check')" class="glass-card p-8 w-full flex items-center gap-6 active:scale-[0.98] transition-all group overflow-hidden relative border-none ring-1 ring-slate-200 hover:ring-2 hover:ring-emerald-400">
-                    <div class="w-16 h-16 bg-emerald-100 rounded-[1.5rem] flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all shrink-0 shadow-sm">
+                <button onclick="navigate('fabric-check')"
+                    class="glass-card p-8 w-full flex items-center gap-6 active:scale-[0.98] transition-all group overflow-hidden relative border-none ring-1 ring-slate-200 hover:ring-2 hover:ring-emerald-400">
+                    <div
+                        class="w-16 h-16 bg-emerald-100 rounded-[1.5rem] flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all shrink-0 shadow-sm">
                         <i data-lucide="table-2" class="w-7 h-7"></i>
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-800 text-xl leading-tight text-left">เช็คม้วนผืนผ้า</h3>
-                        <p class="text-xs text-slate-500 mt-1 italic text-left">วิเคราะห์บัญชีคิวงานรายลำดับ (Running Down)</p>
+                        <p class="text-xs text-slate-500 mt-1 italic text-left">วิเคราะห์บัญชีคิวงานรายลำดับ (Running
+                            Down)</p>
                     </div>
-                    <i data-lucide="arrow-right" class="absolute right-8 text-slate-200 group-hover:text-emerald-400 transition-colors w-6 h-6 hide-on-mobile"></i>
+                    <i data-lucide="arrow-right"
+                        class="absolute right-8 text-slate-200 group-hover:text-emerald-400 transition-colors w-6 h-6 hide-on-mobile"></i>
                 </button>
-                
-                <button onclick="navigate('usage-stats')" class="glass-card p-8 w-full flex items-center gap-6 active:scale-[0.98] transition-all group overflow-hidden relative border-none ring-1 ring-slate-200 hover:ring-2 hover:ring-sky-400">
-                    <div class="w-16 h-16 bg-sky-100 rounded-[1.5rem] flex items-center justify-center text-sky-600 group-hover:bg-sky-600 group-hover:text-white transition-all shrink-0 shadow-sm">
+
+                <button onclick="navigate('usage-stats')"
+                    class="glass-card p-8 w-full flex items-center gap-6 active:scale-[0.98] transition-all group overflow-hidden relative border-none ring-1 ring-slate-200 hover:ring-2 hover:ring-sky-400">
+                    <div
+                        class="w-16 h-16 bg-sky-100 rounded-[1.5rem] flex items-center justify-center text-sky-600 group-hover:bg-sky-600 group-hover:text-white transition-all shrink-0 shadow-sm">
                         <i data-lucide="layout-grid" class="w-7 h-7"></i>
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-800 text-xl leading-tight text-left">วิเคราะห์ภาพรวม</h3>
-                        <p class="text-xs text-slate-500 mt-1 italic text-left">สรุปข้อมูลสเปกผ้า รายสินค้า รายเซลล์ และลูกค้า</p>
+                        <p class="text-xs text-slate-500 mt-1 italic text-left">สรุปข้อมูลสเปกผ้า รายสินค้า รายเซลล์
+                            และลูกค้า</p>
                     </div>
-                    <i data-lucide="arrow-right" class="absolute right-8 text-slate-200 group-hover:text-sky-400 transition-colors w-6 h-6 hide-on-mobile"></i>
+                    <i data-lucide="arrow-right"
+                        class="absolute right-8 text-slate-200 group-hover:text-sky-400 transition-colors w-6 h-6 hide-on-mobile"></i>
                 </button>
             </div>
         </div>
@@ -152,37 +231,51 @@
             <div class="layout-container">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
-                        <button onclick="navigate('menu')" class="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-800"><i data-lucide="arrow-left"></i></button>
+                        <button onclick="navigate('menu')"
+                            class="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-800"><i
+                                data-lucide="arrow-left"></i></button>
                         <div>
                             <h2 class="text-lg font-bold text-slate-800 leading-none">บัญชีสถานะผืนผ้า</h2>
-                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Sync: <span id="sync-time-ledger">--:--</span></span>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Sync: <span
+                                    id="sync-time-ledger">--:--</span></span>
                         </div>
                     </div>
-                    <button onclick="toggleFilters()" class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-4 py-2 rounded-xl flex items-center gap-1.5 border border-emerald-100 shadow-sm">
-                        <i data-lucide="filter" class="w-3.5 h-3.5"></i> <span id="filter-status-text">ซ่อนตัวกรอง</span>
+                    <button onclick="toggleFilters()"
+                        class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-4 py-2 rounded-xl flex items-center gap-1.5 border border-emerald-100 shadow-sm">
+                        <i data-lucide="filter" class="w-3.5 h-3.5"></i> <span
+                            id="filter-status-text">ซ่อนตัวกรอง</span>
                     </button>
                 </div>
 
                 <div id="filter-container" class="transition-all duration-300 overflow-hidden">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Wildth</label>
-                            <select id="sel-width" onchange="updateFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600"></select>
+                            <label
+                                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Wildth</label>
+                            <select id="sel-width" onchange="updateFilters()"
+                                class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600"></select>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Denia</label>
-                            <select id="sel-denia" onchange="updateFilters()" class="w-full bg-slate-50 border-none rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600 shadow-inner"></select>
+                            <label
+                                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Denia</label>
+                            <select id="sel-denia" onchange="updateFilters()"
+                                class="w-full bg-slate-50 border-none rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600 shadow-inner"></select>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Frequency</label>
-                            <select id="sel-frequency" onchange="updateFilters()" class="w-full bg-slate-50 border-none rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600 shadow-inner"></select>
+                            <label
+                                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Frequency</label>
+                            <select id="sel-frequency" onchange="updateFilters()"
+                                class="w-full bg-slate-50 border-none rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600 shadow-inner"></select>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Pattern</label>
-                            <select id="sel-pattern" onchange="updateFilters()" class="w-full bg-slate-50 border-none rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600 shadow-inner"></select>
+                            <label
+                                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Pattern</label>
+                            <select id="sel-pattern" onchange="updateFilters()"
+                                class="w-full bg-slate-50 border-none rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600 shadow-inner"></select>
                         </div>
                     </div>
-                    <button onclick="processLedger(); closeFiltersOnSearch();" class="w-full py-4 btn-gradient rounded-2xl text-sm font-bold shadow-lg flex items-center justify-center gap-2">
+                    <button onclick="processLedger(); closeFiltersOnSearch();"
+                        class="w-full py-4 btn-gradient rounded-2xl text-sm font-bold shadow-lg flex items-center justify-center gap-2">
                         <i data-lucide="search" class="w-4 h-4"></i> ค้นหาข้อมูลตามสเปก
                     </button>
                 </div>
@@ -192,8 +285,11 @@
         <main class="p-5 w-full">
             <div class="layout-container space-y-6">
                 <div id="loading-area" class="hidden flex-col items-center py-20">
-                    <div class="w-10 h-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest italic tracking-tighter">กำลังวิเคราะห์ข้อมูล...</p>
+                    <div
+                        class="w-10 h-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin mb-4">
+                    </div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest italic tracking-tighter">
+                        กำลังวิเคราะห์ข้อมูล...</p>
                 </div>
 
                 <div id="result-view" class="hidden space-y-6">
@@ -201,31 +297,47 @@
                     <div class="glass-card p-6 bg-white border-slate-200 overflow-hidden relative">
                         <div class="flex justify-between items-center mb-8 pb-4 border-b border-slate-50">
                             <div>
-                                <span id="dash-item-code" class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg uppercase tracking-widest font-jakarta">#ITEM_NAME</span>
-                                <h3 class="text-xl font-bold text-slate-800 mt-2 font-jakarta leading-none">สรุปภาพรวมแผนงานทอ</h3>
+                                <span id="dash-item-code"
+                                    class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg uppercase tracking-widest font-jakarta">#ITEM_NAME</span>
+                                <h3 class="text-xl font-bold text-slate-800 mt-2 font-jakarta leading-none">
+                                    สรุปภาพรวมแผนงานทอ</h3>
                             </div>
                             <div class="text-right">
-                                <p class="text-[9px] text-slate-400 font-bold uppercase mb-1 italic leading-none">Capacity / Day</p>
-                                <p id="dash-capacity" class="text-lg font-black text-emerald-600 leading-none font-jakarta">0 ม.</p>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase mb-1 italic leading-none">
+                                    Capacity / Day</p>
+                                <p id="dash-capacity"
+                                    class="text-lg font-black text-emerald-600 leading-none font-jakarta">0 ม.</p>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
                             <div class="space-y-1">
-                                <span class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1">สต็อกยกมา (ม.)</span>
-                                <span id="dash-total-stock" class="text-2xl font-black text-slate-800 font-jakarta">0</span>
+                                <span
+                                    class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1">สต็อกยกมา
+                                    (ม.)</span>
+                                <span id="dash-total-stock"
+                                    class="text-2xl font-black text-slate-800 font-jakarta">0</span>
                             </div>
                             <div class="space-y-1">
-                                <span class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1">ทอจริง (เครื่อง)</span>
-                                <span id="dash-actual-mc" class="text-3xl font-black text-blue-600 font-jakarta leading-none">0</span>
-                                <p class="text-[9px] text-slate-300 font-bold tracking-tight">แผนเป้าหมาย: <span id="dash-target-mc">0</span> M/C</p>
+                                <span
+                                    class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1">ทอจริง
+                                    (เครื่อง)</span>
+                                <span id="dash-actual-mc"
+                                    class="text-3xl font-black text-blue-600 font-jakarta leading-none">0</span>
+                                <p class="text-[9px] text-slate-300 font-bold tracking-tight">แผนเป้าหมาย: <span
+                                        id="dash-target-mc">0</span> M/C</p>
                             </div>
                             <div class="space-y-1">
-                                <span class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1 text-sky-600">ยอดจองรวม (ม.)</span>
+                                <span
+                                    class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1 text-sky-600">ยอดจองรวม
+                                    (ม.)</span>
                                 <span id="dash-required" class="text-3xl font-black text-sky-600 font-jakarta">0</span>
                             </div>
                             <div class="space-y-1">
-                                <span class="text-[10px] text-emerald-600 block font-bold uppercase tracking-tighter italic leading-none mb-1">คงเหลือสุทธิ (ม.)</span>
-                                <span id="dash-final-balance" class="text-3xl font-black text-emerald-500 font-jakarta italic">0</span>
+                                <span
+                                    class="text-[10px] text-emerald-600 block font-bold uppercase tracking-tighter italic leading-none mb-1">คงเหลือสุทธิ
+                                    (ม.)</span>
+                                <span id="dash-final-balance"
+                                    class="text-3xl font-black text-emerald-500 font-jakarta italic">0</span>
                             </div>
                         </div>
                     </div>
@@ -233,22 +345,30 @@
                     <!-- ตาราง Ledger -->
                     <div class="space-y-3 pb-20">
                         <div class="flex justify-between items-center px-2">
-                            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <h3
+                                class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <i data-lucide="align-left" class="w-3.5 h-3.5"></i> บัญชีคิวงานรายลำดับ (Running Down)
                             </h3>
-                            <span class="text-[9px] bg-slate-900 text-white px-3 py-1 rounded-full font-bold shadow-sm uppercase tracking-widest italic">Live Status</span>
+                            <span
+                                class="text-[9px] bg-slate-900 text-white px-3 py-1 rounded-full font-bold shadow-sm uppercase tracking-widest italic">Live
+                                Status</span>
                         </div>
-                        
+
                         <div class="glass-card overflow-hidden border-slate-100 shadow-xl bg-white">
                             <div class="overflow-x-auto hide-scrollbar">
                                 <table class="w-full text-left ledger-table min-w-[950px]">
                                     <thead class="bg-slate-50 border-b border-slate-100">
                                         <tr class="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                                            <th class="px-6 py-5 bg-emerald-50 text-emerald-800 border-r border-emerald-100 w-36 text-center italic">วันขึ้นของ</th>
+                                            <th
+                                                class="px-6 py-5 bg-emerald-50 text-emerald-800 border-r border-emerald-100 w-36 text-center italic">
+                                                วันขึ้นของ</th>
                                             <th class="px-6 py-4">ฝ่ายขาย / รายการงาน FG / รหัสสินค้า</th>
-                                            <th class="px-4 py-4 text-right w-32 italic border-l border-slate-50">Stock ยกมา</th>
+                                            <th class="px-4 py-4 text-right w-32 italic border-l border-slate-50">Stock
+                                                ยกมา</th>
                                             <th class="px-4 py-4 text-right w-28 italic">ใช้ผ้า (ม.)</th>
-                                            <th class="px-6 py-5 text-right bg-slate-900 text-emerald-400 w-44 tracking-wider">คงเหลือสะสม</th>
+                                            <th
+                                                class="px-6 py-5 text-right bg-slate-900 text-emerald-400 w-44 tracking-wider">
+                                                คงเหลือสะสม</th>
                                         </tr>
                                     </thead>
                                     <tbody id="ledger-body" class="divide-y divide-slate-100 text-[12px]"></tbody>
@@ -266,30 +386,46 @@
         <div class="layout-container">
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6">
                 <div class="flex items-center gap-4">
-                    <button onclick="navigate('menu')" class="p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800 border border-slate-100"><i data-lucide="arrow-left"></i></button>
+                    <button onclick="navigate('menu')"
+                        class="p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800 border border-slate-100"><i
+                            data-lucide="arrow-left"></i></button>
                     <div>
-                        <h2 id="stats-page-title" class="text-2xl font-bold text-slate-800 font-jakarta tracking-tight leading-none mb-3">วิเคราะห์ภาพรวม</h2>
+                        <h2 id="stats-page-title"
+                            class="text-2xl font-bold text-slate-800 font-jakarta tracking-tight leading-none mb-3">
+                            วิเคราะห์ภาพรวม</h2>
                         <div class="flex gap-1.5 bg-slate-200/50 p-1 rounded-xl border border-slate-100 w-fit">
-                             <button onclick="changeStatsType('group')" class="stats-tab text-[10px] font-bold px-4 py-2 rounded-lg bg-slate-900 text-white transition-all shadow-sm" id="tab-group">กลุ่มงาน</button>
-                             <button onclick="changeStatsType('sales')" class="stats-tab text-[10px] font-bold px-4 py-2 rounded-lg text-slate-500 transition-all" id="tab-sales">รายเซลล์</button>
-                             <button onclick="changeStatsType('customer')" class="stats-tab text-[10px] font-bold px-4 py-2 rounded-lg text-slate-500 transition-all" id="tab-customer">รายลูกค้า</button>
+                            <button onclick="changeStatsType('group')"
+                                class="stats-tab text-[10px] font-bold px-4 py-2 rounded-lg bg-slate-900 text-white transition-all shadow-sm"
+                                id="tab-group">กลุ่มงาน</button>
+                            <button onclick="changeStatsType('sales')"
+                                class="stats-tab text-[10px] font-bold px-4 py-2 rounded-lg text-slate-500 transition-all"
+                                id="tab-sales">รายเซลล์</button>
+                            <button onclick="changeStatsType('customer')"
+                                class="stats-tab text-[10px] font-bold px-4 py-2 rounded-lg text-slate-500 transition-all"
+                                id="tab-customer">รายลูกค้า</button>
                         </div>
                     </div>
                 </div>
-                <button onclick="refreshData()" class="p-3 bg-white rounded-2xl shadow-sm text-emerald-600 active:rotate-180 transition-transform w-fit self-end md:self-center">
+                <button onclick="refreshData()"
+                    class="p-3 bg-white rounded-2xl shadow-sm text-emerald-600 active:rotate-180 transition-transform w-fit self-end md:self-center">
                     <i data-lucide="refresh-cw"></i>
                 </button>
             </div>
 
             <!-- กราฟวิเคราะห์หลัก -->
             <div id="stats-charts-section" class="glass-card p-6 mb-8 border-slate-200">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-4 border-b border-slate-100">
-                    <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2 uppercase tracking-widest italic leading-none">
+                <div
+                    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-4 border-b border-slate-100">
+                    <h3
+                        class="text-sm font-bold text-slate-700 flex items-center gap-2 uppercase tracking-widest italic leading-none">
                         <i data-lucide="bar-chart-2" class="w-4 h-4 text-emerald-500"></i> สถิติการจองผ้าและกำลังผลิต
                     </h3>
                     <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-                        <button onclick="toggleChartMode('meter')" id="chart-mode-meter" class="text-[9px] font-black px-4 py-2 rounded-lg bg-white shadow-sm transition-all uppercase tracking-tighter">เมตรสะสม</button>
-                        <button onclick="toggleChartMode('machine')" id="chart-mode-machine" class="text-[9px] font-black px-4 py-2 rounded-lg text-slate-400 transition-all uppercase tracking-tighter">จำนวน M/C</button>
+                        <button onclick="toggleChartMode('meter')" id="chart-mode-meter"
+                            class="text-[9px] font-black px-4 py-2 rounded-lg bg-white shadow-sm transition-all uppercase tracking-tighter">เมตรสะสม</button>
+                        <button onclick="toggleChartMode('machine')" id="chart-mode-machine"
+                            class="text-[9px] font-black px-4 py-2 rounded-lg text-slate-400 transition-all uppercase tracking-tighter">จำนวน
+                            M/C</button>
                     </div>
                 </div>
                 <div class="h-80 relative">
@@ -297,11 +433,13 @@
                 </div>
             </div>
 
-            <div id="stats-view-main" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20 stats-grid"></div>
+            <div id="stats-view-main" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20 stats-grid">
+            </div>
 
             <!-- รายละเอียดเจาะลึก (Drill-down) -->
             <div id="stats-view-detail" class="hidden space-y-6 animate-in fade-in pb-20">
-                <button onclick="showStatsMain()" class="text-xs font-bold text-sky-600 flex items-center gap-1 mb-4 bg-sky-50 px-5 py-2.5 rounded-xl w-fit shadow-sm border border-sky-100">
+                <button onclick="showStatsMain()"
+                    class="text-xs font-bold text-sky-600 flex items-center gap-1 mb-4 bg-sky-50 px-5 py-2.5 rounded-xl w-fit shadow-sm border border-sky-100">
                     <i data-lucide="chevron-left" class="w-4 h-4"></i> กลับไปหน้าสรุป
                 </button>
                 <div class="glass-card p-8 bg-slate-900 border-none shadow-2xl text-white relative overflow-hidden">
@@ -310,8 +448,11 @@
                     </div>
                     <div class="flex justify-between items-end relative z-10">
                         <div>
-                            <p class="text-[10px] font-black uppercase tracking-[0.25em] opacity-40 mb-2 italic">Detailed Allocation Ledger</p>
-                            <h3 id="drilldown-group-name" class="font-bold text-3xl tracking-tight uppercase font-jakarta leading-none">หัวข้อ: -</h3>
+                            <p class="text-[10px] font-black uppercase tracking-[0.25em] opacity-40 mb-2 italic">
+                                Detailed Allocation Ledger</p>
+                            <h3 id="drilldown-group-name"
+                                class="font-bold text-3xl tracking-tight uppercase font-jakarta leading-none">หัวข้อ: -
+                            </h3>
                         </div>
                     </div>
                 </div>
@@ -320,7 +461,8 @@
         </div>
     </section>
 
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl text-[11px] font-bold shadow-2xl opacity-0 transition-all pointer-events-none z-50 uppercase tracking-widest font-jakarta">
+    <div id="toast"
+        class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl text-[11px] font-bold shadow-2xl opacity-0 transition-all pointer-events-none z-50 uppercase tracking-widest font-jakarta">
         เรียบร้อย
     </div>
 
@@ -328,21 +470,21 @@
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhA5Pgw2DjeL_JLpWHruLvV9bMs5Wk2IFU-FA1C5AFUFWkql48YxoS8fVb1ueuaeeG_PwIrFtTjyhi/pub?output=csv';
         let rawData = [];
         let isFilterOpen = true;
-        let currentStatsType = 'group'; 
+        let currentStatsType = 'group';
         let viewMode = 'mobile';
-        let chartMode = 'meter'; 
+        let chartMode = 'meter';
         let demandChartInstance = null;
         const filterFields = ['Wildth', 'Denia', 'Frequency', 'Pattern'];
 
         const parseNum = (v) => parseFloat(String(v || '0').replace(/,/g, '')) || 0;
-        
+
         const dateParser = (dateStr) => {
             if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '' || dateStr === '-') return new Date(2099, 11, 31);
             const cleanStr = dateStr.trim().split(' ')[0];
             const parts = cleanStr.split(/[\/\-\.]/);
             if (parts.length < 3) return new Date(2099, 11, 31);
             let d, m, y;
-            if (parts[2].length === 4) { d = parseInt(parts[0]); m = parseInt(parts[1]) - 1; y = parseInt(parts[2]); } 
+            if (parts[2].length === 4) { d = parseInt(parts[0]); m = parseInt(parts[1]) - 1; y = parseInt(parts[2]); }
             else if (parts[0].length === 4) { y = parseInt(parts[0]); m = parseInt(parts[1]) - 1; d = parseInt(parts[2]); }
             if (y > 2400) y -= 543;
             const dateObj = new Date(y, m, d);
@@ -353,8 +495,8 @@
             if (dateObj.getFullYear() === 2099) return { text: "-", label: "", diff: 999 };
             const d = String(dateObj.getDate()).padStart(2, '0');
             const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const today = new Date(); today.setHours(0,0,0,0);
-            const target = new Date(dateObj); target.setHours(0,0,0,0);
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const target = new Date(dateObj); target.setHours(0, 0, 0, 0);
             const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
             let label = diffDays === 0 ? "(วันนี้)" : (diffDays > 0 ? `(${diffDays} วัน)` : `(${Math.abs(diffDays)} วันก่อน)`);
             return { text: `${d}/${m}`, label, diff: diffDays };
@@ -370,7 +512,7 @@
             const menuIcon = document.getElementById('refresh-icon-menu');
             const ledgerIcon = document.getElementById('refresh-icon-ledger');
             [menuIcon, ledgerIcon].forEach(i => i?.classList.add('animate-spin'));
-            
+
             Papa.parse(CSV_URL, {
                 download: true, header: true, skipEmptyLines: true,
                 complete: (results) => {
@@ -416,7 +558,7 @@
                 const el = document.getElementById(getFieldId(f));
                 if (el) selections[f] = el.value;
             });
-            
+
             filterFields.forEach(field => {
                 const sel = document.getElementById(getFieldId(field));
                 if (!sel) return;
@@ -428,7 +570,7 @@
                         return String(item[f]) === el.value;
                     });
                 });
-                const uniqueValues = [...new Set(filteredSubset.map(item => String(item[field] || '').trim()))].filter(v => v !== '').sort((a,b) => parseFloat(a) - parseFloat(b));
+                const uniqueValues = [...new Set(filteredSubset.map(item => String(item[field] || '').trim()))].filter(v => v !== '').sort((a, b) => parseFloat(a) - parseFloat(b));
                 sel.innerHTML = `<option value="ทั้งหมด">-- ${field} --</option>` + uniqueValues.map(v => `<option value="${v}" ${v === currentVal ? 'selected' : ''}>${v}</option>`).join('');
             });
         }
@@ -473,7 +615,6 @@
             document.getElementById('dash-actual-mc').textContent = maxActualMc.toLocaleString();
             document.getElementById('dash-target-mc').textContent = maxTargetMc.toLocaleString();
             document.getElementById('dash-capacity').textContent = `${(maxActualMc * 2500).toLocaleString()} ม.`;
-            document.getElementById('dash-jobs').textContent = items.length;
             document.getElementById('dash-required').textContent = totalRequired.toLocaleString();
             document.getElementById('dash-final-balance').textContent = finalBalance.toLocaleString();
 
@@ -531,7 +672,7 @@
             chartMode = mode;
             const meterBtn = document.getElementById('chart-mode-meter');
             const machineBtn = document.getElementById('chart-mode-machine');
-            [meterBtn, machineBtn].forEach(b => { 
+            [meterBtn, machineBtn].forEach(b => {
                 b.classList.replace('bg-white', 'text-slate-400');
                 b.classList.remove('shadow-sm', 'text-slate-900');
             });
@@ -566,7 +707,7 @@
                 groups[key].mc = keyMcSum;
             });
 
-            const sorted = Object.entries(groups).sort((a,b) => b[1].total - a[1].total);
+            const sorted = Object.entries(groups).sort((a, b) => b[1].total - a[1].total);
             container.innerHTML = sorted.map(([name, data]) => `
                 <div onclick="drilldownGroup('${name}')" class="glass-card p-6 active:scale-[0.98] transition-all cursor-pointer group hover:bg-white shadow-md flex flex-col h-full ring-1 ring-slate-100">
                     <div class="flex justify-between items-start mb-6">
@@ -606,7 +747,7 @@
                     indexAxis: viewMode === 'desktop' ? 'x' : 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { 
+                    plugins: {
                         legend: { display: false },
                         datalabels: {
                             anchor: 'end',
@@ -616,7 +757,7 @@
                             color: '#475569'
                         }
                     },
-                    scales: { 
+                    scales: {
                         y: { grid: { display: false }, ticks: { font: { size: 9, family: 'Kanit' } } },
                         x: { grid: { display: false }, ticks: { font: { size: 9, family: 'Kanit' } } }
                     }
@@ -630,11 +771,11 @@
             document.getElementById('stats-view-detail').classList.remove('hidden');
             document.getElementById('stats-charts-section').classList.add('hidden');
             document.getElementById('drilldown-group-name').textContent = `${groupName}`;
-            
+
             let hName = currentStatsType === 'group' ? "ItemGroup" : (currentStatsType === 'sales' ? "ฝ่ายขาย" : "Name");
             const filtered = rawData.filter(i => (i[hName] || 'ไม่ระบุ') === groupName);
             filtered.sort((a, b) => a._sortDate - b._sortDate);
-            
+
             const fabrics = {};
             filtered.forEach(i => {
                 const fid = i['Weaving Item'] || 'Unknown';
@@ -646,10 +787,10 @@
                 fabrics[fid].finalStock = parseNum(i['Stock คงเหลือ']);
             });
 
-            const sorted = Object.entries(fabrics).sort((a,b) => b[1].totalUse - a[1].totalUse);
+            const sorted = Object.entries(fabrics).sort((a, b) => b[1].totalUse - a[1].totalUse);
             const drillContent = document.getElementById('drilldown-content');
             drillContent.className = viewMode === 'desktop' ? "grid grid-cols-2 gap-6 pb-20" : "grid grid-cols-1 gap-4 pb-20";
-            
+
             drillContent.innerHTML = sorted.map(([id, data]) => {
                 const safeId = id.replace(/[^a-zA-Z0-9]/g, '');
                 return `
@@ -703,19 +844,21 @@
                         </div>
                     </div>
                 </div>
-            `;}).join('');
+            `;
+            }).join('');
             lucide.createIcons();
         }
 
-        function showStatsMain() { 
-            document.getElementById('stats-view-main').classList.remove('hidden'); 
-            document.getElementById('stats-view-detail').classList.add('hidden'); 
+        function showStatsMain() {
+            document.getElementById('stats-view-main').classList.remove('hidden');
+            document.getElementById('stats-view-detail').classList.add('hidden');
             document.getElementById('stats-charts-section').classList.remove('hidden');
         }
-        
+
         function toggleCollapsible(id) { const c = document.getElementById(`collapse-${id}`); const i = document.getElementById(`icon-${id}`); c.classList.toggle('show'); i.style.transform = c.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)'; }
-        
+
         window.onload = () => { lucide.createIcons(); refreshData(); changeStatsType('group'); };
     </script>
 </body>
+
 </html>
