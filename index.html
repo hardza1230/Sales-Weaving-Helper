@@ -869,24 +869,37 @@
             });
         }
 
-        function parseAndCleanRows(results, setProgress) {
+        // Yield to the browser so it can repaint the progress bar between steps
+        const frame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+
+        window.preloadComplete = false; // Guard: must be true before app is usable
+
+        async function parseAndCleanRows(results, setProgress) {
+            // STEP A: Clean & parse rows
+            setProgress(62, 'ทำความสะอาดข้อมูล...');
+            await frame();
             rawData = results.data
-                .filter(r => r['Weaving Item'] || r['\u0e40\u0e25\u0e02\u0e17\u0e35\u0e48 CO'])
+                .filter(r => r['Weaving Item'] || r['เลขที่ CO'])
                 .map(row => {
                     const cleanRow = {};
                     Object.keys(row).forEach(k => {
                         const cleanKey = k.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
                         cleanRow[cleanKey] = row[k];
                     });
-                    const dateObj = dateParser(cleanRow['\u0e27\u0e31\u0e19\u0e02\u0e36\u0e49\u0e19\u0e02\u0e2d\u0e07']);
+                    const dateObj = dateParser(cleanRow['วันขึ้นของ']);
                     return { ...cleanRow, _sortDate: dateObj.getTime(), _dateObj: dateObj };
                 });
+            console.log(`[Preload] Step A: ${rawData.length} rows cleaned`);
 
-            setProgress(72, 'สร้าง Fabric Index...');
+            // STEP B: Build filters (unique values for dropdowns)
+            setProgress(70, `สร้าง Index (${rawData.length.toLocaleString()} แถว)...`);
+            await frame();
             updateFilters();
+            console.log('[Preload] Step B: Filters built');
 
-            // Pre-compute fabric cache (Running Balance + KPIs)
-            setProgress(85, 'คำนวณ Running Balance ล่วงหน้า...');
+            // STEP C: Build fabric index (group rows by Weaving Item)
+            setProgress(78, 'จัดกลุ่ม Fabric Spec...');
+            await frame();
             window.fabricCache = {};
             rawData.forEach(item => {
                 const fid = item['Weaving Item'] || 'Unknown';
@@ -896,12 +909,8 @@
                         desc: item['Description'] || '-',
                         group: (item['ItemGroup'] || '-').trim(),
                         start: parseNum(item['Stock ยกมา']),
-                        final: 0,
-                        jobs: [],
-                        maxMc: 0,
-                        runSim: null,   // computed below
-                        plants: new Set(),
-                        salesSet: new Set()
+                        final: 0, jobs: [], maxMc: 0,
+                        runSim: null, plants: new Set(), salesSet: new Set()
                     };
                 }
                 const f = window.fabricCache[fid];
@@ -911,31 +920,48 @@
                 if (plant && plant !== '-') f.plants.add(plant);
                 if (sales && sales !== '-') f.salesSet.add(sales);
             });
-
-            // Run simulation for every fabric spec
-            let i = 0;
             const fabKeys = Object.keys(window.fabricCache);
+            console.log(`[Preload] Step C: ${fabKeys.length} fabric specs indexed`);
+
+            // STEP D: Sort jobs + compute final balance per spec
+            setProgress(85, `เรียงลำดับ ${fabKeys.length} สเปก...`);
+            await frame();
             fabKeys.forEach(fid => {
                 const f = window.fabricCache[fid];
                 f.jobs.sort((a, b) => a._sortDate - b._sortDate);
                 f.final = parseNum(f.jobs[f.jobs.length - 1]['Stock คงเหลือ']);
                 f.maxMc = Math.max(...f.jobs.map(j => parseNum(j['เกิดจริง'])), 0);
-                f.runSim = calculateDailyRunningBalance(f.jobs, f.start, f.maxMc, null);
-                // Convert Sets to arrays for easier use
                 f.plants = Array.from(f.plants);
                 f.salesSet = Array.from(f.salesSet);
-                i++;
             });
+            console.log('[Preload] Step D: Sort + balance done');
 
-            setProgress(95, 'เตรียม Dashboard...');
+            // STEP E: Running Balance simulation (heaviest step)
+            setProgress(91, `คำนวณ Running Balance (${fabKeys.length} สเปก)...`);
+            await frame();
+            fabKeys.forEach(fid => {
+                const f = window.fabricCache[fid];
+                f.runSim = calculateDailyRunningBalance(f.jobs, f.start, f.maxMc, null);
+            });
+            console.log('[Preload] Step E: Running Balance simulation done');
+
+            // STEP F: Sync time display
+            setProgress(97, 'เตรียม Dashboard...');
+            await frame();
             const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-            ['sync-time-menu', 'sync-time-ledger'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = now; });
+            ['sync-time-menu', 'sync-time-ledger'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = now;
+            });
+            console.log('[Preload] Step F: Dashboard ready');
         }
 
-
         async function initWithLoading(mode) {
-            // 1. Show loading screen, hide all other pages
-            const allPages = ['page-start', 'page-loading', 'page-menu', 'page-fabric-check', 'page-usage-stats', 'page-rec-role-select', 'page-stock-recommend'];
+            window.preloadComplete = false;
+
+            // Show loading screen, hide all pages
+            const allPages = ['page-start', 'page-loading', 'page-menu', 'page-fabric-check',
+                'page-usage-stats', 'page-rec-role-select', 'page-stock-recommend'];
             allPages.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) { el.classList.remove('page-active'); el.classList.add('hidden'); }
@@ -943,8 +969,7 @@
             const loadingPage = document.getElementById('page-loading');
             if (loadingPage) {
                 loadingPage.classList.remove('hidden');
-                loadingPage.classList.add('flex');
-                loadingPage.classList.add('page-active');
+                loadingPage.classList.add('flex', 'page-active');
             }
             if (mode) { viewMode = mode; document.body.className = `view-${mode}`; }
 
@@ -953,58 +978,62 @@
             const setProgress = (pct, msg) => {
                 if (bar) bar.style.width = pct + '%';
                 if (txt) txt.textContent = msg;
+                console.log(`[Preload] ${pct}% — ${msg}`);
             };
 
-            setProgress(5, '\u0e40\u0e23\u0e34\u0e48\u0e21\u0e15\u0e49\u0e19\u0e23\u0e30\u0e1a\u0e1a...');
-            await new Promise(r => setTimeout(r, 150));
+            setProgress(5, 'เริ่มต้นระบบ...');
+            await frame();
 
-            // Helper: wrap PapaParse in a Promise
             const papaFetch = (url) => new Promise((resolve, reject) => {
                 Papa.parse(url, {
                     download: true, header: true, skipEmptyLines: true,
-                    complete: resolve,
-                    error: reject
+                    complete: resolve, error: reject
                 });
             });
 
             let source = '';
             try {
-                // Try live Google Sheets first
-                setProgress(25, '\u0e40\u0e0a\u0e37\u0e48\u0e2d\u0e21\u0e15\u0e48\u0e2d Google Sheets...');
+                setProgress(20, 'เชื่อมต่อ Google Sheets...');
+                await frame();
                 const results = await papaFetch(CSV_URL);
-                setProgress(65, '\u0e1b\u0e23\u0e30\u0e21\u0e27\u0e25\u0e1c\u0e25\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25...');
+                setProgress(55, 'ดาวน์โหลดสำเร็จ กำลังตรวจสอบ...');
+                await frame();
                 if (!results.data || results.data.length < 2) throw new Error('Empty response from Google Sheets');
-                parseAndCleanRows(results, setProgress);
+                await parseAndCleanRows(results, setProgress);
                 source = 'Live Sheet';
 
             } catch (liveErr) {
-                console.warn('Google Sheets fetch failed, falling back to local data.csv:', liveErr);
+                console.warn('[Preload] Google Sheets failed, trying local data.csv:', liveErr.message);
                 try {
-                    // Fallback: local data.csv
-                    setProgress(40, '\u0e43\u0e0a\u0e49\u0e44\u0e1f\u0e25\u0e4c\u0e2a\u0e33\u0e23\u0e2d\u0e07 (data.csv)...');
+                    setProgress(35, 'ใช้ไฟล์สำรอง (data.csv)...');
+                    await frame();
                     const results = await papaFetch('data.csv');
-                    setProgress(65, '\u0e1b\u0e23\u0e30\u0e21\u0e27\u0e25\u0e1c\u0e25\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25...');
-                    if (!results.data || results.data.length < 2) throw new Error('Local data.csv also empty or missing');
-                    parseAndCleanRows(results, setProgress);
-                    source = '\u0e44\u0e1f\u0e25\u0e4c\u0e2a\u0e33\u0e23\u0e2d\u0e07';
+                    setProgress(55, 'ไฟล์สำรองโหลดสำเร็จ...');
+                    await frame();
+                    if (!results.data || results.data.length < 2) throw new Error('data.csv also empty or missing');
+                    await parseAndCleanRows(results, setProgress);
+                    source = 'ไฟล์สำรอง';
 
                 } catch (localErr) {
-                    console.error('Both fetch sources failed:', localErr);
+                    console.error('[Preload] Both sources failed:', localErr);
                     if (bar) { bar.style.width = '40%'; bar.style.backgroundImage = 'linear-gradient(to right,#f43f5e,#e11d48)'; }
-                    if (txt) txt.textContent = '\u0e42\u0e2b\u0e25\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e44\u0e21\u0e48\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08 — \u0e44\u0e21\u0e48\u0e1e\u0e1a\u0e44\u0e1f\u0e25\u0e4c\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25';
+                    if (txt) txt.textContent = 'โหลดข้อมูลไม่สำเร็จ — ไม่พบไฟล์ข้อมูล';
                     loadingPage.insertAdjacentHTML('beforeend',
                         `<div class="mt-8 relative z-10 flex flex-col items-center gap-3">
                             <p class="text-xs text-slate-400">Google Sheets: CORS blocked &bull; data.csv: not found</p>
                             <button onclick="initWithLoading('${mode}')" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl shadow-lg">
-                                \u0e25\u0e2d\u0e07\u0e43\u0e2b\u0e21\u0e48\u0e2d\u0e35\u0e01\u0e04\u0e23\u0e31\u0e49\u0e07
+                                ลองใหม่อีกครั้ง
                             </button>
                         </div>`);
-                    return;
+                    return; // ❌ GUARD: do NOT navigate
                 }
             }
 
-            setProgress(100, `\u0e42\u0e2b\u0e25\u0e14\u0e2a\u0e33\u0e40\u0e23\u0e47\u0e08 \u2713 (${rawData.length.toLocaleString()} \u0e23\u0e32\u0e22\u0e01\u0e32\u0e23 \u2022 ${source})`);
-            await new Promise(r => setTimeout(r, 700));
+            // ✅ All steps verified complete — mark and navigate
+            window.preloadComplete = true;
+            console.log(`[Preload] ✅ Complete! ${rawData.length} rows, ${Object.keys(window.fabricCache).length} specs — source: ${source}`);
+            setProgress(100, `โหลดสำเร็จ ✓  ${rawData.length.toLocaleString()} รายการ • ${source}`);
+            await new Promise(r => setTimeout(r, 800));
             navigate('menu');
         }
 
