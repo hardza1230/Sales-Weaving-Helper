@@ -2038,46 +2038,6 @@
 
         window.onload = () => { lucide.createIcons(); refreshData(); changeStatsType('group'); };
     </script>
-    <section id='page-stock-recommend' class="page hidden">
-        <div class="flex items-center justify-between mb-8">
-            <h2 class="text-2xl font-black text-slate-800 font-jakarta leading-none">Stock Recommendations</h2>
-            <button onclick="navigate('page-usage-stats')"
-                class="text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors flex items-center gap-1">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                <span>Back to Usage Stats</span>
-            </button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="glass-card p-6 bg-white shadow-xl flex flex-col h-full border-rose-200">
-                <div class="flex justify-between items-start mb-6 pb-4 border-b border-rose-100">
-                    <h3
-                        class="font-bold text-rose-600 leading-tight text-lg uppercase font-jakarta line-clamp-1 leading-none tracking-tight">
-                        Insufficient Stock</h3>
-                    <span
-                        class="text-[9px] bg-rose-50 text-rose-700 px-3 py-1 rounded-full font-black italic border border-rose-100 uppercase tracking-tighter shrink-0">Top
-                        10</span>
-                </div>
-                <div id="rec-insufficient-list" class="flex flex-col gap-3">
-                    <!-- Insufficient stock items will be rendered here -->
-                </div>
-            </div>
-
-            <div class="glass-card p-6 bg-white shadow-xl flex flex-col h-full border-emerald-200">
-                <div class="flex justify-between items-start mb-6 pb-4 border-b border-emerald-100">
-                    <h3
-                        class="font-bold text-emerald-600 leading-tight text-lg uppercase font-jakarta line-clamp-1 leading-none tracking-tight">
-                        Abundant Stock</h3>
-                    <span
-                        class="text-[9px] bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full font-black italic border border-emerald-100 uppercase tracking-tighter shrink-0">Top
-                        10</span>
-                </div>
-                <div id="rec-abundant-list" class="flex flex-col gap-3">
-                    <!-- Abundant stock items will be rendered here -->
-                </div>
-            </div>
-        </div>
-    </section>
 </body>
 
 </html>
