@@ -881,11 +881,57 @@
                     const dateObj = dateParser(cleanRow['\u0e27\u0e31\u0e19\u0e02\u0e36\u0e49\u0e19\u0e02\u0e2d\u0e07']);
                     return { ...cleanRow, _sortDate: dateObj.getTime(), _dateObj: dateObj };
                 });
-            setProgress(85, '\u0e27\u0e34\u0e40\u0e04\u0e23\u0e32\u0e30\u0e2b\u0e4c Running Balance...');
+
+            setProgress(72, 'สร้าง Fabric Index...');
             updateFilters();
+
+            // Pre-compute fabric cache (Running Balance + KPIs)
+            setProgress(85, 'คำนวณ Running Balance ล่วงหน้า...');
+            window.fabricCache = {};
+            rawData.forEach(item => {
+                const fid = item['Weaving Item'] || 'Unknown';
+                if (!window.fabricCache[fid]) {
+                    window.fabricCache[fid] = {
+                        id: fid,
+                        desc: item['Description'] || '-',
+                        group: (item['ItemGroup'] || '-').trim(),
+                        start: parseNum(item['Stock ยกมา']),
+                        final: 0,
+                        jobs: [],
+                        maxMc: 0,
+                        runSim: null,   // computed below
+                        plants: new Set(),
+                        salesSet: new Set()
+                    };
+                }
+                const f = window.fabricCache[fid];
+                f.jobs.push(item);
+                const plant = (item['Plant'] || item['plant'] || item[' โรงงาน'] || '-').trim();
+                const sales = (item['ฝ่ายขาย'] || item[' ฝ่ายขาย'] || '-').trim();
+                if (plant && plant !== '-') f.plants.add(plant);
+                if (sales && sales !== '-') f.salesSet.add(sales);
+            });
+
+            // Run simulation for every fabric spec
+            let i = 0;
+            const fabKeys = Object.keys(window.fabricCache);
+            fabKeys.forEach(fid => {
+                const f = window.fabricCache[fid];
+                f.jobs.sort((a, b) => a._sortDate - b._sortDate);
+                f.final = parseNum(f.jobs[f.jobs.length - 1]['Stock คงเหลือ']);
+                f.maxMc = Math.max(...f.jobs.map(j => parseNum(j['เกิดจริง'])), 0);
+                f.runSim = calculateDailyRunningBalance(f.jobs, f.start, f.maxMc, null);
+                // Convert Sets to arrays for easier use
+                f.plants = Array.from(f.plants);
+                f.salesSet = Array.from(f.salesSet);
+                i++;
+            });
+
+            setProgress(95, 'เตรียม Dashboard...');
             const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
             ['sync-time-menu', 'sync-time-ledger'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = now; });
         }
+
 
         async function initWithLoading(mode) {
             // 1. Show loading screen, hide all other pages
@@ -1475,27 +1521,40 @@
         }
 
         function renderStockRecommendations() {
-            const fabrics = {};
+            // Use pre-computed cache from loading phase; fall back to fresh build if missing
+            const fabrics = window.fabricCache || {};
+            const needsRebuild = Object.keys(fabrics).length === 0;
+            if (needsRebuild) {
+                // Build on-the-fly (e.g. after manual refreshData)
+                rawData.forEach(item => {
+                    const fid = item['Weaving Item'] || 'Unknown';
+                    if (!fabrics[fid]) fabrics[fid] = {
+                        id: fid, desc: item['Description'] || '-',
+                        group: (item['ItemGroup'] || '-').trim(),
+                        start: parseNum(item['Stock ยกมา']), final: 0, jobs: [], maxMc: 0,
+                        runSim: null, plants: [], salesSet: []
+                    };
+                    fabrics[fid].jobs.push(item);
+                });
+                Object.values(fabrics).forEach(f => {
+                    f.jobs.sort((a, b) => a._sortDate - b._sortDate);
+                    f.final = parseNum(f.jobs[f.jobs.length - 1]['Stock คงเหลือ']);
+                    f.maxMc = Math.max(...f.jobs.map(j => parseNum(j['เกิดจริง'])), 0);
+                    f.runSim = calculateDailyRunningBalance(f.jobs, f.start, f.maxMc, null);
+                    f.plants = Array.from(new Set(f.jobs.map(j => (j['Plant'] || j['plant'] || '-').trim()).filter(p => p !== '-')));
+                    f.salesSet = Array.from(new Set(f.jobs.map(j => (j['ฝ่ายขาย'] || '-').trim()).filter(s => s !== '-')));
+                });
+            }
+
             const uniqueGroups = new Set();
             const uniquePlants = new Set();
             const uniqueSales = new Set();
-
-            rawData.forEach(item => {
-                const fid = item['Weaving Item'] || 'Unknown';
-                const group = (item['ItemGroup'] || '-').trim();
-                const plant = (item['Plant'] || item['plant'] || item[' โรงงาน'] || '-').trim();
-                const sales = (item['ฝ่ายขาย'] || item[' ฝ่ายขาย'] || '-').trim();
-
-                if (group && group !== '-') uniqueGroups.add(group);
-                if (plant && plant !== '-') uniquePlants.add(plant);
-                if (sales && sales !== '-') uniqueSales.add(sales);
-
-                if (!fabrics[fid]) fabrics[fid] = {
-                    id: fid, desc: item['Description'] || '-', group: group,
-                    start: parseNum(item['Stock ยกมา']), final: 0, jobs: [], maxMc: 0
-                };
-                fabrics[fid].jobs.push(item);
+            Object.values(fabrics).forEach(f => {
+                if (f.group && f.group !== '-') uniqueGroups.add(f.group);
+                f.plants.forEach(p => uniquePlants.add(p));
+                f.salesSet.forEach(s => uniqueSales.add(s));
             });
+
 
             // Populate Filters
             // Create Filter Buttons for Item Group
@@ -1528,11 +1587,10 @@
             let maxCapacityDeficit = 0;
 
             Object.values(fabrics).forEach(f => {
-                f.jobs.sort((a, b) => a._sortDate - b._sortDate);
-                f.final = parseNum(f.jobs[f.jobs.length - 1]['Stock คงเหลือ']);
-                f.maxMc = Math.max(...f.jobs.map(j => parseNum(j['เกิดจริง'])), 0);
+                // All values (jobs sorted, final, maxMc, runSim) already pre-computed in fabricCache
 
                 if (activeRecGroup !== 'ทั้งหมด' && f.group !== activeRecGroup) return;
+
 
                 if (currentRecTab === 'sales') {
                     // SALES VIEW: Filter jobs down to just this sales portfolio
