@@ -489,15 +489,27 @@
     <section id='page-stock-recommend'
         class="hidden min-h-screen flex-col p-6 overflow-y-auto hide-scrollbar bg-slate-50">
         <div class="layout-container">
-            <div class="flex items-center gap-4 mb-8">
-                <button onclick="navigate('menu')"
-                    class="p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800 border border-slate-100"><i
-                        data-lucide="arrow-left"></i></button>
-                <div>
-                    <h2 class="text-2xl font-bold text-slate-800 font-jakarta tracking-tight leading-none mb-1">
-                        แนะนำผืนผ้า</h2>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider italic">Stock Balance
-                        Analysis</p>
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6">
+                <div class="flex items-center gap-4">
+                    <button onclick="navigate('menu')"
+                        class="p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800 border border-slate-100"><i
+                            data-lucide="arrow-left"></i></button>
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800 font-jakarta tracking-tight leading-none mb-1">
+                            แนะนำผืนผ้า</h2>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider italic">Stock Balance
+                            Analysis</p>
+                    </div>
+                </div>
+                <div
+                    class="flex items-center gap-2 bg-white p-1 rounded-2xl shadow-sm border border-slate-100 pr-3 w-full md:w-auto">
+                    <div class="p-2 bg-slate-50 rounded-xl text-slate-400">
+                        <i data-lucide="filter" class="w-4 h-4"></i>
+                    </div>
+                    <select id="sel-rec-group" onchange="renderStockRecommendations()"
+                        class="w-full md:w-48 bg-transparent border-none text-[11px] font-bold outline-none text-slate-600 appearance-none cursor-pointer">
+                        <option value="ทั้งหมด">-- ทุกกลุ่มสินค้า --</option>
+                    </select>
                 </div>
             </div>
 
@@ -950,19 +962,37 @@
 
         function renderStockRecommendations() {
             const fabrics = {};
+            const uniqueGroups = new Set();
+
             rawData.forEach(item => {
                 const fid = item['Weaving Item'] || 'Unknown';
                 const group = item['ItemGroup'] || '-';
+                if (group && group !== '-') uniqueGroups.add(group);
                 if (!fabrics[fid]) fabrics[fid] = { id: fid, desc: item['Description'] || '-', group: group, start: parseNum(item['Stock ยกมา']), final: 0, jobs: [] };
                 fabrics[fid].jobs.push(item);
             });
+
+            const selEl = document.getElementById('sel-rec-group');
+            if (selEl && selEl.options.length <= 1) {
+                const selectedBefore = selEl.value;
+                const sortedGroups = Array.from(uniqueGroups).sort();
+                selEl.innerHTML = `<option value="ทั้งหมด">-- ทุกกลุ่มสินค้า --</option>` +
+                    sortedGroups.map(g => `<option value="${g}" ${g === selectedBefore ? 'selected' : ''}>${g}</option>`).join('');
+            }
 
             Object.values(fabrics).forEach(f => {
                 f.jobs.sort((a, b) => a._sortDate - b._sortDate);
                 f.final = parseNum(f.jobs[f.jobs.length - 1]['Stock คงเหลือ']);
             });
 
-            const sortedFabrics = Object.values(fabrics).sort((a, b) => a.final - b.final);
+            // Filter by dropdown before sorting
+            const activeGroup = selEl ? selEl.value : 'ทั้งหมด';
+            let targetFabrics = Object.values(fabrics);
+            if (activeGroup !== 'ทั้งหมด') {
+                targetFabrics = targetFabrics.filter(f => f.group === activeGroup);
+            }
+
+            const sortedFabrics = targetFabrics.sort((a, b) => a.final - b.final);
 
             // Render Insufficient (Negative / Lowest stock)
             const insufficient = sortedFabrics.filter(f => f.final < 0).slice(0, 10);
@@ -1015,6 +1045,7 @@
                     </button>
                 `).join('');
             }
+            lucide.createIcons();
         }
 
         window.onload = () => { lucide.createIcons(); refreshData(); changeStatsType('group'); };
