@@ -64,7 +64,7 @@
         .view-desktop .layout-container { max-width: 80rem; }
 
         .ledger-table th { position: sticky; top: 0; z-index: 10; }
-        .ledger-row:nth-child(even) { background-color: rgba(248, 250, 252, 0.3); }
+        .ledger-row:nth-child(even) { background-color: rgba(248, 250, 252, 0.2); }
     </style>
 </head>
 <body class="view-mobile">
@@ -82,7 +82,7 @@
         
         <h1 class="text-3xl font-bold text-slate-800 mb-3 leading-tight tracking-tight">Planner Want to tell you<br>About Weaving</h1>
         <p class="text-slate-500 text-sm font-light max-w-xs mb-10 leading-relaxed">
-            วิเคราะห์แผนงานทอและสต็อกสะสมผืนผ้า<br>เลือกรูปแบบการแสดงผลที่ต้องการใช้งาน
+            เลือกรูปแบบการแสดงผลที่ต้องการใช้งาน
         </p>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
@@ -92,7 +92,7 @@
                 </div>
                 <div>
                     <h3 class="font-bold text-slate-800">มุมมองมือถือ</h3>
-                    <p class="text-[10px] text-slate-400 font-light">แสดงผลแนวตั้ง เหมาะสำหรับสมาร์ทโฟน</p>
+                    <p class="text-[10px] text-slate-400 font-light">สำหรับเช็คงานผ่านสมาร์ทโฟน</p>
                 </div>
             </button>
 
@@ -102,7 +102,7 @@
                 </div>
                 <div>
                     <h3 class="font-bold text-slate-800">มุมมองคอมพิวเตอร์</h3>
-                    <p class="text-[10px] text-slate-400 font-light">แสดงผลแบบหน้ากว้าง เหมาะสำหรับคอมพิวเตอร์</p>
+                    <p class="text-[10px] text-slate-400 font-light">เหมาะสำหรับฝ่ายวางแผน</p>
                 </div>
             </button>
         </div>
@@ -111,14 +111,17 @@
     <!-- 2. หน้าเมนูหลัก -->
     <section id="page-menu" class="hidden min-h-screen flex-col p-6 overflow-y-auto hide-scrollbar">
         <div class="layout-container">
-            <div class="mt-8 mb-8 flex justify-between items-end px-2 border-b border-slate-100 pb-4">
+            <div class="mt-8 mb-8 flex justify-between items-end px-2 border-b border-slate-100 pb-6">
                 <div>
-                    <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">ระบบงานทอ</p>
-                    <h2 class="text-2xl font-bold text-slate-800 italic font-semibold leading-none">เมนูหลัก</h2>
+                    <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Weaving Engine</p>
+                    <h2 class="text-2xl font-bold text-slate-800 font-jakarta leading-none mb-1">เมนูหลัก</h2>
+                    <div class="flex items-center gap-1.5 text-[9px] text-slate-400 font-bold uppercase">
+                        <i data-lucide="clock" class="w-2.5 h-2.5"></i> อัปเดตล่าสุด: <span id="sync-time-menu">--:--</span>
+                    </div>
                 </div>
-                <div id="sync-status" class="text-[10px] bg-white border border-slate-100 text-slate-400 px-3 py-1.5 rounded-full font-bold shadow-sm">
-                    กำลังเชื่อมต่อ...
-                </div>
+                <button onclick="refreshData()" class="p-2.5 bg-white border border-slate-100 rounded-2xl shadow-sm text-emerald-600 active:scale-95 transition-all">
+                    <i data-lucide="refresh-cw" class="w-5 h-5" id="refresh-icon-menu"></i>
+                </button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="menu-grid">
@@ -128,7 +131,7 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-800 text-base leading-tight">เช็คม้วนผืนผ้า</h3>
-                        <p class="text-[10px] text-slate-500 font-light italic">ดูยอดคงเหลือสะสม (เรียงตามวันขึ้นของ)</p>
+                        <p class="text-[10px] text-slate-500 font-light italic">วิเคราะห์บัญชีคิวงานตามวันขึ้นของ</p>
                     </div>
                 </button>
                 
@@ -137,8 +140,8 @@
                         <i data-lucide="package" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800 text-base leading-tight">วิเคราะห์แยกกลุ่มสินค้า</h3>
-                        <p class="text-[10px] text-slate-500 font-light italic">สรุปการใช้ผ้าตามประเภทงาน</p>
+                        <h3 class="font-bold text-slate-800 text-base leading-tight">แยกตามกลุ่มสินค้า</h3>
+                        <p class="text-[10px] text-slate-500 font-light italic">Summary by ItemGroup</p>
                     </div>
                 </button>
 
@@ -147,8 +150,8 @@
                         <i data-lucide="users" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800 text-base leading-tight">วิเคราะห์แยกฝ่ายขาย</h3>
-                        <p class="text-[10px] text-slate-500 font-light italic">ดูยอดค้างผลิตแยกรายเซลล์</p>
+                        <h3 class="font-bold text-slate-800 text-base leading-tight">แยกตามฝ่ายขาย</h3>
+                        <p class="text-[10px] text-slate-500 font-light italic">Sales Representative Breakdown</p>
                     </div>
                 </button>
 
@@ -157,8 +160,8 @@
                         <i data-lucide="user-check" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-800 text-base leading-tight">วิเคราะห์แยกรายลูกค้า</h3>
-                        <p class="text-[10px] text-slate-500 font-light italic">สรุปความต้องการใช้ผ้ารายลูกค้า</p>
+                        <h3 class="font-bold text-slate-800 text-base leading-tight">แยกตามรายลูกค้า</h3>
+                        <p class="text-[10px] text-slate-500 font-light italic">Customer Demand Summary</p>
                     </div>
                 </button>
             </div>
@@ -178,11 +181,19 @@
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-2">
                         <button onclick="navigate('menu')" class="p-2 -ml-2 text-slate-400"><i data-lucide="arrow-left"></i></button>
-                        <h2 class="text-lg font-bold text-slate-800 leading-none">บัญชีสถานะผืนผ้า</h2>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800 leading-none">บัญชีสถานะผืนผ้า</h2>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Sync: <span id="sync-time-ledger">--:--</span></span>
+                        </div>
                     </div>
-                    <button onclick="toggleFilters()" class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-emerald-100 shadow-sm">
-                        <i data-lucide="filter" class="w-3 h-3"></i> <span id="filter-status-text">ซ่อนตัวกรอง</span>
-                    </button>
+                    <div class="flex items-center gap-2">
+                         <button onclick="refreshData()" class="p-2 bg-white border border-slate-100 rounded-xl shadow-sm text-emerald-600 active:scale-95 transition-all">
+                            <i data-lucide="refresh-cw" class="w-4 h-4" id="refresh-icon-ledger"></i>
+                        </button>
+                        <button onclick="toggleFilters()" class="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl flex items-center gap-1.5 border border-emerald-100">
+                            <i data-lucide="filter" class="w-3 h-3"></i> <span id="filter-status-text">ซ่อนตัวกรอง</span>
+                        </button>
+                    </div>
                 </div>
 
                 <div id="filter-container" class="transition-all duration-300 overflow-hidden">
@@ -224,7 +235,7 @@
                         <div class="flex justify-between items-center mb-6">
                             <span id="dash-item-code" class="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-3 py-1.5 rounded-full uppercase tracking-widest font-jakarta shadow-sm">#ITEM_NAME</span>
                             <div class="text-right">
-                                <p class="text-[9px] text-slate-400 font-bold uppercase mb-0.5 tracking-tighter italic leading-none">ความสามารถผลิต/วัน</p>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase mb-0.5 tracking-tighter italic leading-none">กำลังผลิตสูงสุด/วัน</p>
                                 <p id="dash-capacity" class="text-sm font-black text-emerald-600 leading-none font-jakarta">0 ม.</p>
                             </div>
                         </div>
@@ -234,11 +245,11 @@
                                 <span id="dash-total-stock" class="text-3xl font-black text-slate-800 font-jakarta leading-none">0</span>
                             </div>
                             <div>
-                                <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase tracking-tighter italic">ทอเกิดจริง (MAX)</span>
+                                <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase tracking-tighter italic">ทอจริง (MAX)</span>
                                 <span id="dash-actual-mc" class="text-3xl font-black text-slate-800 font-jakarta leading-none">0</span>
                             </div>
                             <div>
-                                <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase tracking-tighter text-sky-600 italic">งานรอลำดับ</span>
+                                <span class="text-[10px] text-slate-400 block font-bold mb-1 uppercase tracking-tighter text-sky-600 italic">งานค้างผลิต</span>
                                 <span id="dash-jobs" class="text-3xl font-black text-sky-600 font-jakarta leading-none">0</span>
                             </div>
                             <div>
@@ -248,7 +259,7 @@
                         </div>
                         <div class="mt-4 pt-4 border-t border-slate-100">
                              <span class="text-[10px] text-slate-400 font-bold uppercase italic tracking-widest flex items-center gap-1.5">
-                                 <i data-lucide="target" class="w-3 h-3"></i> ผังเป้าหมาย: <span id="dash-target-mc" class="text-slate-800">0</span> เครื่อง
+                                 <i data-lucide="target" class="w-3 h-3"></i> แผนเป้าหมาย: <span id="dash-target-mc" class="text-slate-800">0</span> เครื่อง
                              </span>
                         </div>
                     </div>
@@ -257,9 +268,9 @@
                     <div class="space-y-3">
                         <div class="flex justify-between items-center px-2 mb-1">
                             <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <i data-lucide="align-left" class="w-3 h-3"></i> ตารางวิเคราะห์ยอด Running รายลำดับ
+                                <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i> ตารางบัญชีคิวงานตามลำดับส่ง
                             </h3>
-                            <span class="text-[9px] bg-slate-900 text-white px-3 py-1 rounded-full font-bold shadow-sm uppercase tracking-widest italic">เรียงตามวันขึ้นของ</span>
+                            <span class="text-[9px] bg-slate-900 text-white px-3 py-1 rounded-full font-bold shadow-sm uppercase tracking-widest italic">Sorted by Shipping Date</span>
                         </div>
                         
                         <div class="glass-card overflow-hidden border-slate-100 shadow-md bg-white">
@@ -267,15 +278,15 @@
                                 <table class="w-full text-left ledger-table min-w-[850px]">
                                     <thead class="bg-slate-50 border-b border-slate-100">
                                         <tr class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                            <th class="px-4 py-3 bg-emerald-100 text-emerald-800 border-r border-emerald-200 w-28 text-center italic">วันขึ้นของ</th>
-                                            <th class="px-4 py-3">รายละเอียดงาน / ลูกค้า / เซลล์</th>
-                                            <th class="px-2 py-3 text-center w-48 italic">ยกมา / Weaving Use / คงเหลือ</th>
-                                            <th class="px-2 py-3 text-right w-24">ใช้ผ้า (ม.)</th>
-                                            <th class="px-4 py-3 text-right bg-slate-900 text-emerald-400 w-32 tracking-wider italic">สต็อกคงเหลือ</th>
+                                            <th class="px-5 py-4 bg-emerald-100 text-emerald-800 border-r border-emerald-200 w-32 text-center italic">วันขึ้นของ</th>
+                                            <th class="px-5 py-4">รายละเอียดงาน / ลูกค้า / เซลล์</th>
+                                            <th class="px-3 py-4 text-right w-28 italic">Stock ยกมา</th>
+                                            <th class="px-3 py-4 text-right w-24">ใช้ผ้า (ม.)</th>
+                                            <th class="px-5 py-4 text-right bg-slate-50 border-l border-slate-100 w-36 tracking-wider">สต็อกคงเหลือ</th>
                                         </tr>
                                     </thead>
                                     <tbody id="ledger-body" class="divide-y divide-slate-50 text-[11px]">
-                                        <!-- ข้อมูลจาก JS -->
+                                        <!-- JS Inject -->
                                     </tbody>
                                 </table>
                             </div>
@@ -286,7 +297,7 @@
         </main>
     </section>
 
-    <!-- 4. หน้าวิเคราะห์ภาพรวม (ใช้ร่วมกันหลายมุมมอง) -->
+    <!-- 4. หน้าวิเคราะห์ภาพรวม -->
     <section id="page-usage-stats" class="hidden min-h-screen flex-col p-6 overflow-y-auto hide-scrollbar">
         <div class="layout-container">
             <div class="flex items-center gap-3 mb-8">
@@ -301,7 +312,7 @@
                     <i data-lucide="chevron-left" class="w-3 h-3"></i> กลับไปหน้าภาพรวม
                 </button>
                 <div class="glass-card p-5 bg-gradient-to-r from-emerald-50 to-sky-50 border-emerald-100 mb-6 shadow-sm">
-                    <h3 id="drilldown-group-name" class="font-bold text-slate-800 text-lg tracking-tight uppercase font-jakarta">หัวข้อ: -</h3>
+                    <h3 id="drilldown-group-name" class="font-bold text-slate-800 text-lg tracking-tight uppercase font-jakarta leading-none">หัวข้อ: -</h3>
                 </div>
                 <div id="drilldown-content" class="grid grid-cols-1 gap-4"></div>
             </div>
@@ -318,10 +329,11 @@
         let isFilterOpen = true;
         let currentStatsType = 'group'; 
         let viewMode = 'mobile';
-        const filterFields = ['Wildth', 'Denia', 'Frequency', 'Pattern']; // แก้เป็น Wildth
+        const filterFields = ['Wildth', 'Denia', 'Frequency', 'Pattern'];
 
         const parseNum = (v) => parseFloat(String(v || '0').replace(/,/g, '')) || 0;
         
+        // Date Logic (Power Query Style)
         const dateParser = (dateStr) => {
             if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '' || dateStr === '-') return new Date(2099, 11, 31);
             const cleanStr = dateStr.trim();
@@ -335,28 +347,63 @@
             return isNaN(dateObj.getTime()) ? new Date(2099, 11, 31) : dateObj;
         };
 
+        // Date Display Formatting (DD/MM + Diff Days)
+        const formatDateDisplay = (dateObj) => {
+            if (dateObj.getFullYear() === 2099) return "-";
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            dateObj.setHours(0,0,0,0);
+            
+            const diffTime = dateObj - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            let label = "";
+            if (diffDays === 0) label = " (วันนี้)";
+            else if (diffDays > 0) label = ` (อีก ${diffDays} วัน)`;
+            else label = ` (เลย ${Math.abs(diffDays)} วัน)`;
+            
+            return { text: `${day}/${month}`, label: label, diff: diffDays };
+        };
+
         const getBalanceColorClass = (val) => {
-            if (val < 0) return 'text-rose-600 font-black';
-            if (val <= 2000) return 'text-orange-500 font-black';
-            return 'text-emerald-600 font-black';
+            if (val < 0) return 'text-rose-500 font-bold';
+            if (val <= 2000) return 'text-orange-400 font-bold';
+            return 'text-slate-600 font-bold';
         };
 
         async function refreshData() {
-            const status = document.getElementById('sync-status');
-            status.textContent = 'ซิงค์ข้อมูล...';
+            const menuStatus = document.getElementById('sync-status');
+            const menuTime = document.getElementById('sync-time-menu');
+            const ledgerTime = document.getElementById('sync-time-ledger');
+            const menuIcon = document.getElementById('refresh-icon-menu');
+            const ledgerIcon = document.getElementById('refresh-icon-ledger');
+
+            [menuIcon, ledgerIcon].forEach(icon => icon?.classList.add('animate-spin'));
+            menuStatus.textContent = 'SYNCING...';
+            
             Papa.parse(CSV_URL, {
                 download: true,
                 header: true,
                 complete: (results) => {
                     rawData = results.data.filter(r => r['เลขที่ CO'] || r['Weaving Item']).map(row => {
+                        const dateObj = dateParser(row['วันขึ้นของ']);
                         return {
                             ...row,
-                            _sortDate: dateParser(row['วันขึ้นของ']).getTime()
+                            _sortDate: dateObj.getTime(),
+                            _dateObj: dateObj
                         };
                     });
                     updateFilters();
-                    status.textContent = 'เชื่อมต่อแล้ว';
-                    status.className = 'text-[10px] bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full font-bold border border-emerald-100 shadow-sm';
+                    
+                    const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                    [menuTime, ledgerTime].forEach(el => { if(el) el.textContent = now; });
+                    [menuIcon, ledgerIcon].forEach(icon => icon?.classList.remove('animate-spin'));
+                    
+                    menuStatus.textContent = 'เชื่อมต่อแล้ว';
+                    menuStatus.className = 'text-[10px] bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full font-bold border border-emerald-100 shadow-sm';
                 }
             });
         }
@@ -446,57 +493,47 @@
             document.getElementById('dash-jobs').textContent = items.length;
             document.getElementById('dash-required').textContent = totalRequired.toLocaleString();
 
-            const today = new Date().getTime();
             body.innerHTML = items.map((item, idx) => {
                 const stockBrought = parseNum(item['Stock ยกมา']);
                 const usage = parseNum(item['ใช้ผ้า']);
                 const stockRemain = parseNum(item['Stock คงเหลือ']);
-                const isLate = item._sortDate < today;
+                const dateInfo = formatDateDisplay(item._dateObj);
 
                 return `
-                    <tr class="ledger-row border-b border-slate-50 hover:bg-emerald-50 transition-colors group">
-                        <td class="px-4 py-4 bg-emerald-50/20 border-r border-emerald-50 align-middle text-center">
+                    <tr class="ledger-row border-b border-slate-50 hover:bg-emerald-50/50 transition-colors group">
+                        <td class="px-5 py-5 bg-emerald-50/20 border-r border-emerald-50 align-middle text-center">
                             <div class="flex flex-col items-center">
-                                <span class="text-[10px] font-black ${isLate ? 'text-rose-600' : 'text-emerald-700'} font-jakarta leading-none mb-1">${item['วันขึ้นของ'] || '-'}</span>
-                                <span class="text-[8px] text-slate-400 font-bold uppercase tracking-tighter italic">วันส่งสินค้า</span>
+                                <span class="text-sm font-black ${dateInfo.diff < 0 ? 'text-rose-600 underline' : 'text-emerald-700'} font-jakarta leading-none mb-1">${dateInfo.text}</span>
+                                <span class="text-[8px] ${dateInfo.diff < 0 ? 'text-rose-500' : 'text-slate-400'} font-bold uppercase tracking-tighter leading-none">${dateInfo.label}</span>
                             </div>
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-5 py-5">
                             <div class="flex flex-col">
-                                <div class="flex items-center gap-2 mb-1 leading-none">
+                                <div class="flex items-center gap-2 mb-1.5 leading-none">
                                     <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">${item['ฝ่ายขาย'] || 'N/A'}</span>
-                                    <span class="text-[9px] text-slate-400 font-bold italic">เปิดงาน: ${item['Request Date'] || '-'}</span>
+                                    <span class="text-[9px] text-slate-400 font-bold bg-slate-50 px-1 rounded">REQ: ${item['Request Date'] || '-'}</span>
                                 </div>
-                                <div class="flex items-center gap-1.5 mb-1">
+                                <div class="flex items-center gap-1.5 mb-1.5">
                                     <span class="text-xs font-black text-slate-800 font-jakarta uppercase italic">CO: ${item['เลขที่ CO']} / ${item['Line']}</span>
-                                    <span class="text-[9px] bg-slate-100 px-1 rounded font-bold text-slate-400 uppercase tracking-tighter">FG: ${item['Item']}</span>
+                                    <span class="text-[9px] border border-slate-100 px-1 rounded font-bold text-slate-400 uppercase tracking-tighter">FG: ${item['Item']}</span>
                                 </div>
-                                <p class="text-[10px] text-slate-500 font-bold leading-tight line-clamp-1 mb-1 italic">${item['Name'] || '-'}</p>
-                                <p class="text-[10px] text-slate-400 truncate">${item['Description']}</p>
+                                <p class="text-[10px] text-slate-500 font-bold leading-tight line-clamp-1 mb-1 italic tracking-tight">${item['Name'] || '-'}</p>
+                                <p class="text-[10px] text-slate-400 truncate leading-none">${item['Description']}</p>
                             </div>
                         </td>
-                        <td class="px-2 py-4 text-center align-middle border-x border-slate-50">
-                            <div class="flex flex-col items-center justify-center">
-                                <div class="flex items-center gap-1.5 text-xs font-black font-jakarta">
-                                    <span class="text-slate-400">${stockBrought.toLocaleString()}</span>
-                                    <span class="text-orange-300">/</span>
-                                    <span class="text-orange-600">${usage.toLocaleString()}</span>
-                                    <span class="text-emerald-300">/</span>
-                                    <span class="text-emerald-600">${stockRemain.toLocaleString()}</span>
-                                </div>
-                                <span class="text-[8px] text-slate-400 font-bold uppercase tracking-tighter mt-1 leading-none italic">ยกมา / ใช้ / เหลือ</span>
-                            </div>
+                        <td class="px-3 py-5 text-right align-middle font-jakarta text-slate-400 font-bold">
+                            ${stockBrought.toLocaleString()}
                         </td>
-                        <td class="px-2 py-4 text-right align-middle">
+                        <td class="px-3 py-5 text-right align-middle">
                             <div class="flex flex-col items-end">
-                                <span class="text-sm font-black text-slate-700 font-jakarta">-${usage.toLocaleString()}</span>
-                                <span class="text-[8px] text-slate-400 uppercase font-bold tracking-widest mt-0.5">เมตร</span>
+                                <span class="text-xs font-black text-orange-500 font-jakarta leading-none">-${usage.toLocaleString()}</span>
+                                <span class="text-[8px] text-slate-300 uppercase font-bold tracking-widest mt-1 italic">Meters</span>
                             </div>
                         </td>
-                        <td class="px-4 py-4 text-right bg-slate-900 align-middle transition-all">
+                        <td class="px-5 py-5 text-right bg-slate-50/50 align-middle transition-all border-l border-slate-100">
                             <div class="flex flex-col items-end">
-                                <span class="text-base font-jakarta ${getBalanceColorClass(stockRemain)}">${stockRemain.toLocaleString()}</span>
-                                <span class="text-[8px] text-slate-500 uppercase font-bold tracking-tighter leading-none mt-1 italic tracking-widest">STOCK_BALANCE</span>
+                                <span class="text-sm font-jakarta ${getBalanceColorClass(stockRemain)}">${stockRemain.toLocaleString()}</span>
+                                <span class="text-[8px] text-slate-300 uppercase font-bold tracking-tighter leading-none mt-1">Balance</span>
                             </div>
                         </td>
                     </tr>
@@ -525,8 +562,8 @@
             container.innerHTML = sorted.map(([name, data]) => `
                 <div onclick="drilldownGroup('${name}')" class="glass-card p-6 border-white active:scale-[0.98] transition-all cursor-pointer group hover:bg-white shadow-sm flex flex-col justify-between h-full">
                     <div class="flex justify-between items-start mb-4">
-                        <h3 class="font-bold text-slate-800 group-hover:text-emerald-600 transition-colors text-lg uppercase font-jakarta line-clamp-1 leading-none">${name}</h3>
-                        <span class="text-[9px] bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full font-black italic border border-emerald-100 shrink-0 uppercase tracking-tighter">${data.items} รายการ</span>
+                        <h3 class="font-bold text-slate-800 group-hover:text-emerald-600 transition-colors text-lg uppercase font-jakarta line-clamp-1 leading-none tracking-tight">${name}</h3>
+                        <span class="text-[9px] bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full font-black italic border border-emerald-100 shrink-0 uppercase tracking-tighter">${data.items} คิวงาน</span>
                     </div>
                     <div class="flex items-end justify-between mt-auto border-t border-slate-50 pt-4">
                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none italic">ใช้ผ้าสะสม</p>
@@ -563,42 +600,42 @@
                 <div class="glass-card p-6 border-white shadow-md bg-white flex flex-col h-full">
                     <div class="flex justify-between items-start mb-5 pb-4 border-b border-slate-50">
                         <div class="max-w-[70%]">
-                            <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1 block leading-none tracking-tighter italic">WEAVING_FABRIC: ${id}</span>
+                            <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1 block leading-none tracking-tighter italic">FABRIC: ${id}</span>
                             <h4 class="font-bold text-slate-800 leading-tight text-base uppercase font-jakarta line-clamp-1">${data.desc}</h4>
                         </div>
                         <div class="text-right">
-                             <p class="text-[8px] text-slate-400 font-bold uppercase leading-none mb-1 italic">เกิดจริง</p>
+                             <p class="text-[8px] text-slate-400 font-bold uppercase tracking-tighter leading-none mb-1 italic">ทอจริง</p>
                              <p class="text-sm font-black text-sky-600 leading-none">${data.maxMc} M/C</p>
                         </div>
                     </div>
                     <div class="grid grid-cols-3 gap-2 mb-6">
-                        <div class="text-center p-2 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner">
+                        <div class="text-center p-2 rounded-2xl bg-slate-50 border border-slate-100">
                              <span class="text-[8px] text-slate-400 block font-bold uppercase mb-1 tracking-tighter leading-none italic">ยกมา</span>
                              <span class="text-xs font-black text-slate-800 font-jakarta leading-none">${(data.totalUse + remainder).toLocaleString()}</span>
                         </div>
-                        <div class="text-center p-2 rounded-2xl bg-amber-50 border border-amber-100 shadow-inner">
+                        <div class="text-center p-2 rounded-2xl bg-amber-50 border border-amber-100">
                              <span class="text-[8px] text-amber-500 block font-bold uppercase mb-1 tracking-tighter leading-none italic">ใช้รวม</span>
                              <span class="text-xs font-black text-orange-500 font-jakarta leading-none">${data.totalUse.toLocaleString()}</span>
                         </div>
-                        <div class="text-center p-2 rounded-2xl bg-emerald-50 border border-emerald-100 shadow-inner">
+                        <div class="text-center p-2 rounded-2xl bg-emerald-50 border border-emerald-100">
                              <span class="text-[8px] text-emerald-600 block font-bold uppercase mb-1 tracking-tighter leading-none italic">คงเหลือ</span>
                              <span class="text-xs ${getBalanceColorClass(remainder)} font-jakarta leading-none">${remainder.toLocaleString()}</span>
                         </div>
                     </div>
                     <button onclick="toggleCollapsible('${safeId}')" class="w-full flex items-center justify-between py-2.5 px-4 bg-slate-50 rounded-2xl text-[9px] font-black text-slate-400 uppercase tracking-widest hover:bg-slate-100 transition-all mt-auto shadow-sm">
-                        <span>ดูคิวงานตามวันขึ้นของ (${data.jobs.length})</span>
+                        <span>ดูคิวงานในสเปก (${data.jobs.length})</span>
                         <i data-lucide="chevron-down" id="icon-${safeId}" class="w-3 h-3 transition-transform duration-300"></i>
                     </button>
                     <div id="collapse-${safeId}" class="collapsible-content pt-4 px-1 space-y-3">
                         ${data.jobs.map(job => `
                             <div class="flex justify-between items-start text-[10px] py-2 border-b border-slate-50 last:border-0">
                                 <div class="flex flex-col max-w-[65%]">
-                                    <span class="font-black text-slate-800 italic uppercase leading-none mb-1">CO: ${job['เลขที่ CO']}</span>
+                                    <span class="font-black text-slate-800 italic uppercase leading-none mb-1 tracking-tighter">CO: ${job['เลขที่ CO']}</span>
                                     <span class="text-[9px] text-slate-400 font-bold truncate leading-none">${job['Name'] || '-'}</span>
                                 </div>
                                 <div class="text-right shrink-0">
                                     <span class="font-black text-slate-900 leading-none">${parseNum(job['ใช้ผ้า']).toLocaleString()} ม.</span>
-                                    <p class="text-[9px] text-rose-500 font-black uppercase tracking-tighter leading-none mt-1 italic">SHIP: ${job['วันขึ้นของ'] || '-'}</p>
+                                    <p class="text-[9px] text-rose-500 font-black uppercase tracking-tighter leading-none mt-1 italic">SHIP: ${formatDateDisplay(job._dateObj).text}</p>
                                 </div>
                             </div>
                         `).join('')}
