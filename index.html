@@ -580,7 +580,7 @@
         <div class="layout-container">
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6">
                 <div class="flex items-center gap-4">
-                    <button onclick="openRecRoleSelection()"
+                    <button onclick="navigate('rec-role-select')"
                         class="p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800 border border-slate-100"><i
                             data-lucide="arrow-left"></i></button>
                     <div>
@@ -738,10 +738,13 @@
                     </div>
                 </div>
 
+                <!-- Inline Ledger Container -->
+                <div id="rm-ledger-container" class="w-full shrink-0"></div>
+
                 <!-- Open original usage stats button -->
                 <button onclick="gotoUsageStatsFromModal()"
                     class="shrink-0 w-full py-4 rounded-xl bg-slate-800 text-white font-bold tracking-wider uppercase text-[11px] hover:bg-slate-900 transition-colors shadow-lg shadow-slate-900/20 active:scale-[0.98] mt-auto">
-                    เปิดดู Ledger ละเอียด (รายการออเดอร์)
+                    เปิดดู Ledger ละเอียดทั้งหมด (รายการออเดอร์)
                 </button>
             </div>
         </div>
@@ -1254,7 +1257,7 @@
         function calculateDailyRunningBalance(jobs, startBalance, currentMachines, activePlant) {
             // Find valid timeframe
             const validJobs = jobs.filter(j => j._dateObj.getFullYear() !== 2099);
-            if (validJobs.length === 0) return { minBalance: startBalance, isBottleneck: startBalance < 0, totalDemand: 0 };
+            if (validJobs.length === 0) return { minBalance: startBalance, isBottleneck: startBalance < 0, totalDemand: 0, timeline: [] };
 
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -1264,15 +1267,17 @@
             let minBalance = startBalance;
             let totalDemand = 0;
             let simDate = new Date(today);
+            let timeline = [];
 
             // Advance simulation day by day
             while (simDate <= maxDate) {
                 // Add daily capacity
-                currentBalance += (currentMachines * 2500);
+                const dailyProduction = currentMachines * 2500;
+                currentBalance += dailyProduction;
 
-                // Subtract orders arriving 4 days from now (production buffer)
+                // Subtract orders arriving 5 days from now (production buffer)
                 const targetDate = new Date(simDate);
-                targetDate.setDate(targetDate.getDate() + 4);
+                targetDate.setDate(targetDate.getDate() + 5);
 
                 const jobsForTarget = validJobs.filter(j => j._dateObj.getTime() === targetDate.getTime());
                 let dailyDrain = 0;
@@ -1285,10 +1290,17 @@
                 currentBalance -= dailyDrain;
                 minBalance = Math.min(minBalance, currentBalance);
 
+                timeline.push({
+                    date: new Date(simDate),
+                    bal: currentBalance,
+                    drain: dailyDrain,
+                    added: dailyProduction
+                });
+
                 simDate.setDate(simDate.getDate() + 1);
             }
 
-            return { minBalance, isBottleneck: minBalance < 0, totalDemand };
+            return { minBalance, isBottleneck: minBalance < 0, totalDemand, timeline };
         }
 
         function renderStockRecommendations() {
@@ -1315,17 +1327,14 @@
             });
 
             // Populate Filters
-            const buildPills = (items, activeVal, onClickFn) => {
-                let html = `<button onclick="${onClickFn}('ทั้งหมด')" class="shrink-0 px-4 py-1.5 text-[10px] font-black rounded-lg transition-all border ${activeVal === 'ทั้งหมด' ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}">ทั้งหมด</button>`;
-                items.forEach(i => {
-                    const isActive = activeVal === i;
-                    html += `<button onclick="${onClickFn}('${i}')" class="shrink-0 px-4 py-1.5 text-[10px] font-black rounded-lg transition-all border ${isActive ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}">${i}</button>`;
-                });
-                return html;
-            };
-
-            const divGrp = document.getElementById('filter-rec-group');
-            if (divGrp) divGrp.innerHTML = buildPills(Array.from(uniqueGroups).sort(), activeRecGroup, 'setRecGroup');
+            // Create Filter Buttons for Item Group
+            let groupFilterHtml = `<button onclick="setRecGroup('ทั้งหมด')" class="px-5 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all ${activeRecGroup === 'ทั้งหมด' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'}">ทั้งหมด</button>`;
+            Array.from(uniqueGroups).sort().forEach(g => {
+                const isActive = activeRecGroup === g;
+                groupFilterHtml += `<button onclick="setRecGroup('${g}')" class="px-5 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all ${isActive ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'}">${g}</button>`;
+            });
+            document.getElementById('filter-rec-group').className = "flex flex-wrap items-center gap-2 max-w-full";
+            document.getElementById('filter-rec-group').innerHTML = groupFilterHtml;
 
             const divRole = document.getElementById('filter-rec-role');
             if (divRole) {
@@ -1479,9 +1488,9 @@
                                     <div class="flex items-center gap-1.5 text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
                                         <i data-lucide="users" class="w-3 h-3"></i> กระทบลูกค้า: <span class="text-slate-800">${impactText}</span>
                                     </div>
-                                    <div class="mt-2 flex items-center gap-1.5 text-[9px] font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-lg border border-rose-100">
-                                        <i data-lucide="settings-2" class="w-3 h-3"></i> เครื่องรันไม่พอส่ง (เปิดอยู่ ${f.maxMc}) แนะนำสลับเพิ่ม +${extraMcNeeded} เครื่อง
-                                    </div>
+                                     <div class="mt-2 flex items-center gap-1.5 text-[9px] font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-lg border border-rose-100">
+                                         <i data-lucide="settings-2" class="w-3 h-3"></i> เครื่องรันไม่พอส่ง (เปิดอยู่ ${f.maxMc}) แนะนำเพิ่ม +${extraMcNeeded} เครื่อง/วัน
+                                     </div>
                                 </div>
                             </button>
                             `
@@ -1507,11 +1516,11 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="w-full pt-2 mt-2 border-t border-dashed border-emerald-100">
-                                    <div class="flex items-center gap-1.5 text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">
-                                        <i data-lucide="power-off" class="w-3 h-3"></i> เครื่องรันเกินออเดอร์ (${f.maxMc} เครื่อง) สามารถสลับดึงไปทอตัวอื่นได้
-                                    </div>
-                                </div>
+                                 <div class="w-full pt-2 mt-2 border-t border-dashed border-emerald-100">
+                                     <div class="flex items-center gap-1.5 text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">
+                                         <i data-lucide="power-off" class="w-3 h-3"></i> ดึงเครื่องออกได้! สต็อกเหลือเฟือ แนะนำลดเครื่องทอลง -${Math.max(1, Math.min(f.maxMc, Math.floor((runningSim.minBalance - 10000) / 25000)))} เครื่อง
+                                     </div>
+                                 </div>
                             </button>
                             `
                         });
@@ -1650,16 +1659,42 @@
             document.getElementById('rm-stats').innerHTML = statsHtml;
 
             const chartCont = document.getElementById('rm-chart-container');
+            chartCont.classList.remove('hidden');
+            chartCont.classList.add('flex');
 
-            if (currentRecTab === 'planner') {
-                chartCont.classList.remove('hidden');
-                chartCont.classList.add('flex');
+            const sim = calculateDailyRunningBalance(fjobs, startBal, maxMc, activeRecPlant);
+            drawRecChart(sim.timeline);
 
-                const sim = calculateDailyRunningBalance(fjobs, startBal, maxMc, activeRecPlant);
-                drawRecChart(sim.timeline);
-            } else {
-                chartCont.classList.add('hidden');
-                chartCont.classList.remove('flex');
+            const ledgerCont = document.getElementById('rm-ledger-container');
+            if (ledgerCont) {
+                const ledgerHtml = `
+                    <div class="mt-2 border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-white">
+                        <div class="bg-slate-50 border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+                            <h4 class="text-[11px] font-bold text-slate-600 uppercase tracking-widest"><i data-lucide="list" class="w-3 h-3 inline mr-1"></i> รายการออเดอร์ (Ledger)</h4>
+                            <span class="text-[9px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-md font-bold">${fjobs.length} รายการ</span>
+                        </div>
+                        <div class="overflow-x-auto hide-scrollbar max-h-[30vh] md:max-h-60 overflow-y-auto relative">
+                            <table class="w-full text-[10px] text-left">
+                                <thead class="text-slate-400 uppercase tracking-tighter bg-white sticky top-0 z-10 shadow-sm border-b border-slate-50 font-black italic">
+                                    <tr><th class="py-2 px-3">วันขึ้นของ</th><th class="py-2 px-3">ลูกค้า/ฝ่ายขาย</th><th class="py-2 text-right">จำนวนตัดสต็อก</th></tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50">
+                                    ${fjobs.map(job => `
+                                        <tr class="hover:bg-slate-50 transition-colors">
+                                            <td class="py-2.5 px-3 font-bold text-slate-700 whitespace-nowrap">${formatDateDisplay(job._dateObj).text}</td>
+                                            <td class="py-2.5 px-3">
+                                                <span class="block text-[11px] text-slate-700 font-bold line-clamp-1">${job['Name'] || '-'}</span>
+                                                <span class="block text-[9px] text-slate-400 font-jakarta">${job['ฝ่ายขาย'] || '-'}</span>
+                                            </td>
+                                            <td class="py-2.5 text-right px-3 font-black text-rose-500 font-jakarta">-${parseNum(job['ใช้ผ้า']).toLocaleString()}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                ledgerCont.innerHTML = ledgerHtml;
             }
 
             const overlay = document.getElementById('recModal');
