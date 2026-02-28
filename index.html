@@ -66,7 +66,7 @@
 
         /* Table Styling */
         .ledger-table th { position: sticky; top: 0; z-index: 10; }
-        .ledger-row:nth-child(even) { background-color: rgba(248, 250, 252, 0.5); }
+        .ledger-row:nth-child(even) { background-color: rgba(248, 250, 252, 0.3); }
     </style>
 </head>
 <body class="view-mobile">
@@ -84,7 +84,7 @@
         
         <h1 class="text-3xl font-bold text-slate-800 mb-3 leading-tight tracking-tight">Planner Want to tell you<br>About Weaving</h1>
         <p class="text-slate-500 text-sm font-light max-w-xs mb-10 leading-relaxed">
-            วิเคราะห์แผนงานทอและสต็อกสะสมแบบบัญชีแยกประเภท (Ledger)
+            วิเคราะห์แผนงานทอและสต็อกสะสมแบบบัญชีแยกประเภท (Ledger) เรียงตามลำดับความสำคัญของวันที่ส่งของ
         </p>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
@@ -116,7 +116,7 @@
             <div class="mt-8 mb-8 flex justify-between items-end px-2">
                 <div>
                     <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-[0.2em] mb-1">Weaving Operations</p>
-                    <h2 class="text-2xl font-bold text-slate-800 italic">หน้าหลัก</h2>
+                    <h2 class="text-2xl font-bold text-slate-800 italic font-semibold">หน้าหลัก</h2>
                 </div>
                 <div id="sync-status" class="text-[10px] bg-white border border-slate-100 text-slate-400 px-3 py-1.5 rounded-full font-bold shadow-sm">
                     ซิงค์ข้อมูล...
@@ -130,7 +130,7 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-800 text-base leading-tight">เช็คม้วนผืนผ้า</h3>
-                        <p class="text-[10px] text-slate-500 font-light">Running Balance แบบตารางบัญชี</p>
+                        <p class="text-[10px] text-slate-500 font-light italic">Running Balance Table</p>
                     </div>
                 </button>
                 
@@ -140,7 +140,7 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-800 text-base leading-tight">แยกตามกลุ่มสินค้า</h3>
-                        <p class="text-[10px] text-slate-500 font-light">วิเคราะห์การใช้ผ้าแยกตาม ItemGroup</p>
+                        <p class="text-[10px] text-slate-500 font-light italic">Product Group Analysis</p>
                     </div>
                 </button>
 
@@ -150,7 +150,7 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-800 text-base leading-tight">แยกตามฝ่ายขาย</h3>
-                        <p class="text-[10px] text-slate-500 font-light">ดูยอดจองและงานค้างผลิตรายเซลล์</p>
+                        <p class="text-[10px] text-slate-500 font-light italic">Sales Team Allocation</p>
                     </div>
                 </button>
 
@@ -160,7 +160,7 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-800 text-base leading-tight">แยกตามรายลูกค้า</h3>
-                        <p class="text-[10px] text-slate-500 font-light">วิเคราะห์ผ้าคงเหลือรายรายชื่อลูกค้า</p>
+                        <p class="text-[10px] text-slate-500 font-light italic">Customer Demand Summary</p>
                     </div>
                 </button>
             </div>
@@ -253,23 +253,26 @@
                     <!-- Ledger Table -->
                     <div class="space-y-3">
                         <div class="flex justify-between items-center px-2 mb-1">
-                            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">ตารางวิเคราะห์การตัดสต็อกสะสม</h3>
-                            <span class="text-[9px] bg-slate-900 text-white px-2 py-0.5 rounded-full font-bold shadow-sm">RUNNING DOWN</span>
+                            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <i data-lucide="align-left" class="w-3 h-3"></i> ตารางวิเคราะห์การตัดสต็อกสะสม
+                            </h3>
+                            <span class="text-[9px] bg-slate-900 text-white px-3 py-1 rounded-full font-bold shadow-sm uppercase tracking-widest">Running Down</span>
                         </div>
                         
-                        <div class="glass-card overflow-hidden border-slate-100 shadow-md">
+                        <div class="glass-card overflow-hidden border-slate-100 shadow-md bg-white">
                             <div class="overflow-x-auto hide-scrollbar">
-                                <table class="w-full text-left ledger-table min-w-[600px]">
+                                <table class="w-full text-left ledger-table min-w-[750px]">
                                     <thead class="bg-slate-50 border-b border-slate-100">
-                                        <tr class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
-                                            <th class="px-4 py-3">Due Date / Sale / Item</th>
-                                            <th class="px-2 py-3 text-center">ม้วน ยกมา/ใช้/เหลือ</th>
-                                            <th class="px-2 py-3 text-right">ยอดใช้ (เมตร)</th>
-                                            <th class="px-4 py-3 text-right bg-slate-900 text-emerald-400">คงเหลือสะสม</th>
+                                        <tr class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                            <th class="px-4 py-3 bg-emerald-50 text-emerald-700 border-r border-emerald-100 w-28">กำหนดส่ง</th>
+                                            <th class="px-4 py-3">ฝ่ายขาย / รายการงาน / Item</th>
+                                            <th class="px-2 py-3 text-center w-40">ม้วน ยกมา / Weaving Use / เหลือ</th>
+                                            <th class="px-2 py-3 text-right w-28">ยอดใช้ (ม.)</th>
+                                            <th class="px-4 py-3 text-right bg-slate-900 text-emerald-400 w-32">คงเหลือสะสม</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="ledger-body" class="divide-y divide-slate-50">
-                                        <!-- Rows injected by JavaScript -->
+                                    <tbody id="ledger-body" class="divide-y divide-slate-50 text-[11px]">
+                                        <!-- Rows injected by JS -->
                                     </tbody>
                                 </table>
                             </div>
@@ -285,7 +288,7 @@
         <div class="layout-container">
             <div class="flex items-center gap-3 mb-8">
                 <button onclick="navigate('menu')" class="p-2 -ml-2 text-slate-400 hover:text-slate-800 transition-colors"><i data-lucide="arrow-left"></i></button>
-                <h2 id="stats-page-title" class="text-xl font-bold text-slate-800 leading-tight italic font-jakarta">วิเคราะห์ภาพรวม</h2>
+                <h2 id="stats-page-title" class="text-xl font-bold text-slate-800 leading-tight italic font-jakarta font-semibold tracking-tight text-emerald-800">วิเคราะห์ภาพรวม</h2>
             </div>
 
             <div id="stats-view-main" class="grid grid-cols-1 gap-4"></div>
@@ -303,7 +306,7 @@
     </section>
 
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl text-[11px] font-bold shadow-2xl opacity-0 transition-all pointer-events-none z-50 uppercase tracking-widest font-jakarta">
-        Copied to clipboard
+        คัดลอกรายงานเรียบร้อย
     </div>
 
     <script>
@@ -318,10 +321,17 @@
         const parseNum = (v) => parseFloat(String(v || '0').replace(/,/g, '')) || 0;
         
         const dateParser = (dateStr) => {
-            if (!dateStr || dateStr === '-') return new Date(8640000000000000);
+            if (!dateStr || dateStr === '-' || dateStr.trim() === '') return new Date(2099, 11, 31);
             const parts = dateStr.split('/');
-            if (parts.length < 3) return new Date(8640000000000000);
-            return new Date(parts[2], parts[1] - 1, parts[0]);
+            if (parts.length < 3) return new Date(2099, 11, 31);
+            return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+        };
+
+        // Helper สำหรับเลือกสีตัวเลขตามสถานะบาลานซ์
+        const getBalanceColorClass = (val) => {
+            if (val < 0) return 'text-rose-500 font-black'; // แดง = ติดลบ
+            if (val <= 2000) return 'text-orange-500 font-black'; // ส้ม = ใกล้หมด
+            return 'text-emerald-500 font-black'; // เขียว = ปกติ
         };
 
         async function refreshData() {
@@ -332,12 +342,9 @@
                 download: true,
                 header: true,
                 complete: (results) => {
-                    rawData = results.data
-                        .filter(r => r['Due Date'] || r['Item'])
-                        .sort((a, b) => dateParser(a['Due Date']) - dateParser(b['Due Date']));
-                    
+                    rawData = results.data.filter(r => r['Item'] || r['Weaving Item']);
                     updateFilters();
-                    status.textContent = 'READY';
+                    status.textContent = 'SYSTEM READY';
                     status.className = 'text-[10px] bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full font-bold border border-emerald-100 shadow-sm';
                 }
             });
@@ -411,6 +418,8 @@
                         return String(item[f]) === selections[f];
                     });
                 });
+
+                results.sort((a, b) => dateParser(a['Due Date']) - dateParser(b['Due Date']));
                 renderLedger(results);
                 document.getElementById('loading-area').classList.add('hidden');
                 document.getElementById('result-view').classList.remove('hidden');
@@ -420,7 +429,7 @@
         function renderLedger(items) {
             const body = document.getElementById('ledger-body');
             if (items.length === 0) {
-                body.innerHTML = `<tr><td colspan="4" class="text-center py-20 text-slate-300 italic font-bold uppercase tracking-widest text-xs">Target Lost - No Data Found</td></tr>`;
+                body.innerHTML = `<tr><td colspan="5" class="text-center py-20 text-slate-300 italic font-bold uppercase tracking-widest text-xs">No Data found for this spec</td></tr>`;
                 return;
             }
 
@@ -440,44 +449,50 @@
                 const balance = parseNum(item['Stock คงเหลือ']);
                 const usage = parseNum(item['Weaving Use']);
                 const currentRolls = parseNum(item['มีม้วนเท่าไร']);
-                const rollUsed = Math.ceil(usage / 1000); // Mock roll usage
+                const rollUsed = Math.ceil(usage / 1000) || 0; 
                 const rollBrought = currentRolls + rollUsed;
+                const isLate = dateParser(item['Due Date']) < new Date();
 
                 return `
-                    <tr class="ledger-row border-b border-slate-50 hover:bg-emerald-50/30 transition-colors group">
-                        <td class="px-4 py-4 min-w-[200px]">
+                    <tr class="ledger-row border-b border-slate-50 hover:bg-emerald-50 transition-colors group">
+                        <td class="px-4 py-4 bg-emerald-50/20 border-r border-emerald-50 align-middle">
+                            <div class="flex flex-col items-center">
+                                <span class="text-[10px] font-black ${isLate ? 'text-rose-600' : 'text-emerald-700'} font-jakarta">${item['Due Date'] || '-'}</span>
+                                <span class="text-[8px] text-slate-400 font-bold uppercase tracking-tighter mt-0.5">Deadline</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4">
                             <div class="flex flex-col">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-[9px] font-black text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded shadow-sm">${item['Due Date'] || '-'}</span>
-                                    <span class="text-[9px] font-bold text-slate-300 italic tracking-tighter">REQ: ${item['Request Date'] || '-'}</span>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-none">${item['ฝ่ายขาย'] || 'N/A'}</span>
+                                    <span class="text-[9px] text-slate-300 font-bold">REQ: ${item['Request Date'] || '-'}</span>
                                 </div>
-                                <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-0.5 leading-none">${item['ฝ่ายขาย'] || 'N/A'}</span>
-                                <span class="text-xs font-bold text-slate-800 font-jakarta leading-tight">#${item['Item']}</span>
-                                <span class="text-[10px] text-slate-400 line-clamp-1 italic">${item['Description']}</span>
+                                <span class="text-xs font-bold text-slate-800 font-jakarta leading-tight uppercase">#${item['Item']}</span>
+                                <p class="text-[10px] text-slate-500 line-clamp-1 mt-0.5 italic leading-none">${item['Description']}</p>
                             </div>
                         </td>
                         <td class="px-2 py-4 text-center align-middle">
                             <div class="flex flex-col items-center justify-center">
-                                <span class="text-[9px] text-slate-300 font-bold uppercase tracking-tighter leading-none mb-1">ม้วน (ยก/ใช้/เหลือ)</span>
                                 <div class="flex items-center gap-1.5 text-xs font-black font-jakarta">
                                     <span class="text-slate-400">${rollBrought}</span>
-                                    <span class="text-orange-400">/</span>
-                                    <span class="text-orange-500">${rollUsed}</span>
-                                    <span class="text-emerald-400">/</span>
-                                    <span class="text-emerald-600">${currentRolls}</span>
+                                    <span class="text-orange-300">/</span>
+                                    <span class="text-orange-500 font-bold">${rollUsed}</span>
+                                    <span class="text-emerald-300">/</span>
+                                    <span class="text-emerald-600 font-bold">${currentRolls}</span>
                                 </div>
+                                <span class="text-[8px] text-slate-300 font-bold uppercase tracking-tighter mt-1 italic">ยกมา / Weaving Use / เหลือ</span>
                             </div>
                         </td>
                         <td class="px-2 py-4 text-right align-middle">
                             <div class="flex flex-col items-end">
                                 <span class="text-sm font-black text-slate-700 font-jakarta">-${usage.toLocaleString()}</span>
-                                <span class="text-[8px] text-slate-400 uppercase font-bold tracking-widest mt-0.5">เมตร</span>
+                                <span class="text-[8px] text-slate-400 uppercase font-bold tracking-widest">เมตร</span>
                             </div>
                         </td>
-                        <td class="px-4 py-4 text-right bg-slate-900/5 align-middle group-hover:bg-slate-900 transition-all">
+                        <td class="px-4 py-4 text-right bg-slate-900 align-middle transition-all">
                             <div class="flex flex-col items-end">
-                                <span class="text-base font-black ${balance < 0 ? 'text-rose-500' : 'text-slate-900'} group-hover:text-emerald-400 font-jakarta">${balance.toLocaleString()}</span>
-                                <span class="text-[8px] text-slate-400 uppercase font-bold group-hover:text-slate-500">TOTAL REMAINING</span>
+                                <span class="text-base font-jakarta ${getBalanceColorClass(balance)}">${balance.toLocaleString()}</span>
+                                <span class="text-[8px] text-slate-500 uppercase font-bold tracking-tighter leading-none mt-1">Meter Balance</span>
                             </div>
                         </td>
                     </tr>
@@ -503,17 +518,19 @@
                 groups[key].total += demand;
                 groups[key].items += 1;
             });
+            
             const sorted = Object.entries(groups).sort((a,b) => b[1].total - a[1].total);
             container.className = viewMode === 'desktop' ? "grid grid-cols-2 gap-4" : "grid grid-cols-1 gap-4";
+            
             container.innerHTML = sorted.map(([name, data]) => `
-                <div onclick="drilldownGroup('${name}')" class="glass-card p-6 border-white active:scale-[0.98] transition-all cursor-pointer group hover:bg-white shadow-sm flex flex-col justify-between">
+                <div onclick="drilldownGroup('${name}')" class="glass-card p-6 border-white active:scale-[0.98] transition-all cursor-pointer group hover:bg-white shadow-sm flex flex-col justify-between h-full">
                     <div class="flex justify-between items-start mb-4">
-                        <h3 class="font-bold text-slate-800 group-hover:text-emerald-600 transition-colors text-lg line-clamp-1 uppercase">${name}</h3>
-                        <span class="text-[9px] bg-slate-100 text-slate-500 px-3 py-1 rounded-full font-black italic border border-slate-100 shrink-0 uppercase tracking-tighter">${data.items} JOBS</span>
+                        <h3 class="font-bold text-slate-800 group-hover:text-emerald-600 transition-colors text-lg uppercase font-jakarta line-clamp-1">${name}</h3>
+                        <span class="text-[9px] bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full font-black italic border border-emerald-100 shrink-0 uppercase tracking-tighter">${data.items} JOBS</span>
                     </div>
-                    <div class="flex items-end justify-between mt-auto">
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Total Meters</p>
-                        <p class="text-3xl font-black text-slate-800 leading-none font-jakarta">${data.total.toLocaleString()}</p>
+                    <div class="flex items-end justify-between mt-auto border-t border-slate-50 pt-4">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none italic">Total Demand</p>
+                        <p class="text-3xl font-black text-slate-800 leading-none font-jakarta">${data.total.toLocaleString()} <span class="text-[10px]">ม.</span></p>
                     </div>
                 </div>
             `).join('');
@@ -526,6 +543,8 @@
             document.getElementById('drilldown-group-name').textContent = `${groupName}`;
             let headerName = currentStatsType === 'group' ? "ItemGroup" : (currentStatsType === 'sales' ? "ฝ่ายขาย" : "Name");
             const filtered = rawData.filter(i => (i[headerName] || 'อื่นๆ') === groupName);
+            filtered.sort((a, b) => dateParser(a['Due Date']) - dateParser(b['Due Date']));
+            
             const fabrics = {};
             filtered.forEach(i => {
                 const fid = i['Weaving Item'] || 'Unknown';
@@ -535,21 +554,23 @@
                 fabrics[fid].maxMc = Math.max(fabrics[fid].maxMc, parseNum(i['Weaving Machine No.']));
                 fabrics[fid].stock = Math.max(fabrics[fid].stock, parseNum(i['Stock คงเหลือ']));
             });
+
             const sorted = Object.entries(fabrics).sort((a,b) => b[1].totalUse - a[1].totalUse);
             const drillContent = document.getElementById('drilldown-content');
             drillContent.className = viewMode === 'desktop' ? "grid grid-cols-2 gap-4" : "grid grid-cols-1 gap-4";
+            
             drillContent.innerHTML = sorted.map(([id, data]) => {
                 const remainder = data.stock - data.totalUse;
                 const safeId = id.replace(/[^a-zA-Z0-9]/g, '');
                 return `
-                <div class="glass-card p-6 border-white shadow-md bg-white flex flex-col">
+                <div class="glass-card p-6 border-white shadow-md bg-white flex flex-col h-full">
                     <div class="flex justify-between items-start mb-5 pb-4 border-b border-slate-50">
                         <div class="max-w-[70%]">
                             <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1 block leading-none">FABRIC ID: ${id}</span>
                             <h4 class="font-bold text-slate-800 leading-tight text-base uppercase font-jakarta line-clamp-1">${data.desc}</h4>
                         </div>
                         <div class="text-right">
-                             <p class="text-[8px] text-slate-400 font-bold uppercase">M/C MAX</p>
+                             <p class="text-[8px] text-slate-400 font-bold uppercase">MAX MC</p>
                              <p class="text-sm font-black text-sky-600 leading-none">${data.maxMc}</p>
                         </div>
                     </div>
@@ -563,12 +584,12 @@
                              <span class="text-xs font-black text-orange-500 font-jakarta">${data.totalUse.toLocaleString()}</span>
                         </div>
                         <div class="text-center p-2 rounded-2xl bg-emerald-50 border border-emerald-100 shadow-inner">
-                             <span class="text-[8px] text-emerald-600 block font-bold uppercase mb-1 tracking-tighter leading-none">สุทธิ</span>
-                             <span class="text-xs font-black ${remainder < 0 ? 'text-rose-500' : 'text-emerald-700'} font-jakarta">${remainder.toLocaleString()}</span>
+                             <span class="text-[8px] text-emerald-600 block font-bold uppercase mb-1 tracking-tighter leading-none italic">สุทธิ</span>
+                             <span class="text-xs ${getBalanceColorClass(remainder)} font-jakarta">${remainder.toLocaleString()}</span>
                         </div>
                     </div>
                     <button onclick="toggleCollapsible('${safeId}')" class="w-full flex items-center justify-between py-2.5 px-4 bg-slate-50 rounded-2xl text-[9px] font-black text-slate-400 uppercase tracking-widest hover:bg-slate-100 transition-all mt-auto">
-                        <span>ดูคิวงานในสเปก (${data.jobs.length})</span>
+                        <span>ดูคิวงานตามลำดับส่ง (${data.jobs.length})</span>
                         <i data-lucide="chevron-down" id="icon-${safeId}" class="w-3 h-3 transition-transform duration-300"></i>
                     </button>
                     <div id="collapse-${safeId}" class="collapsible-content pt-4 px-1 space-y-3">
@@ -578,9 +599,9 @@
                                     <span class="font-black text-slate-800 italic uppercase">#${job['Item']}</span>
                                     <span class="text-[9px] text-slate-400 font-bold">${job['Name'] || job['ฝ่ายขาย'] || '-'}</span>
                                 </div>
-                                <div class="text-right">
+                                <div class="text-right shrink-0">
                                     <span class="font-black text-slate-900">${parseNum(job['Weaving Use']).toLocaleString()} ม.</span>
-                                    <p class="text-[8px] text-rose-500 font-black uppercase italic">${job['Due Date'] || '-'}</p>
+                                    <p class="text-[9px] text-rose-500 font-black uppercase tracking-tighter leading-none mt-1">DUE: ${job['Due Date'] || '-'}</p>
                                 </div>
                             </div>
                         `).join('')}
