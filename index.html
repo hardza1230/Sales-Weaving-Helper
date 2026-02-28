@@ -869,47 +869,95 @@
             });
         }
 
-        function initWithLoading(mode) {
-            // Show loading screen immediately
+        async function initWithLoading(mode) {
+            // 1. Show loading screen, hide all other pages
             const allPages = ['page-start', 'page-loading', 'page-menu', 'page-fabric-check', 'page-usage-stats', 'page-rec-role-select', 'page-stock-recommend'];
             allPages.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) { el.classList.remove('page-active'); el.classList.add('hidden'); }
             });
             const loadingPage = document.getElementById('page-loading');
-            if (loadingPage) { loadingPage.classList.remove('hidden'); loadingPage.classList.add('page-active'); }
+            if (loadingPage) { loadingPage.classList.remove('hidden'); loadingPage.classList.add('flex'); loadingPage.classList.add('page-active'); }
             if (mode) { viewMode = mode; document.body.className = `view-${mode}`; }
 
-            const progressBar = document.getElementById('loading-progress-bar');
-            const statusText = document.getElementById('loading-status-text');
+            const bar = document.getElementById('loading-progress-bar');
+            const txt = document.getElementById('loading-status-text');
+            const setProgress = (pct, msg) => {
+                if (bar) bar.style.width = pct + '%';
+                if (txt) txt.textContent = msg;
+            };
 
-            // Animated progress steps
-            const steps = [
-                { pct: 10, msg: 'เชื่อมต่อ Google Sheets...' },
-                { pct: 35, msg: 'ดาวน์โหลดข้อมูลดิบ...' },
-                { pct: 60, msg: 'ประมวลผลการจําแนกสต็อก...' },
-                { pct: 80, msg: 'วิเคราะห์ Running Balance...' },
-                { pct: 95, msg: 'เตรียม Dashboard...' },
-            ];
-            let stepIdx = 0;
-            const stepInterval = setInterval(() => {
-                if (stepIdx < steps.length) {
-                    if (progressBar) progressBar.style.width = steps[stepIdx].pct + '%';
-                    if (statusText) statusText.textContent = steps[stepIdx].msg;
-                    stepIdx++;
-                } else {
-                    clearInterval(stepInterval);
-                }
-            }, 350);
+            // Step 1 — Initialise (instant, just UI)
+            setProgress(5, 'เริ่มต้นระบบ...');
+            await new Promise(r => setTimeout(r, 200));
 
-            // Fetch real data then navigate to menu
-            refreshData(() => {
-                clearInterval(stepInterval);
-                if (progressBar) progressBar.style.width = '100%';
-                if (statusText) statusText.textContent = 'พร้อมใช้งาน ✓';
-                setTimeout(() => navigate('menu'), 500);
-            });
+            // Step 2 — Connect & download CSV via PapaParse
+            setProgress(20, 'เชื่อมต่อ Google Sheets...');
+            try {
+                await new Promise((resolve, reject) => {
+                    Papa.parse(CSV_URL, {
+                        download: true,
+                        header: true,
+                        skipEmptyLines: true,
+                        // Step 3 progress — triggers when file starts streaming
+                        chunk: () => { setProgress(40, 'ดาวน์โหลดข้อมูลจาก Live Sheet...'); },
+                        complete: (results) => {
+                            // Step 4 — Parse & clean
+                            setProgress(65, 'ประมวลผลและจำแนกข้อมูล...');
+                            try {
+                                rawData = results.data
+                                    .filter(r => r['Weaving Item'] || r['เลขที่ CO'])
+                                    .map(row => {
+                                        const cleanRow = {};
+                                        Object.keys(row).forEach(k => {
+                                            const cleanKey = k.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+                                            cleanRow[cleanKey] = row[k];
+                                        });
+                                        const dateObj = dateParser(cleanRow['วันขึ้นของ']);
+                                        return { ...cleanRow, _sortDate: dateObj.getTime(), _dateObj: dateObj };
+                                    });
+
+                                // Step 5 — Build derivative indexes (filters, sync time)
+                                setProgress(85, 'วิเคราะห์ Running Balance...');
+                                updateFilters();
+                                const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                                const menuIcon = document.getElementById('refresh-icon-menu');
+                                const ledgerIcon = document.getElementById('refresh-icon-ledger');
+                                [menuIcon, ledgerIcon].forEach(i => i?.classList.remove('animate-spin'));
+                                const elSync = document.getElementById('sync-time-menu');
+                                if (elSync) elSync.textContent = now;
+                                const elSyncL = document.getElementById('sync-time-ledger');
+                                if (elSyncL) elSyncL.textContent = now;
+
+                                resolve();
+                            } catch (parseErr) {
+                                reject(parseErr);
+                            }
+                        },
+                        error: (err) => reject(err)
+                    });
+                });
+
+                // Step 6 — All done!
+                setProgress(100, `โหลดสำเร็จ ✓ (${rawData.length.toLocaleString()} รายการ)`);
+                await new Promise(r => setTimeout(r, 700));
+                navigate('menu');
+
+            } catch (err) {
+                // Error state — show user friendly message with retry
+                if (bar) bar.style.width = '40%';
+                if (bar) bar.style.backgroundImage = 'linear-gradient(to right, #f43f5e, #e11d48)';
+                if (txt) txt.textContent = 'โหลดข้อมูลไม่สำเร็จ — กรุณาตรวจสอบการเชื่อมต่อ';
+                loadingPage.innerHTML += `
+                    <div class="mt-8 relative z-10">
+                        <button onclick="initWithLoading('${mode}')" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl shadow-lg transition-all">
+                            ลองใหม่อีกครั้ง
+                        </button>
+                    </div>`;
+                console.error('initWithLoading error:', err);
+            }
         }
+
 
         function navigate(pageId, mode) {
             if (mode) { viewMode = mode; document.body.className = `view-${mode}`; }
