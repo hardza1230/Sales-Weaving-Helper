@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Live - Sales System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- PapaParse for CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
+        body { font-family: 'Kanit', sans-serif; overflow-x: hidden; }
+        .console-font { font-family: 'Fira Code', monospace; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .active-filter { background-color: #2563eb !important; color: white !important; border-color: #2563eb !important; }
+        .active-filter-emerald { background-color: #059669 !important; color: white !important; border-color: #059669 !important; }
+        .active-filter-amber { background-color: #d97706 !important; color: white !important; border-color: #d97706 !important; }
+        .active-filter-rose { background-color: #e11d48 !important; color: white !important; border-color: #e11d48 !important; }
+        .tap-feedback:active { transform: scale(0.96); transition: 0.1s; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-24">
+
+    <!-- Header -->
+    <header class="bg-white border-b sticky top-0 z-30 shadow-sm">
+        <div class="max-w-xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="bg-blue-600 p-2 rounded-xl shadow-blue-200 shadow-lg">
+                    <i data-lucide="package" class="text-white w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-800 leading-tight">Stock Live</h1>
+                    <div class="flex items-center gap-1 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                        <i data-lucide="clock" class="w-3 h-3"></i> อัปเดต: <span id="lastUpdated">--:--</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-1">
+                <button onclick="toggleSettings()" class="p-2.5 rounded-full hover:bg-slate-100 text-slate-400 tap-feedback">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                </button>
+                <button id="refreshBtn" class="p-2.5 rounded-full hover:bg-blue-50 text-blue-600 tap-feedback">
+                    <i data-lucide="refresh-cw" id="refreshIcon" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Search & Filter -->
+        <div class="max-w-xl mx-auto px-4 pb-3 pt-1">
+            <div class="relative group">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 transition-colors group-focus-within:text-blue-500"></i>
+                <input type="text" id="searchInput" placeholder="รหัส Item หรือ ชื่อผ้า..." class="w-full bg-slate-100 border-none rounded-2xl py-3.5 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 outline-none text-slate-700 text-sm shadow-inner">
+            </div>
+            <div class="flex gap-2 mt-3 overflow-x-auto no-scrollbar pb-1">
+                <button onclick="setFilter('all', this)" class="filter-btn active-filter px-5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap border bg-white text-slate-500 border-slate-200 shadow-sm tap-feedback">ทั้งหมด</button>
+                <button onclick="setFilter('available', this)" class="filter-btn px-5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap border bg-white text-slate-500 border-slate-200 shadow-sm tap-feedback" data-color="emerald">พร้อมขาย</button>
+                <button onclick="setFilter('low', this)" class="filter-btn px-5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap border bg-white text-slate-500 border-slate-200 shadow-sm tap-feedback" data-color="amber">ใกล้หมด</button>
+                <button onclick="setFilter('out', this)" class="filter-btn px-5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap border bg-white text-slate-500 border-slate-200 shadow-sm tap-feedback" data-color="rose">หมด</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Settings Modal (Hidden by default) -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm p-4 flex items-center justify-center">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl animate-in zoom-in duration-200">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2"><i data-lucide="link" class="w-4 h-4 text-blue-500"></i> ตั้งค่าแหล่งข้อมูล</h3>
+                <button onclick="toggleSettings()" class="text-slate-400 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-xs text-slate-500 mb-3 leading-relaxed">วางลิงก์ CSV จาก Google Sheets (Published to web) เพื่อซิงค์ข้อมูลจริง</p>
+            <textarea id="urlInput" class="w-full h-28 bg-slate-50 border border-slate-200 rounded-2xl p-3 text-[10px] font-mono mb-4 focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+            <div class="flex gap-2">
+                <button onclick="saveSettings()" class="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-bold text-sm tap-feedback shadow-lg shadow-blue-200">บันทึกและซิงค์</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-xl mx-auto px-4 pt-4 space-y-3">
+        <!-- Sync Status Console -->
+        <div id="loadingState" class="py-10 text-center">
+            <div class="relative w-16 h-16 mx-auto mb-6">
+                <div class="absolute inset-0 border-4 border-blue-100 rounded-full animate-pulse"></div>
+                <div class="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+            </div>
+            <div class="bg-slate-900 rounded-3xl p-5 text-left shadow-2xl max-w-sm mx-auto border border-slate-800">
+                <div id="syncConsole" class="console-font text-[10px] space-y-1.5 min-h-[120px] text-slate-400">
+                    <p class="text-blue-400 font-bold tracking-widest">> SYSTEM_BOOT_SEQUENCE</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Error Display -->
+        <div id="errorState" class="hidden bg-white border border-red-100 rounded-3xl p-8 text-center shadow-lg">
+            <div class="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="unplug" class="w-8 h-8 text-red-500"></i>
+            </div>
+            <h3 class="font-bold text-slate-800 mb-2">ไม่สามารถดึงข้อมูลออนไลน์ได้</h3>
+            <div class="bg-amber-50 p-4 rounded-2xl text-left mb-4 text-[11px] text-amber-700 leading-relaxed">
+                <p class="font-bold mb-1 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> สาเหตุที่เป็นไปได้:</p>
+                <ul class="list-disc pl-4 space-y-1">
+                    <li>เปิดแอปจากไฟล์ในเครื่อง (CORS Security)</li>
+                    <li>ยังไม่ได้ Publish Google Sheets เป็น CSV</li>
+                    <li>อินเทอร์เน็ตมีปัญหา</li>
+                </ul>
+            </div>
+            <div class="flex flex-col gap-2">
+                <button onclick="refreshData()" class="w-full py-3.5 bg-slate-900 text-white rounded-2xl text-sm font-bold shadow-md active:scale-95 transition-all">ลองซิงค์ใหม่อีกครั้ง</button>
+                <button onclick="toggleSettings()" class="w-full py-3.5 bg-white text-slate-600 border border-slate-200 rounded-2xl text-sm font-bold active:scale-95 transition-all">ตรวจสอบลิงก์ข้อมูล</button>
+            </div>
+        </div>
+
+        <!-- Inventory Data Grid -->
+        <div id="dataGrid" class="space-y-3"></div>
+        <div id="emptyState" class="hidden py-20 text-center text-slate-400">
+            <i data-lucide="search-x" class="mx-auto mb-2 opacity-20 w-12 h-12"></i>
+            <p class="font-medium">ไม่พบสินค้าที่คุณกำลังมองหา</p>
+            <button onclick="clearSearch()" class="mt-2 text-blue-600 text-sm font-bold underline">ล้างค่าการค้นหา</button>
+        </div>
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-2xl text-xs font-bold shadow-2xl flex items-center gap-2 opacity-0 transition-opacity pointer-events-none z-50">
+        <i data-lucide="check-circle-2" class="text-emerald-400 w-4 h-4"></i>
+        <span id="toastMsg">คัดลอกแล้ว</span>
+    </div>
+
+    <script>
+        // เริ่มต้นด้วยลิงก์ที่นายให้มา
+        let SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhA5Pgw2DjeL_JLpWHruLvV9bMs5Wk2IFU-FA1C5AFUFWkql48YxoS8fVb1ueuaeeG_PwIrFtTjyhi/pub?output=csv';
+
+        let allInventory = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        function log(msg, type = 'info') {
+            const el = document.getElementById('syncConsole');
+            if (!el) return;
+            const p = document.createElement('p');
+            const color = type === 'success' ? 'text-emerald-400' : type === 'error' ? 'text-red-400' : type === 'process' ? 'text-blue-300' : 'text-slate-500';
+            p.className = color;
+            p.textContent = `> ${msg}`;
+            el.appendChild(p);
+            // Auto scroll console
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function toggleSettings() {
+            const modal = document.getElementById('settingsModal');
+            document.getElementById('urlInput').value = SHEET_CSV_URL;
+            modal.classList.toggle('hidden');
+        }
+
+        function saveSettings() {
+            const newUrl = document.getElementById('urlInput').value.trim();
+            if (newUrl) {
+                SHEET_CSV_URL = newUrl;
+                localStorage.setItem('fabric_sheet_url', newUrl);
+                toggleSettings();
+                refreshData();
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.replace('opacity-0', 'opacity-100');
+            setTimeout(() => toast.classList.replace('opacity-100', 'opacity-0'), 2000);
+        }
+
+        window.onload = () => {
+            lucide.createIcons();
+            // โหลดลิงก์ที่เซฟไว้ (ถ้ามี)
+            const savedUrl = localStorage.getItem('fabric_sheet_url');
+            if (savedUrl) SHEET_CSV_URL = savedUrl;
+            
+            // โหลดข้อมูลเก่ามาโชว์ก่อน (Offline Cache)
+            const cached = localStorage.getItem('fabric_data_cache');
+            if (cached) {
+                allInventory = JSON.parse(cached);
+                document.getElementById('lastUpdated').textContent = localStorage.getItem('fabric_last_update') || '--:--';
+                document.getElementById('loadingState').classList.add('hidden');
+                render();
+            }
+            
+            refreshData();
+        };
+
+        document.getElementById('refreshBtn').addEventListener('click', refreshData);
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase();
+            render();
+        });
+
+        async function refreshData() {
+            const loading = document.getElementById('loadingState');
+            const errorPanel = document.getElementById('errorState');
+            const icon = document.getElementById('refreshIcon');
+            
+            loading.classList.remove('hidden');
+            errorPanel.classList.add('hidden');
+            icon.classList.add('animate-spin');
+            log(`INITIATING SYNC...`, 'process');
+            log(`URL: ${SHEET_CSV_URL.substring(0, 40)}...`);
+
+            Papa.parse(SHEET_CSV_URL, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    log(`CONNECTED: ${results.data.length} ROWS FOUND`, 'success');
+                    
+                    try {
+                        allInventory = results.data.map(row => {
+                            const parseStock = (val) => parseFloat(String(val || '0').replace(/,/g, '')) || 0;
+                            
+                            return {
+                                id: row['Item'] || 'N/A',
+                                name: row['Description'] || '-',
+                                cat: row['กลุ่มผลิตภัณฑ์'] || 'ทั่วไป',
+                                plant: row['Plant'] || '-',
+                                spec: row['Weaving Item'] || '-',
+                                stock: parseStock(row['Stock คงเหลือ']),
+                                uom: 'หน่วย' 
+                            };
+                        }).filter(i => i.id !== 'Item' && i.id !== 'N/A' && i.id !== '');
+
+                        // Save to Cache
+                        localStorage.setItem('fabric_data_cache', JSON.stringify(allInventory));
+                        const now = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+                        localStorage.setItem('fabric_last_update', now);
+                        document.getElementById('lastUpdated').textContent = now;
+
+                        log(`PARSING COMPLETE: ${allInventory.length} ITEMS READY`, 'success');
+                        
+                        setTimeout(() => {
+                            loading.classList.add('hidden');
+                            icon.classList.remove('animate-spin');
+                            render();
+                        }, 800);
+
+                    } catch (e) {
+                        log(`PARSING ERROR: ${e.message}`, 'error');
+                        handleError(e.message);
+                    }
+                },
+                error: function(err) {
+                    log(`FETCH FAILED: ${err}`, 'error');
+                    handleError(err);
+                }
+            });
+        }
+
+        function handleError(msg) {
+            document.getElementById('refreshIcon').classList.remove('animate-spin');
+            // ถ้าไม่มีข้อมูลเก่าในเครื่องเลย ให้โชว์หน้า Error
+            if (allInventory.length === 0) {
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('errorState').classList.remove('hidden');
+            } else {
+                // ถ้ามีข้อมูลเก่า ให้ใช้ข้อมูลเดิมไปก่อนแต่แจ้งเตือนเบาๆ
+                document.getElementById('loadingState').classList.add('hidden');
+                showToast("ซิงค์ไม่สำเร็จ ใช้ข้อมูลล่าสุดในเครื่อง");
+            }
+        }
+
+        function render() {
+            const grid = document.getElementById('dataGrid');
+            const empty = document.getElementById('emptyState');
+            
+            const filtered = allInventory.filter(item => {
+                const searchMatch = item.name.toLowerCase().includes(searchQuery) || item.id.toLowerCase().includes(searchQuery);
+                if (currentFilter === 'available') return searchMatch && item.stock > 100;
+                if (currentFilter === 'low') return searchMatch && item.stock > 0 && item.stock <= 100;
+                if (currentFilter === 'out') return searchMatch && item.stock <= 0;
+                return searchMatch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+            } else {
+                empty.classList.add('hidden');
+                grid.innerHTML = filtered.map(item => {
+                    let status = {l:'พร้อมขาย', c:'emerald', icon:'check-circle-2'};
+                    if (item.stock <= 0) status = {l:'ของหมด', c:'rose', icon:'x-circle'};
+                    else if (item.stock <= 100) status = {l:'ใกล้หมด', c:'amber', icon:'alert-triangle'};
+
+                    return `
+                        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 transition-all active:scale-[0.98] mb-4 overflow-hidden relative">
+                            <!-- Background Status Strip -->
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-${status.c}-500"></div>
+
+                            <div class="flex justify-between items-start mb-3 pl-2">
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest font-mono">${item.id}</span>
+                                    <span class="text-[11px] text-blue-600 font-bold mt-0.5">${item.cat}</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 bg-${status.c}-50 text-${status.c}-700 text-[10px] px-3 py-1.5 rounded-2xl font-black border border-${status.c}-100 uppercase tracking-tight">
+                                    <i data-lucide="${status.icon}" class="w-3.5 h-3.5"></i> ${status.l}
+                                </div>
+                            </div>
+
+                            <h3 class="font-bold text-slate-800 text-lg leading-snug mb-4 pl-2 pr-4">${item.name}</h3>
+                            
+                            <div class="bg-slate-50 rounded-2xl p-4 mb-4 flex flex-col gap-2 mx-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-slate-400 flex items-center gap-1"><i data-lucide="layers" class="w-3.5 h-3.5"></i> สเปกผ้า</span>
+                                    <span class="text-slate-700 font-bold">${item.spec}</span>
+                                </div>
+                                <div class="flex items-center justify-between text-xs border-t border-slate-100 pt-2">
+                                    <span class="text-slate-400 flex items-center gap-1"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> คลังเก็บ</span>
+                                    <span class="text-slate-700 font-bold">${item.plant}</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-end justify-between px-2 mb-2">
+                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">สต็อกคงเหลือ</div>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-3xl font-black text-slate-900">${item.stock.toLocaleString()}</span>
+                                    <span class="text-[10px] font-black text-slate-400 uppercase">หน่วย</span>
+                                </div>
+                            </div>
+
+                            <button onclick="copyLine('${item.id}')" class="w-full mt-4 py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-bold flex items-center justify-center gap-2 tap-feedback shadow-lg shadow-slate-200">
+                                <i data-lucide="copy" class="w-4 h-4 opacity-50"></i> คัดลอกข้อมูลส่งเข้า LINE
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+                lucide.createIcons();
+            }
+        }
+
+        function setFilter(type, el) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-btn').forEach(b => b.className = 'filter-btn px-5 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap border bg-white text-slate-500 border-slate-200 shadow-sm tap-feedback');
+            const color = el.getAttribute('data-color');
+            el.classList.add(color ? `active-filter-${color}` : 'active-filter');
+            render();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            searchQuery = '';
+            setFilter('all', document.querySelector('.filter-btn'));
+        }
+
+        function copyLine(id) {
+            const item = allInventory.find(i => i.id === id);
+            const text = `🔹 ${item.name} (${item.id})\n✅ พร้อมขาย: ${item.stock.toLocaleString()} หน่วย\n📍 คลัง: ${item.plant}\n🛠️ สเปก: ${item.spec}\n⏰ ข้อมูล ณ: ${document.getElementById('lastUpdated').textContent}`;
+            
+            const ta = document.createElement('textarea'); 
+            ta.value = text; 
+            document.body.appendChild(ta); 
+            ta.select(); 
+            document.execCommand('copy'); 
+            document.body.removeChild(ta);
+            
+            showToast("คัดลอกเรียบร้อย! วางส่ง LINE ได้เลย");
+        }
+    </script>
+</body>
+</html>
