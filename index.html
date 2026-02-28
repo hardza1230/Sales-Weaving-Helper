@@ -510,31 +510,6 @@
 
                     <!-- Filters & Dashboards -->
                     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
-                        <div
-                            class="flex flex-wrap items-center gap-2 bg-white p-1 rounded-2xl shadow-sm border border-slate-100 pr-3 w-full md:w-auto">
-                            <div class="p-2 bg-slate-50 rounded-xl text-slate-400">
-                                <i data-lucide="filter" class="w-4 h-4"></i>
-                            </div>
-
-                            <!-- Sales Filter -->
-                            <select id="sel-rec-sales" onchange="renderStockRecommendations()"
-                                class="hidden w-full md:w-32 bg-transparent border-none text-[11px] font-bold outline-none text-slate-600 appearance-none cursor-pointer">
-                                <option value="ทั้งหมด">-- ทุกเซลล์ --</option>
-                            </select>
-
-                            <!-- Planner Filter -->
-                            <select id="sel-rec-plant" onchange="renderStockRecommendations()"
-                                class="hidden w-full md:w-32 bg-transparent border-none text-[11px] font-bold outline-none text-slate-600 appearance-none cursor-pointer">
-                                <option value="ทั้งหมด">-- ทุกโรงงาน --</option>
-                            </select>
-
-                            <div class="w-px h-6 bg-slate-100 mx-1"></div>
-                            <select id="sel-rec-group" onchange="renderStockRecommendations()"
-                                class="w-full md:w-40 bg-transparent border-none text-[11px] font-bold outline-none text-slate-600 appearance-none cursor-pointer">
-                                <option value="ทั้งหมด">-- ทุกกลุ่มสินค้า --</option>
-                            </select>
-                        </div>
-
                         <!-- Mini Dashboards -->
                         <div class="flex gap-4">
                             <div class="text-right">
@@ -553,6 +528,26 @@
                                     class="text-xl font-black text-slate-700 font-jakarta leading-none drop-shadow-sm">0
                                 </p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role Tabs & Filters -->
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 w-full overflow-hidden mb-8">
+                    <div class="flex flex-col gap-3 min-w-0">
+                        <!-- Group Button Filters -->
+                        <div class="flex items-center gap-2 w-full">
+                            <span
+                                class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider w-16 shrink-0 pt-0.5 whitespace-nowrap">กลุ่มสินค้า</span>
+                            <div id="filter-rec-group"
+                                class="flex overflow-x-auto hide-scrollbar gap-2 pb-1 pr-4 w-full"></div>
+                        </div>
+                        <!-- Role Button Filters -->
+                        <div class="flex items-center gap-2 w-full">
+                            <span id="filter-rec-role-lbl"
+                                class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider w-16 shrink-0 pt-0.5 whitespace-nowrap">รายบุคคล</span>
+                            <div id="filter-rec-role"
+                                class="flex overflow-x-auto hide-scrollbar gap-2 pb-1 pr-4 w-full"></div>
                         </div>
                     </div>
                 </div>
@@ -1232,7 +1227,7 @@
                         abundantList.push({
                             sortVal: myFinalBalance,
                             html: `
-                            <button onclick="openRecommendationSpec('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-emerald-100 shadow-sm flex flex-col group hover:bg-emerald-50 hover:border-emerald-300 transition-all active:scale-[0.98]">
+                            <button onclick="openRecommendationSpecPopup('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-emerald-100 shadow-sm flex flex-col group hover:bg-emerald-50 hover:border-emerald-300 transition-all active:scale-[0.98]">
                                 <div class="flex justify-between items-start w-full">
                                     <div class="w-[65%]">
                                         <div class="flex items-center gap-2 mb-1">
@@ -1273,7 +1268,7 @@
                         insufficientList.push({
                             sortVal: runningSim.minBalance,
                             html: `
-                            <button onclick="openRecommendationSpec('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-rose-100 shadow-sm flex flex-col group hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-[0.98]">
+                            <button onclick="openRecommendationSpecPopup('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-rose-100 shadow-sm flex flex-col group hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-[0.98]">
                                 <div class="flex justify-between items-start w-full mb-2">
                                     <div class="w-[65%]">
                                         <div class="flex items-center gap-2 mb-1">
@@ -1305,7 +1300,7 @@
                         abundantList.push({
                             sortVal: runningSim.minBalance,
                             html: `
-                            <button onclick="openRecommendationSpec('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-emerald-100 shadow-sm flex flex-col group hover:bg-emerald-50 hover:border-emerald-300 transition-all active:scale-[0.98]">
+                            <button onclick="openRecommendationSpecPopup('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-emerald-100 shadow-sm flex flex-col group hover:bg-emerald-50 hover:border-emerald-300 transition-all active:scale-[0.98]">
                                 <div class="flex justify-between items-start w-full">
                                     <div class="w-[65%]">
                                         <div class="flex items-center gap-2 mb-1">
@@ -1356,6 +1351,163 @@
             }
 
             lucide.createIcons();
+        }
+
+        function openRecommendationSpecPopup(f_id) {
+            currentRecModalSpecId = f_id;
+            const fjobs = rawData.filter(i => i['Weaving Item'] === f_id);
+            if (fjobs.length === 0) return;
+
+            const group = fjobs[0]['ItemGroup'] || '-';
+            const desc = fjobs[0]['Description'] || '-';
+            const startStr = fjobs[0]['Stock ยกมา'];
+            const startBal = parseNum(startStr);
+
+            // Re-sort jobs
+            fjobs.forEach(j => j._dateObj = dateParser(j['วันขึ้นของ']));
+            fjobs.sort((a, b) => a._dateObj - b._dateObj);
+
+            const maxMc = Math.max(...fjobs.map(j => parseNum(j['เกิดจริง'])), 0);
+            const finalBal = parseNum(fjobs[fjobs.length - 1]['Stock คงเหลือ']);
+
+            document.getElementById('rm-title').textContent = f_id;
+            document.getElementById('rm-group').textContent = group;
+            document.getElementById('rm-desc').textContent = desc;
+
+            const statsHtml = `
+                <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">สต็อกยกมา</span>
+                    <span class="text-lg font-black font-jakarta text-slate-700">${startBal.toLocaleString()}</span>
+                </div>
+                <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">จบช่วงเวลา</span>
+                    <span class="text-lg font-black font-jakarta ${finalBal < 0 ? 'text-rose-600' : 'text-emerald-600'}">${finalBal.toLocaleString()}</span>
+                </div>
+                <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">ใช้ทั้งหมด</span>
+                    <span class="text-lg font-black font-jakarta text-sky-600">${fjobs.reduce((s, j) => s + parseNum(j['ใช้ผ้า']), 0).toLocaleString()}</span>
+                </div>
+                <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">เครื่องเตรียมทอ</span>
+                    <span class="text-lg font-black font-jakarta text-amber-600">${maxMc} M/C</span>
+                </div>
+            `;
+            document.getElementById('rm-stats').innerHTML = statsHtml;
+
+            const chartCont = document.getElementById('rm-chart-container');
+
+            if (currentRecTab === 'planner') {
+                chartCont.classList.remove('hidden');
+                chartCont.classList.add('flex');
+
+                const sim = calculateDailyRunningBalance(fjobs, startBal, maxMc, activeRecPlant);
+                drawRecChart(sim.timeline);
+            } else {
+                chartCont.classList.add('hidden');
+                chartCont.classList.remove('flex');
+            }
+
+            const overlay = document.getElementById('recModal');
+            const content = document.getElementById('recModalContent');
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                if (window.innerWidth < 768) content.classList.remove('translate-y-full');
+                else content.classList.remove('translate-y-10');
+            }, 10);
+        }
+
+        function closeRecModal() {
+            const overlay = document.getElementById('recModal');
+            const content = document.getElementById('recModalContent');
+            overlay.classList.add('opacity-0');
+            if (window.innerWidth < 768) content.classList.add('translate-y-full');
+            else content.classList.add('translate-y-10');
+
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                if (recChartInstance) {
+                    recChartInstance.destroy();
+                    recChartInstance = null;
+                }
+            }, 300);
+        }
+
+        function gotoUsageStatsFromModal() {
+            if (!currentRecModalSpecId) return;
+            closeRecModal();
+            setTimeout(() => {
+                openRecommendationSpec(currentRecModalSpecId);
+            }, 300);
+        }
+
+        function drawRecChart(timeline) {
+            if (recChartInstance) recChartInstance.destroy();
+            const ctx = document.getElementById('recChart').getContext('2d');
+
+            const labels = timeline.map(t => `${t.date.getDate()}/${t.date.getMonth() + 1}`);
+            const data = timeline.map(t => t.bal);
+
+            const bgColors = data.map(v => v < 0 ? 'rgba(244, 63, 94, 0.2)' : 'rgba(16, 185, 129, 0.2)');
+            const borderColors = data.map(v => v < 0 ? 'rgb(244, 63, 94)' : 'rgb(16, 185, 129)');
+
+            recChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Running Balance',
+                        data: data,
+                        borderColor: 'rgb(203, 213, 225)', // Smooth line default
+                        backgroundColor: bgColors,
+                        borderWidth: 2,
+                        fill: true,
+                        stepped: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        segment: {
+                            borderColor: ctx => ctx.p1DataIndex >= 0 && data[ctx.p1DataIndex] < 0 ? 'rgb(244, 63, 94)' : 'rgb(16, 185, 129)',
+                        }
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                afterBody: (ctxs) => {
+                                    const idx = ctxs[0].dataIndex;
+                                    const point = timeline[idx];
+                                    if (point && point.drain > 0) return `🚨 ออเดอร์เข้าตัด: -${point.drain.toLocaleString()}m`;
+                                    if (point && point.added > 0) return `🏭 เติมผ้าเข้าคลัง: +${point.added.toLocaleString()}m`;
+                                    return '';
+                                }
+                            }
+                        },
+                        datalabels: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            border: { dash: [4, 4] },
+                            ticks: { font: { family: 'Plus Jakarta Sans', size: 10, weight: 'bold' } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { family: 'Kanit', size: 10 },
+                                maxTicksLimit: window.innerWidth < 768 ? 6 : 14
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index',
+                    }
+                }
+            });
         }
 
         window.onload = () => { lucide.createIcons(); refreshData(); changeStatsType('group'); };
