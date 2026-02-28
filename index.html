@@ -720,11 +720,13 @@
                                     <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">${item['ฝ่ายขาย'] || 'N/A'}</span>
                                     <span class="text-[8px] text-slate-300 font-bold uppercase italic">เปิดงาน: ${item['Request Date']}</span>
                                 </div>
-                                <div class="flex items-center gap-1.5 mb-1.5">
-                                    <span class="text-xs font-black text-slate-800 font-jakarta uppercase italic leading-none truncate max-w-[200px]">${item['Description']}</span>
-                                    <span class="text-[9px] border border-slate-200 px-1 rounded font-bold text-slate-400 uppercase shrink-0">FG: ${item['Item']}</span>
+                                <div class="flex items-center gap-1.5 mb-1.5 mt-0.5">
+                                    <span class="text-[13px] font-black text-slate-900 font-jakarta uppercase line-clamp-2 leading-tight">${item['Description'] || '-'}</span>
                                 </div>
-                                <p class="text-[10px] text-slate-500 font-bold line-clamp-1 italic tracking-tight leading-none">${item['Name'] || '-'}</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-[10px] text-slate-500 font-bold line-clamp-1 italic tracking-tight leading-none">${item['Name'] || '-'}</p>
+                                    <span class="text-[8px] bg-slate-50 text-slate-400 px-1.5 py-0.5 rounded-md font-bold uppercase shrink-0 border border-slate-100">FG: ${item['Item']}</span>
+                                </div>
                             </div>
                         </td>
                         <td class="px-4 py-5 text-right align-middle font-jakarta text-slate-400 font-bold text-[11px] border-l border-slate-50">${parseNum(item['Stock ยกมา']).toLocaleString()}</td>
@@ -942,11 +944,31 @@
 
         function toggleCollapsible(id) { const c = document.getElementById(`collapse-${id}`); const i = document.getElementById(`icon-${id}`); c.classList.toggle('show'); i.style.transform = c.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)'; }
 
+        function openRecommendationSpec(specId) {
+            navigate('usage-stats');
+            changeStatsType('group');
+            setTimeout(() => {
+                const groupObj = rawData.find(i => i['Weaving Item'] === specId);
+                if (groupObj && groupObj['ItemGroup']) {
+                    drilldownGroup(groupObj['ItemGroup']);
+                    setTimeout(() => {
+                        const safeId = specId.replace(/[^a-zA-Z0-9]/g, '');
+                        const element = document.getElementById(`collapse-${safeId}`);
+                        if (element && !element.classList.contains('show')) {
+                            toggleCollapsible(safeId);
+                            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 300);
+                }
+            }, 100);
+        }
+
         function renderStockRecommendations() {
             const fabrics = {};
             rawData.forEach(item => {
                 const fid = item['Weaving Item'] || 'Unknown';
-                if (!fabrics[fid]) fabrics[fid] = { id: fid, desc: item['Description'] || '-', start: parseNum(item['Stock ยกมา']), final: 0, jobs: [] };
+                const group = item['ItemGroup'] || '-';
+                if (!fabrics[fid]) fabrics[fid] = { id: fid, desc: item['Description'] || '-', group: group, start: parseNum(item['Stock ยกมา']), final: 0, jobs: [] };
                 fabrics[fid].jobs.push(item);
             });
 
@@ -964,16 +986,22 @@
                 insList.innerHTML = `<div class="p-8 text-center text-slate-300 font-bold italic border-2 border-dashed border-slate-100 rounded-2xl">ไม่มีผ้าที่สต็อกติดลบ 🎉</div>`;
             } else {
                 insList.innerHTML = insufficient.map(f => `
-                    <div class="p-4 rounded-xl bg-rose-50/50 border border-rose-100 flex justify-between items-center group hover:bg-rose-50 transition-colors">
+                    <button onclick="openRecommendationSpec('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-rose-100 shadow-sm flex justify-between items-center group hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-[0.98]">
                         <div class="w-[70%]">
-                            <span class="text-[9px] font-black text-rose-500 uppercase tracking-widest block leading-none mb-1">${f.id}</span>
-                            <p class="text-xs font-bold text-slate-700 line-clamp-1 leading-tight w-full">${f.desc}</p>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-sm font-black text-rose-600 uppercase tracking-widest leading-none font-jakarta group-hover:text-rose-700">${f.id}</span>
+                                <span class="text-[8px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold tracking-tighter shadow-inner line-clamp-1">${f.group}</span>
+                            </div>
+                            <p class="text-xs font-bold text-slate-600 line-clamp-1 leading-tight w-full">${f.desc}</p>
                         </div>
-                        <div class="text-right">
-                            <span class="text-sm font-black text-rose-600 font-jakarta drop-shadow-sm">${f.final.toLocaleString()}</span>
-                            <span class="text-[8px] block text-slate-400 font-bold tracking-tighter uppercase mt-0.5">เมตร</span>
+                        <div class="text-right flex items-center gap-3">
+                            <div>
+                                <span class="text-base font-black text-rose-600 font-jakarta drop-shadow-sm">${f.final.toLocaleString()}</span>
+                                <span class="text-[8px] block text-slate-400 font-bold tracking-tighter uppercase mt-0.5">เมตร</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-rose-200 group-hover:text-rose-500 transition-colors"></i>
                         </div>
-                    </div>
+                    </button>
                 `).join('');
             }
 
@@ -984,16 +1012,22 @@
                 abnList.innerHTML = `<div class="p-8 text-center text-slate-300 font-bold italic border-2 border-dashed border-slate-100 rounded-2xl">ไม่มีข้อมูลสต็อกเหลือ</div>`;
             } else {
                 abnList.innerHTML = abundant.map(f => `
-                    <div class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-100 flex justify-between items-center group hover:bg-emerald-50 transition-colors">
+                    <button onclick="openRecommendationSpec('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-emerald-100 shadow-sm flex justify-between items-center group hover:bg-emerald-50 hover:border-emerald-300 transition-all active:scale-[0.98]">
                         <div class="w-[70%]">
-                            <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest block leading-none mb-1">${f.id}</span>
-                            <p class="text-xs font-bold text-slate-700 line-clamp-1 leading-tight w-full">${f.desc}</p>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-sm font-black text-emerald-600 uppercase tracking-widest leading-none font-jakarta group-hover:text-emerald-700">${f.id}</span>
+                                <span class="text-[8px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold tracking-tighter shadow-inner line-clamp-1">${f.group}</span>
+                            </div>
+                            <p class="text-xs font-bold text-slate-600 line-clamp-1 leading-tight w-full">${f.desc}</p>
                         </div>
-                        <div class="text-right">
-                            <span class="text-sm font-black text-emerald-600 font-jakarta drop-shadow-sm">+${f.final.toLocaleString()}</span>
-                            <span class="text-[8px] block text-slate-400 font-bold tracking-tighter uppercase mt-0.5">เมตร</span>
+                        <div class="text-right flex items-center gap-3">
+                            <div>
+                                <span class="text-base font-black text-emerald-600 font-jakarta drop-shadow-sm">+${f.final.toLocaleString()}</span>
+                                <span class="text-[8px] block text-slate-400 font-bold tracking-tighter uppercase mt-0.5">เมตร</span>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-emerald-200 group-hover:text-emerald-500 transition-colors"></i>
                         </div>
-                    </div>
+                    </button>
                 `).join('');
             }
         }
