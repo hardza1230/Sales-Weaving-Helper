@@ -796,7 +796,7 @@
     <!-- Drill-down Modal -->
     <div id="recModal"
         class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex-col justify-end md:justify-center items-center p-0 md:p-6 transition-opacity opacity-0 duration-300">
-        <div class="bg-white w-full md:w-[700px] lg:w-[900px] rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col h-[85vh] md:h-auto md:max-h-[90vh] overflow-hidden transform translate-y-full md:translate-y-10 transition-transform duration-300"
+        <div class="bg-white w-full md:w-11/12 lg:max-w-[1400px] rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col h-[85vh] md:h-[90vh] overflow-hidden transform translate-y-full md:translate-y-10 transition-transform duration-300"
             id="recModalContent">
             <!-- Header -->
             <div class="p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50 relative shrink-0">
@@ -816,17 +816,35 @@
             </div>
 
             <!-- Body -->
-            <div class="p-6 overflow-y-auto hide-scrollbar flex flex-col md:flex-row gap-6 flex-1 bg-slate-50/50">
+            <div class="p-6 overflow-y-auto hide-scrollbar flex flex-col xl:flex-row gap-6 flex-1 bg-slate-50/50">
 
                 <!-- Left Column (Stats & Chart) -->
-                <div class="flex flex-col gap-6 w-full md:w-2/3 h-full">
+                <div class="flex flex-col gap-6 w-full xl:w-3/4 h-full">
                     <!-- Data point stats -->
                     <div id="rm-stats" class="shrink-0"></div>
 
                     <!-- Chart Container -->
-                    <div id="rm-chart-container" class="hidden flex-col gap-2 flex-1 min-h-[250px] shrink-0">
-                        <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider"><i
-                                data-lucide="activity" class="w-4 h-4 inline mb-1"></i> Running Balance Projection</h4>
+                    <div id="rm-chart-container"
+                        class="hidden flex-col gap-2 flex-1 min-h-[350px] lg:min-h-[500px] shrink-0">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider"><i
+                                    data-lucide="activity" class="w-4 h-4 inline mb-1"></i> Running Balance Projection
+                            </h4>
+                            <div
+                                class="flex items-center gap-1.5 p-1 bg-slate-200/50 rounded-xl border border-slate-100">
+                                <button onclick="setChartTimeframe(14)" id="tf-14"
+                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">14
+                                    DAY</button>
+                                <button onclick="setChartTimeframe(30)" id="tf-30"
+                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">1
+                                    MTH</button>
+                                <button onclick="setChartTimeframe(60)" id="tf-60"
+                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">2
+                                    MTH</button>
+                                <button onclick="setChartTimeframe('all')" id="tf-all"
+                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg bg-sky-100 text-sky-600 shadow-sm transition-all uppercase tracking-tighter">ALL</button>
+                            </div>
+                        </div>
                         <div class="flex-1 w-full border border-slate-100 rounded-2xl bg-white p-2 relative shadow-sm">
                             <canvas id="recChart"></canvas>
                         </div>
@@ -850,6 +868,7 @@
         let demandChartInstance = null;
         let recChartInstance = null;
         let currentRecModalSpecId = null;
+        let currentChartTimeframe = 'all';
         const filterFields = ['Wildth', 'Denia', 'Frequency', 'Pattern'];
 
         const parseNum = (v) => parseFloat(String(v || '0').replace(/,/g, '')) || 0;
@@ -2214,6 +2233,8 @@
             chartCont.classList.remove('hidden');
             chartCont.classList.add('flex');
 
+            window.currentChartTimelineFull = sim.timeline;
+            window.currentChartJobsFull = fjobs;
             drawRecChart(sim.timeline, fjobs); // Passed fjobs
 
             const ledgerCont = document.getElementById('rm-ledger-container');
@@ -2301,9 +2322,32 @@
             }, 300);
         }
 
-        function drawRecChart(timeline, fjobs) {
+        function setChartTimeframe(days) {
+            currentChartTimeframe = days;
+            [14, 30, 60, 'all'].forEach(val => {
+                let btn = document.getElementById(`tf-${val}`);
+                if (!btn) return;
+                if (val === days) {
+                    btn.classList.add('bg-sky-100', 'text-sky-600', 'shadow-sm');
+                    btn.classList.remove('text-slate-500', 'hover:bg-slate-100');
+                } else {
+                    btn.classList.remove('bg-sky-100', 'text-sky-600', 'shadow-sm');
+                    btn.classList.add('text-slate-500', 'hover:bg-slate-100');
+                }
+            });
+            if (window.currentChartTimelineFull && window.currentChartJobsFull) {
+                drawRecChart(window.currentChartTimelineFull, window.currentChartJobsFull);
+            }
+        }
+
+        function drawRecChart(fullTimeline, fjobs) {
             if (recChartInstance) recChartInstance.destroy();
             const ctx = document.getElementById('recChart').getContext('2d');
+
+            let timeline = fullTimeline;
+            if (currentChartTimeframe !== 'all') {
+                timeline = fullTimeline.slice(0, currentChartTimeframe);
+            }
 
             let minLimit = 0;
             let maxLimit = 0;
@@ -2625,7 +2669,8 @@
                         <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                             <div
                                 class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-3">
-                                <i data-lucide="table-2" class="w-5 h-5"></i></div>
+                                <i data-lucide="table-2" class="w-5 h-5"></i>
+                            </div>
                             <h5 class="font-bold text-slate-800 text-sm mb-1">เช็คม้วนผืนผ้า (Ledger)</h5>
                             <p class="text-[11px] text-slate-500 leading-relaxed">ค้นหาผ้าด้วย Width, Denier, Frequency
                                 หรือ Pattern ดู <span class="font-bold text-slate-700">บัญชีคิวงานรายลำดับ</span>
@@ -2635,7 +2680,8 @@
                         <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                             <div
                                 class="w-10 h-10 bg-sky-100 text-sky-600 rounded-xl flex items-center justify-center mb-3">
-                                <i data-lucide="pie-chart" class="w-5 h-5"></i></div>
+                                <i data-lucide="pie-chart" class="w-5 h-5"></i>
+                            </div>
                             <h5 class="font-bold text-slate-800 text-sm mb-1">วิเคราะห์ภาพรวม (Stats)</h5>
                             <p class="text-[11px] text-slate-500 leading-relaxed">ดูสถิติความต้องการรวม (Demand)
                                 จัดกลุ่มตาม <span class="font-bold text-slate-700">กลุ่มงาน (ItemGroup), เซลล์, หรือ
@@ -2663,25 +2709,29 @@
                         <div class="bg-sky-50 border border-sky-100 rounded-2xl p-4 flex gap-4">
                             <div
                                 class="w-12 h-12 bg-white text-sky-600 rounded-full flex items-center justify-center shrink-0 shadow-sm">
-                                <i data-lucide="briefcase" class="w-5 h-5"></i></div>
+                                <i data-lucide="briefcase" class="w-5 h-5"></i>
+                            </div>
                             <div>
                                 <h5 class="font-bold text-sky-700 text-sm mb-1">มุมมองฝ่ายขาย (Sales Role)</h5>
                                 <p class="text-[11px] text-slate-600">เน้นดูแลยอดออเดอร์ของตนเอง ระบบจะค้นหาว่ามี
                                     <b>ออเดอร์ไหนเสี่ยงล่าช้า</b> (โควตาผ้ามีแนวโน้มไม่พอตัดส่ง) ข้อมูลสถิติจะโฟกัสที่
                                     <b>ยอดสั่งตัดรวม vs ยอดขาดส่ง</b> และยังสามารถดู <b>Available to Promise</b>
-                                    หรือผ้ารายการที่ว่าง นำไปขายเพิ่มให้ลูกค้าได้ทันที</p>
+                                    หรือผ้ารายการที่ว่าง นำไปขายเพิ่มให้ลูกค้าได้ทันที
+                                </p>
                             </div>
                         </div>
                         <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex gap-4">
                             <div
                                 class="w-12 h-12 bg-white text-emerald-600 rounded-full flex items-center justify-center shrink-0 shadow-sm">
-                                <i data-lucide="factory" class="w-5 h-5"></i></div>
+                                <i data-lucide="factory" class="w-5 h-5"></i>
+                            </div>
                             <div>
                                 <h5 class="font-bold text-emerald-700 text-sm mb-1">มุมมองฝ่ายวางแผน (Planner Role)</h5>
                                 <p class="text-[11px] text-slate-600">วิเคราะห์ภาพรวม Capacity ของโรงงานทั้งหมด
                                     หน้าที่หลักคือเช็คว่ามีสเปกไหนควร <b>ระดมเครื่องทอด่วน</b> (เครื่องทอในระบบมีไม่พอ)
                                     หรือสเปกไหนควร <b>ปลด/ลดเครื่องทอ</b> เพื่อประหยัดต้นทุน ข้อมูลสถิติจะโฟกัสที่
-                                    <b>Lead Time และ จุดต่ำสุดของคิว (Min Balance)</b> เพื่อรองรับทุกออเดอร์ให้ได้</p>
+                                    <b>Lead Time และ จุดต่ำสุดของคิว (Min Balance)</b> เพื่อรองรับทุกออเดอร์ให้ได้
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -2707,7 +2757,8 @@
                         <div class="flex items-start gap-3">
                             <div
                                 class="w-8 h-8 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center shrink-0 border border-orange-500/50">
-                                <i data-lucide="triangle" class="w-4 h-4 fill-current"></i></div>
+                                <i data-lucide="triangle" class="w-4 h-4 fill-current"></i>
+                            </div>
                             <div>
                                 <strong class="text-sm text-white font-jakarta block">Order Tsunami</strong>
                                 <span class="text-[10px] text-slate-400">วันหฤโหดที่มีประวัติการ
@@ -2717,7 +2768,8 @@
                         <div class="flex items-start gap-3">
                             <div
                                 class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/50">
-                                <i data-lucide="square" class="w-4 h-4 fill-current"></i></div>
+                                <i data-lucide="square" class="w-4 h-4 fill-current"></i>
+                            </div>
                             <div>
                                 <strong class="text-sm text-white font-jakarta block">Catch-up Point</strong>
                                 <span class="text-[10px] text-slate-400">จุดฟื้นตัว! วันที่สต็อกที่เคยติดลบ
@@ -2727,7 +2779,8 @@
                         <div class="flex items-start gap-3">
                             <div
                                 class="w-8 h-8 rounded-full bg-yellow-500/20 text-yellow-400 flex items-center justify-center shrink-0 border border-yellow-500/50">
-                                <i data-lucide="star" class="w-4 h-4 fill-current"></i></div>
+                                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                            </div>
                             <div>
                                 <strong class="text-sm text-white font-jakarta block">Machine Drop Warning</strong>
                                 <span class="text-[10px] text-slate-400">ดาวเตือนใจ! สต็อกวันนี้ดูเหมือนเยอะ แต่
@@ -2738,7 +2791,8 @@
                         <div class="flex items-start gap-3">
                             <div
                                 class="w-8 h-8 rounded-md bg-lime-500/20 text-lime-400 flex items-center justify-center shrink-0 border border-lime-500/50">
-                                <i data-lucide="square" class="w-4 h-4"></i></div>
+                                <i data-lucide="square" class="w-4 h-4"></i>
+                            </div>
                             <div>
                                 <strong class="text-sm text-white font-jakarta block">Batch Switch Window</strong>
                                 <span class="text-[10px] text-slate-400">จังหวะทอง! สต็อกมีล้นเกินค่าเฉลี่ย
@@ -2755,7 +2809,8 @@
                         <div class="flex items-start gap-3">
                             <div
                                 class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center shrink-0 border-t border-slate-500 border-dashed">
-                                <span class="text-[8px] font-black">MIN/MAX</span></div>
+                                <span class="text-[8px] font-black">MIN/MAX</span>
+                            </div>
                             <div>
                                 <strong class="text-sm text-white font-jakarta block">Min / Avg / Max Limit</strong>
                                 <span class="text-[10px] text-slate-400">เส้นประแสดงค่า Control Limit ที่ตั้งค่าไว้
@@ -2765,7 +2820,8 @@
                         <div class="flex items-start gap-3">
                             <div
                                 class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center shrink-0 border-r border-slate-500 border-dashed">
-                                <i data-lucide="flag" class="w-4 h-4"></i></div>
+                                <i data-lucide="flag" class="w-4 h-4"></i>
+                            </div>
                             <div>
                                 <strong class="text-sm text-white font-jakarta block">Target Completion Day</strong>
                                 <span class="text-[10px] text-slate-400">เส้นประแนวตั้ง (🏁) ระบุ
@@ -2781,7 +2837,8 @@
                         <div class="flex items-start gap-3">
                             <div
                                 class="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0 border border-yellow-500/50">
-                                <span class="block w-4 h-4 bg-yellow-500/40 rounded-sm"></span></div>
+                                <span class="block w-4 h-4 bg-yellow-500/40 rounded-sm"></span>
+                            </div>
                             <div>
                                 <strong class="text-sm text-white font-jakarta block">Lead Time Safe Buffer</strong>
                                 <span class="text-[10px] text-slate-400">พื้นหลังสีเหลือง ทอดยาวจากวันนี้ไปจนถึงเส้น
@@ -2791,7 +2848,8 @@
                         <div class="flex items-start gap-3">
                             <div
                                 class="w-8 h-8 rounded-lg bg-slate-500/10 flex items-center justify-center shrink-0 border border-slate-500/50">
-                                <span class="block w-4 h-4 bg-slate-500/40 rounded-sm"></span></div>
+                                <span class="block w-4 h-4 bg-slate-500/40 rounded-sm"></span>
+                            </div>
                             <div>
                                 <strong class="text-sm text-white font-jakarta block">Dead Stock Zone</strong>
                                 <span class="text-[10px] text-slate-400">พื้นหลังสีเทา 🐢
@@ -2802,7 +2860,8 @@
                         <div class="flex items-start gap-3">
                             <div
                                 class="w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/50">
-                                <span class="text-xs font-black">💸</span></div>
+                                <span class="text-xs font-black">💸</span>
+                            </div>
                             <div>
                                 <strong class="text-sm text-white font-jakarta block">Over-Capitalization</strong>
                                 <span class="text-[10px] text-slate-400">จุดแสดงกราฟที่มีค่าสูงทะลุเส้น MAX Limit
