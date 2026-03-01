@@ -858,6 +858,10 @@
                         const dateObj = dateParser(cleanRow['วันขึ้นของ']);
                         return { ...cleanRow, _sortDate: dateObj.getTime(), _dateObj: dateObj };
                     });
+
+                    // Clear the cache so it will be rebuilt on the next render
+                    window.fabricCache = {};
+
                     updateFilters();
                     const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
                     document.getElementById('sync-time-menu').textContent = now;
@@ -2065,7 +2069,7 @@
             });
         }
 
-        window.onload = () => { lucide.createIcons(); refreshData(); changeStatsType('group'); };
+        window.onload = () => { lucide.createIcons(); changeStatsType('group'); };
     </script>
 </body>
 
