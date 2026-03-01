@@ -1338,9 +1338,16 @@
                          </div>
                     </div>`;
                 } else {
-                    const isSurplus = (hasMinMaxCtrl && maxLimit > 0) ? (sim.minBalance > maxLimit && data.maxMc > 0) : (sim.minBalance > 50000 && data.maxMc > 0);
+                    let isSurplus = false;
+                    let midPoint = 0;
+                    if (hasMinMaxCtrl && maxLimit > 0) {
+                        midPoint = (minLimit + maxLimit) / 2;
+                        isSurplus = (sim.minBalance > midPoint && data.maxMc > 0);
+                    } else {
+                        isSurplus = (sim.minBalance > 50000 && data.maxMc > 0);
+                    }
                     if (isSurplus) {
-                        const reduceMc = Math.max(1, Math.min(data.maxMc, Math.floor((sim.minBalance - 10000) / 25000)));
+                        const reduceMc = Math.max(1, Math.min(data.maxMc, Math.ceil((sim.minBalance - midPoint) / (2500 * leadTimeDays))));
                         recommendationHtml = `
                         <div class="mb-5 p-3 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center gap-3">
                              <div class="bg-white p-2 rounded-lg shadow-sm border border-emerald-100 shrink-0">
@@ -1761,7 +1768,14 @@
                             `
                         });
                     } else {
-                        const isSurplus = (hasMinMaxCtrl && maxLimit > 0) ? (myFinalBalance > maxLimit) : (myFinalBalance > 50000);
+                        let isSurplus = false;
+                        let midPoint = 0;
+                        if (hasMinMaxCtrl && maxLimit > 0) {
+                            midPoint = (minLimit + maxLimit) / 2;
+                            isSurplus = myFinalBalance > midPoint;
+                        } else {
+                            isSurplus = myFinalBalance > 50000;
+                        }
 
                         if (isSurplus) {
                             abundantList.push({
@@ -1779,7 +1793,7 @@
                                         <div class="text-right flex items-center gap-2">
                                             <div>
                                                 <span class="text-base font-black text-emerald-600 font-jakarta drop-shadow-sm">+${myFinalBalance.toLocaleString()}</span>
-                                                <span class="text-[8px] block text-slate-400 font-bold tracking-tighter uppercase mt-0.5">เมตร</span>
+                                                <span class="text-[8px] block text-slate-400 font-bold tracking-tighter uppercase mt-0.5">${hasMinMaxCtrl ? 'เมตร (เกินค่ากลาง)' : 'เมตร'}</span>
                                             </div>
                                             <i data-lucide="chevron-right" class="w-4 h-4 text-emerald-200 group-hover:text-emerald-500 transition-colors"></i>
                                         </div>
@@ -1871,9 +1885,14 @@
                         });
                     } else {
                         // 4. Logic: Is it Abundant / Surplus?
-                        // By Order -> minBalance > 50k & machines running
-                        // Min/Max -> minBalance > maxLimit & machines running
-                        const isSurplus = (hasMinMaxCtrl && maxLimit > 0) ? (runningSim.minBalance > maxLimit && f.maxMc > 0) : (runningSim.minBalance > 50000 && f.maxMc > 0);
+                        let isSurplus = false;
+                        let midPoint = 0;
+                        if (hasMinMaxCtrl && maxLimit > 0) {
+                            midPoint = (minLimit + maxLimit) / 2;
+                            isSurplus = (runningSim.minBalance > midPoint && f.maxMc > 0);
+                        } else {
+                            isSurplus = (runningSim.minBalance > 50000 && f.maxMc > 0);
+                        }
 
                         // If it's between Min/Max, and machines are running, it's considered "Normal/Safe", we don't list it in Abundant unless it breaks Max.
 
@@ -1893,7 +1912,7 @@
                                         <div class="text-right flex items-center gap-2">
                                             <div>
                                                 <span class="text-base font-black text-emerald-600 font-jakarta drop-shadow-sm">+${runningSim.minBalance.toLocaleString()}</span>
-                                                <span class="text-[8px] block text-emerald-400 font-bold tracking-tighter uppercase mt-0.5">เมตร (จุดต่ำสุดคิว)</span>
+                                                <span class="text-[8px] block text-emerald-400 font-bold tracking-tighter uppercase mt-0.5">${hasMinMaxCtrl ? 'เมตร (เกินค่ากลาง)' : 'เมตร (จุดต่ำสุดคิว)'}</span>
                                             </div>
                                         </div>
                                     </div>
