@@ -9,8 +9,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Plugin for Chart Data Labels -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
 
@@ -701,47 +701,71 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-20">
-                <!-- ขาดแคลน (Insufficient) -->
+        <!-- Predictive Signals Watchlist (Injected via JS) -->
+        <div id="dash-predictive-signals-wrapper"
+            class="hidden mb-8 bg-white rounded-3xl p-6 shadow-xl border-l-[6px] border-l-purple-500 relative overflow-hidden group">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-bl-[4rem] -z-0"></div>
+            <div class="flex items-center gap-3 mb-4 relative z-10">
                 <div
-                    class="bg-white rounded-[2rem] p-6 shadow-xl border border-rose-100 flex flex-col relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-bl-[4rem] -z-0"></div>
-                    <div class="flex items-center gap-3 mb-6 relative z-10">
-                        <div
-                            class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shadow-inner">
-                            <i data-lucide="trending-down" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-bold text-rose-700 font-jakarta leading-none">สต็อกไม่พอผลิต
-                            </h3>
-                            <p class="text-[10px] text-slate-400 font-bold tracking-tight">
-                                ผ้าที่มียอดสั่งทอเกินสต็อก
-                                (Top 10)</p>
-                        </div>
-                    </div>
-                    <div id="rec-insufficient-list" class="space-y-3 relative z-10 flex-1"></div>
+                    class="w-10 h-10 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center shadow-inner">
+                    <i data-lucide="radar" class="w-5 h-5 animate-pulse"></i>
                 </div>
-
-                <!-- เหลือเยอะ (Abundant) -->
-                <div
-                    class="bg-white rounded-[2rem] p-6 shadow-xl border border-emerald-100 flex flex-col relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-[4rem] -z-0"></div>
-                    <div class="flex items-center gap-3 mb-6 relative z-10">
-                        <div
-                            class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
-                            <i data-lucide="trending-up" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-bold text-emerald-700 font-jakarta leading-none">สต็อกเหลือเยอะ
-                            </h3>
-                            <p class="text-[10px] text-slate-400 font-bold tracking-tight">
-                                ผ้าที่ผลิตทิ้งไว้แต่ไม่มีออเดอร์ (Top 10)</p>
-                        </div>
-                    </div>
-                    <div id="rec-abundant-list" class="space-y-3 relative z-10 flex-1"></div>
+                <div>
+                    <h3 class="text-lg font-black text-purple-800 font-jakarta leading-none tracking-tight">🚨
+                        สัญญาณเตือนล่วงหน้า <span
+                            class="text-[10px] font-bold text-white bg-purple-600 px-2 py-0.5 rounded-full ml-1"
+                            id="dash-predictive-count">0</span></h3>
+                    <p class="text-[10px] text-slate-400 font-bold tracking-tight mt-0.5">ระบบ AI
+                        ตรวจพบความเสี่ยงที่กำลังจะเกิดขึ้นในลูปผลิต</p>
                 </div>
             </div>
+            <div id="dash-predictive-signals" class="flex flex-wrap gap-3 relative z-10"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pb-20">
+            <!-- ขาดแคลน (Insufficient) -->
+            <div
+                class="bg-white rounded-[2rem] p-6 shadow-xl border border-rose-100 flex flex-col relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-bl-[4rem] -z-0"></div>
+                <div class="flex items-center gap-3 mb-6 relative z-10">
+                    <div
+                        class="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shadow-inner">
+                        <i data-lucide="trending-down" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 id="rec-left-title" class="text-lg font-bold text-rose-700 font-jakarta leading-none">
+                            สต็อกไม่พอผลิต
+                        </h3>
+                        <p id="rec-left-desc" class="text-[10px] text-slate-400 font-bold tracking-tight">
+                            ผ้าที่มียอดสั่งทอเกินสต็อก
+                            (Top 10)</p>
+                    </div>
+                </div>
+                <div id="rec-insufficient-list" class="space-y-3 relative z-10 flex-1"></div>
+            </div>
+
+            <!-- เหลือเยอะ (Abundant) -->
+            <div
+                class="bg-white rounded-[2rem] p-6 shadow-xl border border-emerald-100 flex flex-col relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-[4rem] -z-0"></div>
+                <div class="flex items-center gap-3 mb-6 relative z-10">
+                    <div
+                        class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
+                        <i data-lucide="trending-up" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 id="rec-right-title" class="text-lg font-bold text-emerald-700 font-jakarta leading-none">
+                            สต็อกเหลือเยอะ
+                        </h3>
+                        <p id="rec-right-desc" class="text-[10px] text-slate-400 font-bold tracking-tight">
+                            ผ้าที่ผลิตทิ้งไว้แต่ไม่มีออเดอร์ (Top 10)</p>
+                    </div>
+                </div>
+                <div id="rec-abundant-list" class="space-y-3 relative z-10 flex-1"></div>
+            </div>
+        </div>
         </div>
     </section>
 
@@ -1683,10 +1707,50 @@
             let totalRunningMachines = 0;
             let maxCapacityDeficit = 0;
 
+            const predictiveSignalsList = [];
+
             Object.values(fabrics).forEach(f => {
                 // All values (jobs sorted, final, maxMc, runSim) already pre-computed in fabricCache
 
                 if (activeRecGroup !== 'ทั้งหมด' && f.group !== activeRecGroup) return;
+
+                // --- PREDICITIVE SIGNALS GENERATION ---
+                // Filter signals by active Sales / Plant role
+                let keepForSignals = true;
+                if (currentRecTab === 'sales' && activeRecSales !== 'ทั้งหมด' && !f.salesSet.includes(activeRecSales)) keepForSignals = false;
+                if (currentRecTab === 'planner' && activeRecPlant !== 'ทั้งหมด' && !f.plants.includes(activeRecPlant)) keepForSignals = false;
+
+                if (keepForSignals && f.runSim && f.runSim.timeline) {
+                    let maxDrop = 0;
+                    let hasDeadStock = false;
+                    let deadDaysCount = 0;
+
+                    for (let i = 0; i < f.runSim.timeline.length; i++) {
+                        const point = f.runSim.timeline[i];
+                        if (point.drain > 5000 && point.drain > (point.bal + point.drain) * 0.20) {
+                            if (point.drain > maxDrop) maxDrop = point.drain;
+                        }
+                        if (point.drain === 0 && point.added === 0 && point.bal > 0) {
+                            deadDaysCount++;
+                            if (deadDaysCount >= 14) hasDeadStock = true;
+                        } else {
+                            deadDaysCount = 0;
+                        }
+                    }
+
+                    if (maxDrop > 0) {
+                        predictiveSignalsList.push({
+                            html: `<button onclick="openRecommendationSpecPopup('${f.id}')" class="flex items-center gap-2 bg-rose-50 border border-rose-200 hover:border-rose-400 hover:bg-rose-100 transition-colors rounded-full pl-1.5 pr-4 py-1.5 shadow-sm active:scale-95 group"><div class="w-7 h-7 rounded-full bg-rose-200 text-rose-700 flex items-center justify-center shrink-0 group-hover:bg-rose-600 group-hover:text-white transition-colors"><i data-lucide="triangle" class="w-3.5 h-3.5 fill-current"></i></div><div class="text-left leading-tight"><strong class="text-[11px] text-rose-700 font-jakarta group-hover:text-rose-900">${f.id}</strong><br><span class="text-[9px] text-rose-500 font-bold uppercase tracking-tight group-hover:text-rose-700">ระวังออเดอร์มหาศาลจ่อคิวตัด</span></div></button>`
+                        });
+                    }
+                    if (hasDeadStock) {
+                        predictiveSignalsList.push({
+                            html: `<button onclick="openRecommendationSpecPopup('${f.id}')" class="flex items-center gap-2 bg-slate-50 border border-slate-200 hover:border-slate-400 hover:bg-slate-100 transition-colors rounded-full pl-1.5 pr-4 py-1.5 shadow-sm active:scale-95 group"><div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center shrink-0 group-hover:bg-slate-700 group-hover:text-white transition-colors"><i data-lucide="skull" class="w-3.5 h-3.5"></i></div><div class="text-left leading-tight"><strong class="text-[11px] text-slate-700 font-jakarta group-hover:text-slate-900">${f.id}</strong><br><span class="text-[9px] text-slate-500 font-bold uppercase tracking-tight group-hover:text-slate-700">สต็อกตายนิ่งสนิท >14 วัน</span></div></button>`
+                        });
+                    }
+                }
+                // --- END PREDICTIVE SIGNALS ---
+
 
 
                 if (currentRecTab === 'sales') {
@@ -2017,6 +2081,34 @@
                 abnContainer.innerHTML = abundantList.slice(0, 10).map(i => i.html).join('');
             }
 
+            // Render Predictive Signals
+            const signalsWrapper = document.getElementById('dash-predictive-signals-wrapper');
+            const signalsContainer = document.getElementById('dash-predictive-signals');
+            const signalsCount = document.getElementById('dash-predictive-count');
+
+            if (predictiveSignalsList.length > 0) {
+                // Remove duplicates by ID and HTML purely for cleaner display
+                const uniqueSignals = [...new Set(predictiveSignalsList.map(s => s.html))];
+                signalsContainer.innerHTML = uniqueSignals.slice(0, 20).join('');
+                signalsCount.textContent = predictiveSignalsList.length;
+                signalsWrapper.classList.remove('hidden');
+            } else {
+                signalsWrapper.classList.add('hidden');
+            }
+
+            // Rename Headers dynamically
+            if (currentRecTab === 'sales') {
+                document.getElementById('rec-left-title').textContent = "ออเดอร์เสี่ยงล่าช้า";
+                document.getElementById('rec-left-desc').textContent = "โควตาผ้ามีแนวโน้มไม่พอจัดส่ง (Top 10)";
+                document.getElementById('rec-right-title').textContent = "Available to Promise";
+                document.getElementById('rec-right-desc').textContent = "ผ้าพร้อมขาย นำเสนอขายเพิ่มได้ (Top 10)";
+            } else {
+                document.getElementById('rec-left-title').textContent = "ระดมเครื่องทอด่วน";
+                document.getElementById('rec-left-desc').textContent = "สเปกที่ต้องการ Capacity ถักทอ (Top 10)";
+                document.getElementById('rec-right-title').textContent = "ปลด/ลดเครื่องทอ";
+                document.getElementById('rec-right-desc').textContent = "ประหยัดต้นทุน ทอเผื่อไว้พอแล้ว (Top 10)";
+            }
+
             lucide.createIcons();
         }
 
@@ -2041,33 +2133,68 @@
             document.getElementById('rm-group').textContent = group;
             document.getElementById('rm-desc').textContent = desc;
 
-            const statsHtml = `
+            const sim = calculateDailyRunningBalance(fjobs, startBal, maxMc, activeRecPlant);
+
+            const todayForLead = new Date();
+            const validJobs = fjobs.filter(j => j._dateObj.getFullYear() !== 2099);
+            const finalOrderDate = validJobs.length > 0 ? new Date(Math.max(...validJobs.map(j => j._dateObj))) : todayForLead;
+            const msDiff = finalOrderDate.getTime() - todayForLead.getTime();
+            let leadTimeDays = Math.ceil(msDiff / (1000 * 3600 * 24));
+            if (leadTimeDays < 1) leadTimeDays = 1;
+
+            let statsHtml = '';
+            if (currentRecTab === 'sales') {
+                const totalOrder = fjobs.reduce((s, j) => s + parseNum(j['ใช้ผ้า']), 0);
+                const shortage = Math.abs(Math.min(finalBal, 0));
+
+                statsHtml = `
                 <div class="grid grid-cols-2 gap-4 w-full mb-4">
                     <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
-                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">สต็อกยกมา</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">สต็อกพร้อมขาย</span>
                         <span class="text-lg font-black font-jakarta text-slate-700">${startBal.toLocaleString()}</span>
                     </div>
-                    <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
-                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">จบช่วงเวลา</span>
+                    <div class="bg-white p-3 rounded-2xl border ${finalBal < 0 ? 'border-rose-200 bg-rose-50' : 'border-emerald-200 bg-emerald-50'} shadow-sm flex flex-col justify-center items-center">
+                        <span class="text-[9px] font-bold ${finalBal < 0 ? 'text-rose-500' : 'text-emerald-500'} uppercase tracking-widest mb-1">สถานะจบคิว (เมตร)</span>
                         <span class="text-lg font-black font-jakarta ${finalBal < 0 ? 'text-rose-600' : 'text-emerald-600'}">${finalBal.toLocaleString()}</span>
                     </div>
                     <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
-                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">ใช้ทั้งหมด</span>
-                        <span class="text-lg font-black font-jakarta text-sky-600">${fjobs.reduce((s, j) => s + parseNum(j['ใช้ผ้า']), 0).toLocaleString()}</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">ยอดสั่งตัดรวม</span>
+                        <span class="text-lg font-black font-jakarta text-sky-600">${totalOrder.toLocaleString()}</span>
+                    </div>
+                    <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">ยอดขาดส่ง</span>
+                        <span class="text-lg font-black font-jakarta ${shortage > 0 ? 'text-rose-600' : 'text-slate-300'}">${shortage.toLocaleString()}</span>
+                    </div>
+                </div>
+                `;
+            } else {
+                statsHtml = `
+                <div class="grid grid-cols-2 gap-4 w-full mb-4">
+                    <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">สต็อกตั้งต้น</span>
+                        <span class="text-lg font-black font-jakarta text-slate-700">${startBal.toLocaleString()}</span>
+                    </div>
+                    <div class="bg-white p-3 rounded-2xl border ${sim.minBalance < 0 ? 'border-orange-200 bg-orange-50' : 'border-emerald-200 bg-emerald-50'} shadow-sm flex flex-col justify-center items-center">
+                        <span class="text-[9px] font-bold ${sim.minBalance < 0 ? 'text-orange-500' : 'text-emerald-500'} uppercase tracking-widest mb-1">จุดต่ำสุดคิว (เมตร)</span>
+                        <span class="text-lg font-black font-jakarta ${sim.minBalance < 0 ? 'text-orange-600' : 'text-emerald-600'}">${sim.minBalance.toLocaleString()}</span>
+                    </div>
+                    <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Lead Time (วัน)</span>
+                        <span class="text-lg font-black font-jakarta text-purple-600">${leadTimeDays}</span>
                     </div>
                     <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
                         <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">เครื่องเตรียมทอ</span>
                         <span class="text-lg font-black font-jakarta text-amber-600">${maxMc} M/C</span>
                     </div>
                 </div>
-            `;
+                `;
+            }
             document.getElementById('rm-stats').innerHTML = statsHtml;
 
             const chartCont = document.getElementById('rm-chart-container');
             chartCont.classList.remove('hidden');
             chartCont.classList.add('flex');
 
-            const sim = calculateDailyRunningBalance(fjobs, startBal, maxMc, activeRecPlant);
             drawRecChart(sim.timeline, fjobs); // Passed fjobs
 
             const ledgerCont = document.getElementById('rm-ledger-container');
@@ -2155,15 +2282,175 @@
             }, 300);
         }
 
-        function drawRecChart(timeline) {
+        function drawRecChart(timeline, fjobs) {
             if (recChartInstance) recChartInstance.destroy();
             const ctx = document.getElementById('recChart').getContext('2d');
+
+            let minLimit = 0;
+            let maxLimit = 0;
+            let hasMinMaxCtrl = false;
+
+            if (fjobs && fjobs.length > 0) {
+                const rawMinStr = String(fjobs[0]['Min'] || fjobs[0]['min'] || '').trim();
+                const rawMaxStr = String(fjobs[0]['Max'] || fjobs[0]['max'] || '').trim();
+                hasMinMaxCtrl = rawMinStr !== '' || rawMaxStr !== '';
+                if (hasMinMaxCtrl) {
+                    minLimit = parseNum(rawMinStr);
+                    maxLimit = parseNum(rawMaxStr);
+                }
+            }
+            const midPoint = hasMinMaxCtrl ? (minLimit + maxLimit) / 2 : 0;
 
             const labels = timeline.map(t => `${t.date.getDate()}/${t.date.getMonth() + 1}`);
             const data = timeline.map(t => t.bal);
 
+            // 1. Calculate Lead Time for Safe Buffer
+            const todayForLead = new Date();
+            const validJobs = fjobs ? fjobs.filter(j => j._dateObj.getFullYear() !== 2099) : [];
+            const finalOrderDate = validJobs.length > 0 ? new Date(Math.max(...validJobs.map(j => j._dateObj))) : todayForLead;
+            const msDiff = finalOrderDate.getTime() - todayForLead.getTime();
+            let leadTimeDays = Math.ceil(msDiff / (1000 * 3600 * 24));
+            if (leadTimeDays < 1) leadTimeDays = 1;
+
             const bgColors = data.map(v => v < 0 ? 'rgba(244, 63, 94, 0.2)' : 'rgba(16, 185, 129, 0.2)');
-            const borderColors = data.map(v => v < 0 ? 'rgb(244, 63, 94)' : 'rgb(16, 185, 129)');
+
+            // --- Advanced Signals Computation --- 
+            // 2. Tsunami Detection: Drain > 5000 and > 20% of starting balance that day
+            const isTsunami = (i) => timeline[i].drain > 5000 && timeline[i].drain > ((data[i] + timeline[i].drain) * 0.2);
+            // 3. Catch-up Point: Crosses from negative to positive
+            const isCatchUp = (i) => i > 0 && data[i - 1] < 0 && data[i] >= 0;
+            // 4. Machine Drop Warning (Predictive Risk): High stock now, but dropping machine kills stock in 5 days
+            const isMachineDropWarning = (i) => {
+                if (!hasMinMaxCtrl || data[i] <= midPoint) return false;
+                let futureBal = data[i];
+                for (let j = 1; j <= 5; j++) if (i + j < timeline.length) futureBal -= timeline[i + j].drain;
+                return futureBal < minLimit;
+            };
+            // 5. Batch Switch Window: > midPoint and no drains > 1000m for next 5 days
+            const isSafeToSwitch = (i) => {
+                if (!hasMinMaxCtrl || data[i] <= midPoint) return false;
+                for (let j = 1; j <= 5; j++) if (i + j < timeline.length && timeline[i + j].drain > 1000) return false;
+                return true;
+            };
+
+            const pointStyles = data.map((v, i) => {
+                if (isCatchUp(i)) return 'rectRounded';
+                if (isTsunami(i)) return 'triangle';
+                if (isMachineDropWarning(i)) return 'star'; // Warning shape
+                if (isSafeToSwitch(i)) return 'rect'; // Safe shape
+                return 'circle';
+            });
+
+            const pointBgColors = data.map((v, i) => {
+                if (isCatchUp(i)) return '#10b981'; // Green Catch-up
+                if (isTsunami(i)) return '#f97316'; // Orange Tsunami
+                if (isMachineDropWarning(i)) return '#eab308'; // Yellow Warning
+                if (isSafeToSwitch(i)) return '#84cc16'; // Lime Safe
+                if (v < (hasMinMaxCtrl ? minLimit : 0)) return '#f43f5e'; // Danger
+                if (hasMinMaxCtrl && v > maxLimit) return '#9f1239'; // Dark Red Overcap
+                if (hasMinMaxCtrl && v > midPoint) return '#3b82f6'; // Action: Reduce MC
+                return 'transparent';
+            });
+
+            const pointRadii = data.map((v, i) => {
+                if (isCatchUp(i) || isTsunami(i) || isMachineDropWarning(i)) return 6; // Important shapes are larger
+                if (isSafeToSwitch(i)) return 5;
+                if (v < (hasMinMaxCtrl ? minLimit : 0)) return 4;
+                if (hasMinMaxCtrl && v > maxLimit) return 5;
+                if (hasMinMaxCtrl && v > midPoint) return 4;
+                return 0;
+            });
+
+            // Annotations Setup
+            const annotations = {};
+
+            // Burn Rate Indicator Label
+            const totalDrain = fjobs ? fjobs.reduce((s, j) => s + parseNum(j['ใช้ผ้า']), 0) : 0;
+            const weeklyBurn = timeline.length > 0 ? (totalDrain / timeline.length) * 7 : 0;
+            if (weeklyBurn > 0) {
+                annotations.burnRateLabel = {
+                    type: 'label',
+                    xValue: labels[Math.floor(labels.length / 2)] || labels[0],
+                    yValue: Math.max(...data) * 1.05 + 5000,
+                    content: `🔥 Burn Rate: ~${weeklyBurn.toLocaleString(undefined, { maximumFractionDigits: 0 })} m/wk`,
+                    color: '#ef4444', font: { size: 10, weight: 'bold' },
+                    backgroundColor: 'rgba(254, 242, 242, 0.9)', borderRadius: 4, position: 'center'
+                };
+            }
+
+            // A. Thresholds
+            if (hasMinMaxCtrl) {
+                annotations.minLine = {
+                    type: 'line', yMin: minLimit, yMax: minLimit,
+                    borderColor: 'rgba(249, 115, 22, 0.6)', borderWidth: 1, borderDash: [4, 4],
+                    label: { display: true, content: 'MIN', position: 'start', backgroundColor: 'rgba(249, 115, 22, 0.8)', color: '#fff', font: { size: 8, weight: 'bold' }, padding: 2 }
+                };
+                annotations.midLine = {
+                    type: 'line', yMin: midPoint, yMax: midPoint,
+                    borderColor: 'rgba(56, 189, 248, 0.6)', borderWidth: 1, borderDash: [4, 4],
+                    label: { display: true, content: 'AVG', position: 'start', backgroundColor: 'rgba(56, 189, 248, 0.8)', color: '#fff', font: { size: 8, weight: 'bold' }, padding: 2 }
+                };
+                annotations.maxLine = {
+                    type: 'line', yMin: maxLimit, yMax: maxLimit,
+                    borderColor: 'rgba(16, 185, 129, 0.6)', borderWidth: 1, borderDash: [4, 4],
+                    label: { display: true, content: 'MAX', position: 'start', backgroundColor: 'rgba(16, 185, 129, 0.8)', color: '#fff', font: { size: 8, weight: 'bold' }, padding: 2 }
+                };
+                // B. Overcap Zone (Red Zone above Max)
+                if (maxLimit > 0) {
+                    annotations.overcapZone = {
+                        type: 'box', yMin: maxLimit,
+                        backgroundColor: 'rgba(244, 63, 94, 0.05)', borderWidth: 0, drawTime: 'beforeDraw'
+                    };
+                }
+            }
+
+            // C. Target Completion Day (Last drain event)
+            let lastDrainIdx = -1;
+            timeline.forEach((t, i) => { if (t.drain > 0) lastDrainIdx = i; });
+            if (lastDrainIdx > 0 && lastDrainIdx < timeline.length - 1) {
+                annotations.completionLine = {
+                    type: 'line', xMin: labels[lastDrainIdx], xMax: labels[lastDrainIdx],
+                    borderColor: 'rgba(148, 163, 184, 0.8)', borderWidth: 1, borderDash: [2, 2],
+                    label: { display: true, content: '🏁 จบแคมเปญออเดอร์', position: 'end', backgroundColor: 'rgba(148, 163, 184, 0.9)', color: '#fff', font: { size: 8, weight: 'bold' }, padding: 3, yAdjust: 10 }
+                };
+            }
+
+            // D. Lead Time Safe Buffer
+            let bufferEndIdx = Math.min(leadTimeDays, timeline.length - 1);
+            if (bufferEndIdx > 0) {
+                annotations.safeBufferZone = {
+                    type: 'box', xMin: labels[0], xMax: labels[bufferEndIdx],
+                    backgroundColor: 'rgba(253, 224, 71, 0.15)', borderWidth: 0, drawTime: 'beforeDraw',
+                    label: { display: true, content: '🕒 กรอบเวลา Safe Buffer (Lead Time)', position: 'start', color: '#ca8a04', font: { size: 8, weight: 'bold' }, yAdjust: -15 }
+                };
+            }
+
+            // E. Idle Zone classification (> 14 days of no movement)
+            let idleStartIdx = -1;
+            let idleCount = 0;
+            let idleNum = 0;
+            for (let i = 0; i < timeline.length; i++) {
+                if (timeline[i].drain === 0 && timeline[i].added === 0 && data[i] > 0) {
+                    if (idleCount === 0) idleStartIdx = i;
+                    idleCount++;
+                } else {
+                    if (idleCount >= 14) {
+                        annotations[`idleZone${idleNum++}`] = {
+                            type: 'box', xMin: labels[idleStartIdx], xMax: labels[i - 1],
+                            backgroundColor: 'rgba(203, 213, 225, 0.25)', borderWidth: 0, drawTime: 'beforeDraw',
+                            label: { display: true, content: '🐢 สต็อกนิ่งยาว (Dead Stock)', position: 'center', color: '#64748b', font: { size: 8, weight: 'bold' } }
+                        };
+                    }
+                    idleCount = 0;
+                }
+            }
+            if (idleCount >= 14 && idleStartIdx >= 0) {
+                annotations[`idleZone${idleNum}`] = {
+                    type: 'box', xMin: labels[idleStartIdx], xMax: labels[timeline.length - 1],
+                    backgroundColor: 'rgba(203, 213, 225, 0.25)', borderWidth: 0, drawTime: 'beforeDraw',
+                    label: { display: true, content: '🐢 สต็อกนิ่งยาว (Dead Stock)', position: 'center', color: '#64748b', font: { size: 8, weight: 'bold' } }
+                };
+            }
 
             recChartInstance = new Chart(ctx, {
                 type: 'line',
@@ -2177,10 +2464,13 @@
                         borderWidth: 2,
                         fill: true,
                         stepped: true,
-                        pointRadius: 0,
+                        pointStyle: pointStyles,
+                        pointBackgroundColor: pointBgColors,
+                        pointBorderColor: pointBgColors,
+                        pointRadius: pointRadii,
                         pointHoverRadius: 6,
                         segment: {
-                            borderColor: ctx => ctx.p1DataIndex >= 0 && data[ctx.p1DataIndex] < 0 ? 'rgb(244, 63, 94)' : 'rgb(16, 185, 129)',
+                            borderColor: ctx => ctx.p1DataIndex >= 0 && data[ctx.p1DataIndex] < (hasMinMaxCtrl ? minLimit : 0) ? 'rgb(244, 63, 94)' : 'rgb(16, 185, 129)',
                         }
                     }]
                 },
@@ -2189,14 +2479,26 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
+                        annotation: { annotations: annotations },
                         tooltip: {
                             callbacks: {
+                                label: (ctx) => {
+                                    const idx = ctx.dataIndex;
+                                    let msg = `ยอดคงเหลือ: ${ctx.raw.toLocaleString()} m`;
+                                    if (isCatchUp(idx)) msg += ' 🚀 (จุดฟื้นตัว)';
+                                    if (isTsunami(idx)) msg += ' ⚡ (สต็อกลดฮวบ)';
+                                    if (isMachineDropWarning(idx)) msg += ' ⚠️ (ห้ามปิดเครื่อง! เดี๋ยวติดลบ)';
+                                    if (isSafeToSwitch(idx)) msg += ' 🟢 (ปลอดภัย สลับเบอร์ถักได้)';
+                                    if (hasMinMaxCtrl && ctx.raw > maxLimit) msg += ' 💸 (Overcap ทุนจม)';
+                                    return msg;
+                                },
                                 afterBody: (ctxs) => {
                                     const idx = ctxs[0].dataIndex;
                                     const point = timeline[idx];
-                                    if (point && point.drain > 0) return `🚨 ออเดอร์เข้าตัด: -${point.drain.toLocaleString()}m`;
-                                    if (point && point.added > 0) return `🏭 เติมผ้าเข้าคลัง: +${point.added.toLocaleString()}m`;
-                                    return '';
+                                    let msgs = [];
+                                    if (point && point.drain > 0) msgs.push(`🚨 ออเดอร์เข้าตัด: -${point.drain.toLocaleString()}m`);
+                                    if (point && point.added > 0) msgs.push(`🏭 เติมผ้าเข้าคลัง: +${point.added.toLocaleString()}m`);
+                                    return msgs;
                                 }
                             }
                         },
