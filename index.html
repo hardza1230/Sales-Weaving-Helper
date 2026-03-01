@@ -1301,12 +1301,79 @@
 
             drillContent.innerHTML = sorted.map(([id, data]) => {
                 const safeId = id.replace(/[^a-zA-Z0-9]/g, '');
+
+                // Add the new Unified Machine Recommendation Logic here
+                const sim = calculateDailyRunningBalance(data.jobs, data.startStock, data.maxMc, 'ทั้งหมด');
+
+                // 1. Dynamic Lead Time
+                const todayForLead = new Date();
+                const validJobs = data.jobs.filter(j => j._dateObj.getFullYear() !== 2099);
+                const finalOrderDate = validJobs.length > 0 ? new Date(Math.max(...validJobs.map(j => j._dateObj))) : todayForLead;
+                const msDiff = finalOrderDate.getTime() - todayForLead.getTime();
+                let leadTimeDays = Math.ceil(msDiff / (1000 * 3600 * 24));
+                if (leadTimeDays < 1) leadTimeDays = 1;
+
+                // 2. Extract Min Max Thresholds
+                const rawMinStr = String(data.jobs[0]['Min'] || data.jobs[0]['min'] || '').trim();
+                const rawMaxStr = String(data.jobs[0]['Max'] || data.jobs[0]['max'] || '').trim();
+                const hasMinMaxCtrl = rawMinStr !== '' || rawMaxStr !== '';
+                const minLimit = hasMinMaxCtrl ? parseNum(rawMinStr) : 0;
+                const maxLimit = hasMinMaxCtrl ? parseNum(rawMaxStr) : 0;
+
+                let recommendationHtml = '';
+                const isShort = hasMinMaxCtrl ? (sim.minBalance < minLimit) : sim.isBottleneck;
+
+                if (isShort) {
+                    let targetStock = hasMinMaxCtrl ? minLimit : 0;
+                    const deficit = targetStock - sim.minBalance;
+                    const extraMcNeeded = Math.ceil(deficit / (2500 * leadTimeDays));
+                    recommendationHtml = `
+                    <div class="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-100 flex items-center gap-3">
+                         <div class="bg-white p-2 rounded-lg shadow-sm border border-rose-100 shrink-0">
+                              <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-500"></i>
+                         </div>
+                         <div>
+                              <h5 class="text-[10px] font-bold text-rose-700 uppercase tracking-widest mb-0.5">สถานะคิวทอ: วิกฤต</h5>
+                              <p class="text-[9px] font-bold text-rose-600/80 leading-tight"> เครื่องรันไม่พอส่ง (เปิดอยู่ ${data.maxMc}) ควรเพิ่มอีก +${extraMcNeeded} เครื่อง สำหรับช่วง ${leadTimeDays} วันนี้</p>
+                         </div>
+                    </div>`;
+                } else {
+                    const isSurplus = (hasMinMaxCtrl && maxLimit > 0) ? (sim.minBalance > maxLimit && data.maxMc > 0) : (sim.minBalance > 50000 && data.maxMc > 0);
+                    if (isSurplus) {
+                        const reduceMc = Math.max(1, Math.min(data.maxMc, Math.floor((sim.minBalance - 10000) / 25000)));
+                        recommendationHtml = `
+                        <div class="mb-5 p-3 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center gap-3">
+                             <div class="bg-white p-2 rounded-lg shadow-sm border border-emerald-100 shrink-0">
+                                  <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
+                             </div>
+                             <div>
+                                  <h5 class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-0.5">สถานะคิวทอ: สต็อกเหลือเฟือ</h5>
+                                  <p class="text-[9px] font-bold text-emerald-600/80 leading-tight"> สามารถดึงเครื่องออกได้ แนะนำลดเครื่องทอลง -${reduceMc} เครื่อง</p>
+                             </div>
+                        </div>`;
+                    } else if (data.maxMc > 0) {
+                        recommendationHtml = `
+                        <div class="mb-5 p-3 rounded-xl bg-sky-50 border border-sky-100 flex items-center gap-3">
+                             <div class="bg-white p-2 rounded-lg shadow-sm border border-sky-100 shrink-0">
+                                  <i data-lucide="activity" class="w-5 h-5 text-sky-500"></i>
+                             </div>
+                             <div>
+                                  <h5 class="text-[10px] font-bold text-sky-700 uppercase tracking-widest mb-0.5">สถานะคิวทอ: ปลอดภัย / ปกติ</h5>
+                                  <p class="text-[9px] font-bold text-sky-600/80 leading-tight"> รอบการผลิตครอบคลุมแล้ว ควรรักษาระดับนี้ไว้ (${hasMinMaxCtrl ? 'คุมด้วย Min/Max' : 'คุมตาม Order/Running Balance'})</p>
+                             </div>
+                        </div>`;
+                    }
+                }
+
                 return `
                 <div class="glass-card p-6 bg-white shadow-xl flex flex-col h-full border-slate-200">
                     <div class="flex justify-between items-start mb-6 pb-4 border-b border-slate-100">
                         <div class="max-w-[70%]">
                             <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest block leading-none italic mb-1">SPEC ID: ${id}</span>
-                            <h4 class="font-bold text-slate-900 leading-tight text-base uppercase font-jakarta line-clamp-1 leading-none tracking-tight">${data.desc}</h4>
+                            <div class="flex items-center gap-2 mb-1">
+                                <h4 class="font-bold text-slate-900 leading-tight text-base uppercase font-jakarta line-clamp-1 py-1 leading-none tracking-tight">${data.desc}</h4>
+                                ${hasMinMaxCtrl ? `<span class="text-[8px] whitespace-nowrap bg-slate-700 text-white px-2 py-0.5 rounded-full font-bold shadow-inner">Min/Max Ctrl</span>` : `<span class="text-[8px] whitespace-nowrap bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold shadow-inner">By Order</span>`}
+                            </div>
                         </div>
                         <div class="text-right">
                              <p class="text-[8px] text-slate-400 font-bold uppercase italic mb-1 tracking-tighter leading-none">Operating</p>
@@ -1327,6 +1394,7 @@
                              <span class="text-xs ${getBalanceColorClass(data.finalStock)} font-jakarta leading-none">${data.finalStock.toLocaleString()}</span>
                         </div>
                     </div>
+                    ${recommendationHtml}
                     <button onclick="toggleCollapsible('${safeId}')" class="w-full flex items-center justify-between py-3 px-5 bg-slate-900 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all mt-auto shadow-md">
                         <span>รายการคิวทอ (${data.jobs.length})</span>
                         <i data-lucide="chevron-down" id="icon-${safeId}" class="w-4 h-4 transition-transform duration-300"></i>
