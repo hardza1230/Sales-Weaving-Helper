@@ -773,27 +773,26 @@
             </div>
 
             <!-- Body -->
-            <div class="p-6 overflow-y-auto hide-scrollbar flex flex-col gap-6 flex-1">
-                <!-- Data point stats -->
-                <div id="rm-stats" class="grid grid-cols-2 lg:grid-cols-4 gap-4 shrink-0"></div>
+            <div class="p-6 overflow-y-auto hide-scrollbar flex flex-col md:flex-row gap-6 flex-1 bg-slate-50/50">
 
-                <!-- Chart Container -->
-                <div id="rm-chart-container" class="hidden flex-col gap-2 flex-1 min-h-[250px] shrink-0">
-                    <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider"><i data-lucide="activity"
-                            class="w-4 h-4 inline mb-1"></i> Running Balance Projection</h4>
-                    <div class="flex-1 w-full border border-slate-100 rounded-2xl bg-slate-50 p-2 relative">
-                        <canvas id="recChart"></canvas>
+                <!-- Left Column (Stats & Chart) -->
+                <div class="flex flex-col gap-6 w-full md:w-2/3 h-full">
+                    <!-- Data point stats -->
+                    <div id="rm-stats" class="shrink-0"></div>
+
+                    <!-- Chart Container -->
+                    <div id="rm-chart-container" class="hidden flex-col gap-2 flex-1 min-h-[250px] shrink-0">
+                        <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider"><i
+                                data-lucide="activity" class="w-4 h-4 inline mb-1"></i> Running Balance Projection</h4>
+                        <div class="flex-1 w-full border border-slate-100 rounded-2xl bg-white p-2 relative shadow-sm">
+                            <canvas id="recChart"></canvas>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Inline Ledger Container -->
-                <div id="rm-ledger-container" class="w-full shrink-0"></div>
-
-                <!-- Open original usage stats button -->
-                <button onclick="gotoUsageStatsFromModal()"
-                    class="shrink-0 w-full py-4 rounded-xl bg-slate-800 text-white font-bold tracking-wider uppercase text-[11px] hover:bg-slate-900 transition-colors shadow-lg shadow-slate-900/20 active:scale-[0.98] mt-auto">
-                    เปิดดู Ledger ละเอียดทั้งหมด (รายการออเดอร์)
-                </button>
+                <!-- Right Column (Inline Ledger) -->
+                <div id="rm-ledger-container"
+                    class="w-full md:w-1/3 shrink-0 flex flex-col h-full max-h-[500px] md:max-h-full"></div>
             </div>
         </div>
     </div>
@@ -1716,7 +1715,9 @@
                         metricSum += f.maxMc; // Count total active machines trying to fight fires
 
                         const deficit = Math.abs(runningSim.minBalance);
-                        const extraMcNeeded = Math.ceil(deficit / 2500); // Very rough, assuming we need it in 1 day, user can adjust
+                        // Make calculation more realistic by spreading the deficit over a 30-day period
+                        const leadTimeDays = 30;
+                        const extraMcNeeded = Math.ceil(deficit / (2500 * leadTimeDays));
                         maxCapacityDeficit += extraMcNeeded;
 
                         const impactedNames = Array.from(new Set(f.jobs.map(j => j['Name'] || j['ฝ่ายขาย']).filter(n => n && n !== '-')));
@@ -1746,7 +1747,7 @@
                                         <i data-lucide="users" class="w-3 h-3"></i> กระทบลูกค้า: <span class="text-slate-800">${impactText}</span>
                                     </div>
                                      <div class="mt-2 flex items-center gap-1.5 text-[9px] font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-lg border border-rose-100">
-                                         <i data-lucide="settings-2" class="w-3 h-3"></i> เครื่องรันไม่พอส่ง (เปิดอยู่ ${f.maxMc}) แนะนำเพิ่ม +${extraMcNeeded} เครื่อง/วัน
+                                         <i data-lucide="settings-2" class="w-3 h-3"></i> เครื่องรันไม่พอส่ง (เปิดอยู่ ${f.maxMc}) ควรเพิ่มราว +${extraMcNeeded} เครื่อง
                                      </div>
                                 </div>
                             </button>
@@ -1898,21 +1899,23 @@
             document.getElementById('rm-desc').textContent = desc;
 
             const statsHtml = `
-                <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
-                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">สต็อกยกมา</span>
-                    <span class="text-lg font-black font-jakarta text-slate-700">${startBal.toLocaleString()}</span>
-                </div>
-                <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
-                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">จบช่วงเวลา</span>
-                    <span class="text-lg font-black font-jakarta ${finalBal < 0 ? 'text-rose-600' : 'text-emerald-600'}">${finalBal.toLocaleString()}</span>
-                </div>
-                <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
-                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">ใช้ทั้งหมด</span>
-                    <span class="text-lg font-black font-jakarta text-sky-600">${fjobs.reduce((s, j) => s + parseNum(j['ใช้ผ้า']), 0).toLocaleString()}</span>
-                </div>
-                <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
-                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">เครื่องเตรียมทอ</span>
-                    <span class="text-lg font-black font-jakarta text-amber-600">${maxMc} M/C</span>
+                <div class="grid grid-cols-2 gap-4 w-full mb-4">
+                    <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">สต็อกยกมา</span>
+                        <span class="text-lg font-black font-jakarta text-slate-700">${startBal.toLocaleString()}</span>
+                    </div>
+                    <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">จบช่วงเวลา</span>
+                        <span class="text-lg font-black font-jakarta ${finalBal < 0 ? 'text-rose-600' : 'text-emerald-600'}">${finalBal.toLocaleString()}</span>
+                    </div>
+                    <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">ใช้ทั้งหมด</span>
+                        <span class="text-lg font-black font-jakarta text-sky-600">${fjobs.reduce((s, j) => s + parseNum(j['ใช้ผ้า']), 0).toLocaleString()}</span>
+                    </div>
+                    <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center items-center">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">เครื่องเตรียมทอ</span>
+                        <span class="text-lg font-black font-jakarta text-amber-600">${maxMc} M/C</span>
+                    </div>
                 </div>
             `;
             document.getElementById('rm-stats').innerHTML = statsHtml;
@@ -1922,38 +1925,13 @@
             chartCont.classList.add('flex');
 
             const sim = calculateDailyRunningBalance(fjobs, startBal, maxMc, activeRecPlant);
-            drawRecChart(sim.timeline);
+            drawRecChart(sim.timeline, fjobs); // Passed fjobs
 
             const ledgerCont = document.getElementById('rm-ledger-container');
             if (ledgerCont) {
-                const ledgerHtml = `
-                    <div class="mt-2 border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-white">
-                        <div class="bg-slate-50 border-b border-slate-100 px-4 py-3 flex items-center justify-between">
-                            <h4 class="text-[11px] font-bold text-slate-600 uppercase tracking-widest"><i data-lucide="list" class="w-3 h-3 inline mr-1"></i> รายการออเดอร์ (Ledger)</h4>
-                            <span class="text-[9px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-md font-bold">${fjobs.length} รายการ</span>
-                        </div>
-                        <div class="overflow-x-auto hide-scrollbar max-h-[30vh] md:max-h-60 overflow-y-auto relative">
-                            <table class="w-full text-[10px] text-left">
-                                <thead class="text-slate-400 uppercase tracking-tighter bg-white sticky top-0 z-10 shadow-sm border-b border-slate-50 font-black italic">
-                                    <tr><th class="py-2 px-3">วันขึ้นของ</th><th class="py-2 px-3">ลูกค้า/ฝ่ายขาย</th><th class="py-2 text-right">จำนวนตัดสต็อก</th></tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-50">
-                                    ${fjobs.map(job => `
-                                        <tr class="hover:bg-slate-50 transition-colors">
-                                            <td class="py-2.5 px-3 font-bold text-slate-700 whitespace-nowrap">${formatDateDisplay(job._dateObj).text}</td>
-                                            <td class="py-2.5 px-3">
-                                                <span class="block text-[11px] text-slate-700 font-bold line-clamp-1">${job['Name'] || '-'}</span>
-                                                <span class="block text-[9px] text-slate-400 font-jakarta">${job['ฝ่ายขาย'] || '-'}</span>
-                                            </td>
-                                            <td class="py-2.5 text-right px-3 font-black text-rose-500 font-jakarta">-${parseNum(job['ใช้ผ้า']).toLocaleString()}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `;
-                ledgerCont.innerHTML = ledgerHtml;
+                // Store jobs globally for interactive clicking
+                window.currentModalJobs = fjobs;
+                window.renderLedgerList(fjobs, 'รายการออเดอร์ทั้งหมด');
             }
 
             const overlay = document.getElementById('recModal');
@@ -1965,6 +1943,50 @@
                 else content.classList.remove('translate-y-10');
             }, 10);
         }
+
+        window.renderLedgerList = function (jobsToShow, title) {
+            const ledgerCont = document.getElementById('rm-ledger-container');
+            if (!ledgerCont) return;
+            const ledgerHtml = `
+                    <div class="h-full flex flex-col border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-white">
+                        <div class="bg-slate-50 border-b border-slate-100 px-4 py-3 flex items-center justify-between shrink-0">
+                            <h4 class="text-[11px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
+                                <i data-lucide="list" class="w-3 h-3"></i> 
+                                ${title}
+                            </h4>
+                            <span class="text-[9px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-md font-bold">${jobsToShow.length} รายการ</span>
+                        </div>
+                        <div class="overflow-x-auto hide-scrollbar flex-1 overflow-y-auto relative min-h-[150px]">
+                            <table class="w-full text-[10px] text-left">
+                                <thead class="text-slate-400 uppercase tracking-tighter bg-white sticky top-0 z-10 shadow-sm border-b border-slate-50 font-black italic">
+                                    <tr><th class="py-2 px-3">วันขึ้นของ</th><th class="py-2 px-3">ลูกค้า/ฝ่ายขาย</th><th class="py-2 text-right">จำนวนตัดสต็อก</th></tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50">
+                                    ${jobsToShow.length > 0 ? jobsToShow.map(job => `
+                                        <tr class="hover:bg-slate-50 transition-colors">
+                                            <td class="py-2.5 px-3 font-bold text-slate-700 whitespace-nowrap">${formatDateDisplay(job._dateObj).text}</td>
+                                            <td class="py-2.5 px-3">
+                                                <span class="block text-[11px] text-slate-700 font-bold line-clamp-1">${job['Name'] || '-'}</span>
+                                                <span class="block text-[9px] text-slate-400 font-jakarta">${job['ฝ่ายขาย'] || '-'}</span>
+                                            </td>
+                                            <td class="py-2.5 text-right px-3 font-black text-rose-500 font-jakarta">-${parseNum(job['ใช้ผ้า']).toLocaleString()}</td>
+                                        </tr>
+                                    `).join('') : `<tr><td colspan="3" class="text-center py-6 text-slate-400 italic">ไม่มีรายการตัดสต็อกในวันนี้</td></tr>`}
+                                </tbody>
+                            </table>
+                        </div>
+                        ${title !== 'รายการออเดอร์ทั้งหมด' ? `
+                            <div class="p-2 border-t border-slate-100 bg-slate-50">
+                                <button onclick="window.renderLedgerList(window.currentModalJobs, 'รายการออเดอร์ทั้งหมด')" class="w-full bg-white border border-slate-200 text-slate-600 text-[10px] py-1.5 rounded-lg uppercase font-bold tracking-widest hover:bg-slate-100 transition-colors shadow-sm">
+                                    ดูรายการทั้งหมด
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            ledgerCont.innerHTML = ledgerHtml;
+            lucide.createIcons();
+        };
 
         function closeRecModal() {
             const overlay = document.getElementById('recModal');
