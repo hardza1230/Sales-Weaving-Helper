@@ -1487,22 +1487,16 @@
                 subtitleEl.innerHTML = `<i data-lucide="briefcase" class="w-3 h-3 text-sky-600"></i> <span class="text-sky-800">${name}</span>`;
                 subtitleEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-100 text-[10px] font-bold mt-1";
                 activeRecSales = name;
-                document.getElementById('filter-rec-role-lbl').textContent = "ฝ่ายขาย";
             } else {
                 titleEl.textContent = "แผงควบคุมการผลิต";
                 subtitleEl.innerHTML = `<i data-lucide="factory" class="w-3 h-3 text-emerald-600"></i> <span class="text-emerald-800">${name}</span>`;
                 subtitleEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-100 text-[10px] font-bold mt-1";
                 activeRecPlant = name;
-                document.getElementById('filter-rec-role-lbl').textContent = "โรงงาน";
             }
-
-            // Hide filter elements that are not needed visually since we handled the preselection
-            document.getElementById('filter-rec-role-lbl')?.parentElement.classList.add('hidden');
 
             navigate('stock-recommend');
             renderStockRecommendations();
         }
-
 
         function calculateDailyRunningBalance(jobs, startBalance, currentMachines, activePlant) {
             // Find valid timeframe
@@ -1598,12 +1592,6 @@
             });
             document.getElementById('filter-rec-group').className = "flex flex-wrap items-center gap-2 max-w-full";
             document.getElementById('filter-rec-group').innerHTML = groupFilterHtml;
-
-            const divRole = document.getElementById('filter-rec-role');
-            if (divRole) {
-                if (currentRecTab === 'sales') divRole.innerHTML = buildPills(Array.from(uniqueSales).sort(), activeRecSales, 'setRecSales');
-                else divRole.innerHTML = buildPills(Array.from(uniquePlants).sort(), activeRecPlant, 'setRecPlant');
-            }
 
             let criticalCount = 0;
             let metricSum = 0;
