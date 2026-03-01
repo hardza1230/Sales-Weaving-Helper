@@ -806,6 +806,8 @@
         let viewMode = 'mobile';
         let chartMode = 'meter';
         let demandChartInstance = null;
+        let recChartInstance = null;
+        let currentRecModalSpecId = null;
         const filterFields = ['Wildth', 'Denia', 'Frequency', 'Pattern'];
 
         const parseNum = (v) => parseFloat(String(v || '0').replace(/,/g, '')) || 0;
