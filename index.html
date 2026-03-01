@@ -796,7 +796,7 @@
     <!-- Drill-down Modal -->
     <div id="recModal"
         class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex-col justify-end md:justify-center items-center p-0 md:p-6 transition-opacity opacity-0 duration-300">
-        <div class="bg-white w-full md:w-11/12 lg:max-w-[1400px] rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col h-[85vh] md:h-[90vh] overflow-hidden transform translate-y-full md:translate-y-10 transition-transform duration-300"
+        <div class="bg-white w-full md:w-11/12 lg:max-w-[1400px] rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col h-[85vh] md:h-auto md:max-h-[90vh] overflow-hidden transform translate-y-full md:translate-y-4 md:scale-95 transition-all duration-300"
             id="recModalContent">
             <!-- Header -->
             <div class="p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50 relative shrink-0">
@@ -1778,11 +1778,13 @@
 
                     if (maxDrop > 0) {
                         predictiveSignalsList.push({
+                            type: 'tsunami',
                             html: `<button onclick="openRecommendationSpecPopup('${f.id}')" class="flex items-center gap-2 bg-rose-50 border border-rose-200 hover:border-rose-400 hover:bg-rose-100 transition-colors rounded-full pl-1.5 pr-4 py-1.5 shadow-sm active:scale-95 group"><div class="w-7 h-7 rounded-full bg-rose-200 text-rose-700 flex items-center justify-center shrink-0 group-hover:bg-rose-600 group-hover:text-white transition-colors"><i data-lucide="triangle" class="w-3.5 h-3.5 fill-current"></i></div><div class="text-left leading-tight"><strong class="text-[11px] text-rose-700 font-jakarta group-hover:text-rose-900">${f.id}</strong><br><span class="text-[9px] text-rose-500 font-bold uppercase tracking-tight group-hover:text-rose-700">ระวังออเดอร์มหาศาลจ่อคิวตัด</span></div></button>`
                         });
                     }
                     if (hasDeadStock) {
                         predictiveSignalsList.push({
+                            type: 'deadstock',
                             html: `<button onclick="openRecommendationSpecPopup('${f.id}')" class="flex items-center gap-2 bg-slate-50 border border-slate-200 hover:border-slate-400 hover:bg-slate-100 transition-colors rounded-full pl-1.5 pr-4 py-1.5 shadow-sm active:scale-95 group"><div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center shrink-0 group-hover:bg-slate-700 group-hover:text-white transition-colors"><i data-lucide="skull" class="w-3.5 h-3.5"></i></div><div class="text-left leading-tight"><strong class="text-[11px] text-slate-700 font-jakarta group-hover:text-slate-900">${f.id}</strong><br><span class="text-[9px] text-slate-500 font-bold uppercase tracking-tight group-hover:text-slate-700">สต็อกตายนิ่งสนิท >14 วัน</span></div></button>`
                         });
                     }
@@ -2125,10 +2127,39 @@
             const signalsCount = document.getElementById('dash-predictive-count');
 
             if (predictiveSignalsList.length > 0) {
-                // Remove duplicates by ID and HTML purely for cleaner display
-                const uniqueSignals = [...new Set(predictiveSignalsList.map(s => s.html))];
-                signalsContainer.innerHTML = uniqueSignals.slice(0, 20).join('');
-                signalsCount.textContent = predictiveSignalsList.length;
+                const groupedHTML = [];
+                const groups = { 'tsunami': [], 'deadstock': [] };
+
+                predictiveSignalsList.forEach(s => {
+                    if (!groups[s.type].includes(s.html)) {
+                        groups[s.type].push(s.html);
+                    }
+                });
+
+                let totalUnique = 0;
+                Object.keys(groups).forEach(type => {
+                    if (groups[type].length > 0) {
+                        const title = type === 'tsunami' ? '🌊 สึนามิออเดอร์ (ระวังยอดตัดกะทันหัน)' : '🐢 สต็อกนิ่งสนิท (>14 วัน)';
+                        const items = groups[type];
+                        totalUnique += items.length;
+
+                        groupedHTML.push(`<div class="w-full mt-4 mb-2"><h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">${title} <span class="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-md text-[10px]">${items.length}</span></h4></div>`);
+                        groupedHTML.push(`<div class="flex flex-wrap gap-2 w-full">`);
+
+                        const visible = items.slice(0, 5);
+                        const hidden = items.slice(5);
+                        groupedHTML.push(visible.join(''));
+
+                        if (hidden.length > 0) {
+                            groupedHTML.push(`<div id="group-${type}-hidden" class="hidden flex flex-wrap gap-2 w-full mt-2">${hidden.join('')}</div>`);
+                            groupedHTML.push(`<button onclick="document.getElementById('group-${type}-hidden').classList.remove('hidden'); this.classList.add('hidden')" class="text-[10px] font-bold text-sky-600 bg-sky-50 px-4 py-2 rounded-full hover:bg-sky-100 transition-colors border border-sky-100 shadow-sm">+ See more (${hidden.length})</button>`);
+                        }
+                        groupedHTML.push(`</div>`);
+                    }
+                });
+
+                signalsContainer.innerHTML = groupedHTML.join('');
+                signalsCount.textContent = totalUnique;
                 signalsWrapper.classList.remove('hidden');
             } else {
                 signalsWrapper.classList.add('hidden');
@@ -2249,8 +2280,12 @@
             overlay.classList.remove('hidden');
             setTimeout(() => {
                 overlay.classList.remove('opacity-0');
-                if (window.innerWidth < 768) content.classList.remove('translate-y-full');
-                else content.classList.remove('translate-y-10');
+                if (window.innerWidth < 768) {
+                    content.classList.remove('translate-y-full');
+                } else {
+                    content.classList.remove('md:translate-y-4', 'md:scale-95');
+                    content.classList.add('md:translate-y-0', 'md:scale-100');
+                }
             }, 10);
         }
 
@@ -2302,8 +2337,12 @@
             const overlay = document.getElementById('recModal');
             const content = document.getElementById('recModalContent');
             overlay.classList.add('opacity-0');
-            if (window.innerWidth < 768) content.classList.add('translate-y-full');
-            else content.classList.add('translate-y-10');
+            if (window.innerWidth < 768) {
+                content.classList.add('translate-y-full');
+            } else {
+                content.classList.remove('md:translate-y-0', 'md:scale-100');
+                content.classList.add('md:translate-y-4', 'md:scale-95');
+            }
 
             setTimeout(() => {
                 overlay.classList.add('hidden');
@@ -2513,6 +2552,34 @@
                     backgroundColor: 'rgba(203, 213, 225, 0.25)', borderWidth: 0, drawTime: 'beforeDraw',
                     label: { display: true, content: '🐢 สต็อกนิ่งยาว (Dead Stock)', position: 'center', color: '#64748b', font: { size: 8, weight: 'bold' } }
                 };
+            }
+
+            // F. Point Icon Annotations (Emojis on the timeline)
+            let annoCount = 0;
+            for (let i = 0; i < timeline.length; i++) {
+                let iconContent = null;
+                let borderColor = '';
+                if (isTsunami(i)) { iconContent = '🌊 สึนามิ'; borderColor = 'rgba(249, 115, 22, 0.5)'; }
+                else if (isCatchUp(i)) { iconContent = '🚀 พ้นแดนลบ'; borderColor = 'rgba(16, 185, 129, 0.5)'; }
+                else if (isMachineDropWarning(i)) { iconContent = '⚠️ เสี่ยงช็อต'; borderColor = 'rgba(234, 179, 8, 0.5)'; }
+
+                if (iconContent) {
+                    annotations[`pointIcon${annoCount++}`] = {
+                        type: 'label',
+                        xValue: labels[i],
+                        yValue: data[i],
+                        content: iconContent,
+                        backgroundColor: 'rgba(255,255,255,0.95)',
+                        color: '#334155',
+                        font: { size: 9, weight: 'bold' },
+                        borderRadius: 6,
+                        padding: { top: 3, bottom: 3, left: 6, right: 6 },
+                        yAdjust: -25,
+                        borderWidth: 1,
+                        borderColor: borderColor,
+                        callout: { display: true, position: 'bottom', borderColor: borderColor, margin: 2 }
+                    };
+                }
             }
 
             recChartInstance = new Chart(ctx, {
