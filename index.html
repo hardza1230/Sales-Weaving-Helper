@@ -879,37 +879,31 @@
                 <!-- Stats row -->
                 <div id="rm-stats" class="shrink-0"></div>
 
-                <!-- Chart + Table (side-by-side on wide screens, stacked on mobile) -->
-                <div class="flex flex-col xl:flex-row gap-5" style="min-height: 520px;">
-
-                    <!-- Left: Chart -->
-                    <div id="rm-chart-container" class="hidden flex-col gap-2 flex-1">
-                        <div class="flex items-center justify-between">
-                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                                <i data-lucide="activity" class="w-4 h-4 inline mb-1"></i> Running Balance Projection
-                            </h4>
-                            <div
-                                class="flex items-center gap-1.5 p-1 bg-slate-200/50 rounded-xl border border-slate-100">
-                                <button onclick="setChartTimeframe(14)" id="tf-14"
-                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">14D</button>
-                                <button onclick="setChartTimeframe(30)" id="tf-30"
-                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">1M</button>
-                                <button onclick="setChartTimeframe(60)" id="tf-60"
-                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">2M</button>
-                                <button onclick="setChartTimeframe('all')" id="tf-all"
-                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg bg-sky-100 text-sky-600 shadow-sm transition-all uppercase tracking-tighter">ALL</button>
-                            </div>
-                        </div>
-                        <div class="flex-1 w-full border border-slate-100 rounded-2xl bg-white p-2 relative shadow-sm"
-                            style="min-height: 420px;">
-                            <canvas id="recChart"></canvas>
+                <!-- Chart (full width, top) -->
+                <div id="rm-chart-container" class="hidden flex-col gap-2">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                            <i data-lucide="activity" class="w-4 h-4 inline mb-1"></i> Running Balance Projection
+                        </h4>
+                        <div class="flex items-center gap-1.5 p-1 bg-slate-200/50 rounded-xl border border-slate-100">
+                            <button onclick="setChartTimeframe(14)" id="tf-14"
+                                class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">14D</button>
+                            <button onclick="setChartTimeframe(30)" id="tf-30"
+                                class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">1M</button>
+                            <button onclick="setChartTimeframe(60)" id="tf-60"
+                                class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">2M</button>
+                            <button onclick="setChartTimeframe('all')" id="tf-all"
+                                class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg bg-sky-100 text-sky-600 shadow-sm transition-all uppercase tracking-tighter">ALL</button>
                         </div>
                     </div>
-
-                    <!-- Right: Ledger Table (full height, scrollable) -->
-                    <div id="rm-ledger-container" class="w-full xl:w-[55%] shrink-0 flex flex-col"
-                        style="min-height: 420px;"></div>
+                    <div class="w-full border border-slate-100 rounded-2xl bg-white p-2 relative shadow-sm"
+                        style="min-height: 360px;">
+                        <canvas id="recChart"></canvas>
+                    </div>
                 </div>
+
+                <!-- Ledger Table (full width, below chart) -->
+                <div id="rm-ledger-container" class="w-full flex flex-col" style="min-height: 300px;"></div>
             </div>
         </main>
     </section>
@@ -2543,72 +2537,100 @@
             window.scrollTo(0, 0);
         }
 
-        window.renderLedgerList = function (jobsToShow, title) {
+        // ---- Ledger Pagination state ----
+        let _ledgerAllJobs = [];
+        let _ledgerPage = 0;
+        const LEDGER_PAGE_SIZE = 25;
+
+        window.renderLedgerList = function (jobsToShow, title, page) {
+            _ledgerAllJobs = jobsToShow;
+            _ledgerPage = page || 0;
             const ledgerCont = document.getElementById('rm-ledger-container');
             if (!ledgerCont) return;
-            const ledgerHtml = `
-                    <div class="h-full flex flex-col border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-white">
-                        <div class="bg-slate-50 border-b border-slate-100 px-4 py-3 flex items-center justify-between shrink-0">
-                            <h4 class="text-[11px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
-                                <i data-lucide="list" class="w-3 h-3"></i> 
-                                ${title}
-                            </h4>
-                            <span class="text-[9px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-md font-bold">${jobsToShow.length} รายการ</span>
-                        </div>
-                        <div class="overflow-x-auto hide-scrollbar flex-1 overflow-y-auto relative min-h-[150px]">
-                            <table class="min-w-max w-full text-[10px] text-left">
-                                <thead class="text-slate-400 uppercase tracking-tighter bg-white sticky top-0 z-10 shadow-sm border-b border-slate-50 font-black italic">
-                                    <tr>
-                                        <th class="py-2 px-2 whitespace-nowrap">วันที่ใช้</th>
-                                        <th class="py-2 px-2 whitespace-nowrap">วันขึ้นของ</th>
-                                        <th class="py-2 px-2 whitespace-nowrap">เลขที่ CO/Line</th>
-                                        <th class="py-2 px-2">Description/Item</th>
-                                        <th class="py-2 px-2 whitespace-nowrap">ลูกค้า/ฝ่ายขาย</th>
-                                        <th class="py-2 px-2 whitespace-nowrap">Item Group</th>
-                                        <th class="py-2 px-2 whitespace-nowrap">Plant</th>
-                                        <th class="py-2 px-2 text-right whitespace-nowrap">ตัดสต็อก</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-50">
-                                    ${jobsToShow.length > 0 ? jobsToShow.map(job => `
-                                        <tr class="hover:bg-slate-50 transition-colors">
-                                            <td class="py-2.5 px-2 text-slate-600 font-bold whitespace-nowrap">${(() => { const d = new Date(job._dateObj.getTime() - 5 * 24 * 3600 * 1000); return d.getFullYear() === 2099 ? '-' : (String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0')); })()}</td>
-                                            <td class="py-2.5 px-2 font-bold whitespace-nowrap">
-                                                <span class="${formatDateDisplay(job._dateObj).diff < 0 ? 'text-rose-600' : 'text-emerald-700'}">${formatDateDisplay(job._dateObj).text}</span>
-                                                <span class="block text-[8px] text-slate-400 mt-0.5">${formatDateDisplay(job._dateObj).label}</span>
-                                            </td>
-                                            <td class="py-2.5 px-2 font-jakarta whitespace-nowrap">
-                                                <span class="block text-[10px] font-bold text-sky-700">${job['เลขที่ CO'] || '-'}</span>
-                                                <span class="block text-[9px] text-slate-400">${job['Line'] || job['Item'] || '-'}</span>
-                                            </td>
-                                            <td class="py-2.5 px-2 whitespace-nowrap">
-                                                <span class="block text-[10px] font-bold text-slate-700 leading-tight">${job['Description'] || '-'}</span>
-                                                <span class="block text-[9px] text-slate-400 font-jakarta mt-0.5">${job['Item'] || ''}</span>
-                                            </td>
-                                            <td class="py-2.5 px-2 whitespace-nowrap">
-                                                <span class="block text-[10px] font-bold text-slate-700">${job['Name'] || '-'}</span>
-                                                <span class="block text-[9px] text-slate-400 font-jakarta">${job['ฝ่ายขาย'] || '-'}</span>
-                                            </td>
-                                            <td class="py-2.5 px-2 text-[10px] font-bold text-slate-500 whitespace-nowrap">${job['ItemGroup'] || '-'}</td>
-                                            <td class="py-2.5 px-2 text-[10px] font-bold text-indigo-600 whitespace-nowrap">${(job['Plant'] || job['plant'] || job[' โรงงาน'] || '-').trim()}</td>
-                                            <td class="py-2.5 px-2 text-right font-black text-rose-500 font-jakarta whitespace-nowrap">-${parseNum(job['ใช้ผ้า']).toLocaleString()}</td>
-                                        </tr>
-                                    `).join('') : `<tr><td colspan="8" class="text-center py-6 text-slate-400 italic">ไม่มีรายการตัดสต็อกในวันนี้</td></tr>`}
-                                </tbody>
-                            </table>
-                        </div>
-                        ${title !== 'รายการออเดอร์ทั้งหมด' ? `
-                            <div class="p-2 border-t border-slate-100 bg-slate-50">
-                                <button onclick="window.renderLedgerList(window.currentModalJobs, 'รายการออเดอร์ทั้งหมด')" class="w-full bg-white border border-slate-200 text-slate-600 text-[10px] py-1.5 rounded-lg uppercase font-bold tracking-widest hover:bg-slate-100 transition-colors shadow-sm">
-                                    ดูรายการทั้งหมด
-                                </button>
-                            </div>
-                        ` : ''}
+
+            const total = jobsToShow.length;
+            const totalPages = Math.max(1, Math.ceil(total / LEDGER_PAGE_SIZE));
+            const curPage = Math.min(_ledgerPage, totalPages - 1);
+            const start = curPage * LEDGER_PAGE_SIZE;
+            const pageJobs = jobsToShow.slice(start, start + LEDGER_PAGE_SIZE);
+
+            const rowsHtml = pageJobs.length > 0 ? pageJobs.map(job => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="py-2.5 px-2 text-slate-600 font-bold whitespace-nowrap">${(() => { const d = new Date(job._dateObj.getTime() - 5 * 24 * 3600 * 1000); return d.getFullYear() === 2099 ? '-' : (String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0')); })()}</td>
+                    <td class="py-2.5 px-2 font-bold whitespace-nowrap">
+                        <span class="${formatDateDisplay(job._dateObj).diff < 0 ? 'text-rose-600' : 'text-emerald-700'}">${formatDateDisplay(job._dateObj).text}</span>
+                        <span class="block text-[8px] text-slate-400 mt-0.5">${formatDateDisplay(job._dateObj).label}</span>
+                    </td>
+                    <td class="py-2.5 px-2 font-jakarta whitespace-nowrap">
+                        <span class="block text-[10px] font-bold text-sky-700">${job['\u0e40\u0e25\u0e02\u0e17\u0e35\u0e48 CO'] || '-'}</span>
+                        <span class="block text-[9px] text-slate-400">${job['Line'] || job['Item'] || '-'}</span>
+                    </td>
+                    <td class="py-2.5 px-2 whitespace-nowrap">
+                        <span class="block text-[10px] font-bold text-slate-700 leading-tight">${job['Description'] || '-'}</span>
+                        <span class="block text-[9px] text-slate-400 font-jakarta mt-0.5">${job['Item'] || ''}</span>
+                    </td>
+                    <td class="py-2.5 px-2 whitespace-nowrap">
+                        <span class="block text-[10px] font-bold text-slate-700">${job['Name'] || '-'}</span>
+                        <span class="block text-[9px] text-slate-400 font-jakarta">${job['\u0e1d\u0e48\u0e32\u0e22\u0e02\u0e32\u0e22'] || '-'}</span>
+                    </td>
+                    <td class="py-2.5 px-2 text-[10px] font-bold text-slate-500 whitespace-nowrap">${job['ItemGroup'] || '-'}</td>
+                    <td class="py-2.5 px-2 text-[10px] font-bold text-indigo-600 whitespace-nowrap">${(job['Plant'] || job['plant'] || job[' \u0e42\u0e23\u0e07\u0e07\u0e32\u0e19'] || '-').trim()}</td>
+                    <td class="py-2.5 px-2 text-right font-black text-rose-500 font-jakarta whitespace-nowrap">-${parseNum(job['\u0e43\u0e0a\u0e49\u0e1c\u0e49\u0e32']).toLocaleString()}</td>
+                </tr>
+            `).join('') : `<tr><td colspan="8" class="text-center py-6 text-slate-400 italic">\u0e44\u0e21\u0e48\u0e21\u0e35\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23</td></tr>`;
+
+            const paginationHtml = totalPages > 1 ? `
+                <div class="px-4 py-2.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+                    <button onclick="goLedgerPage(${curPage - 1})" ${curPage === 0 ? 'disabled' : ''}
+                        class="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all
+                        ${curPage === 0 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 shadow-sm'}">
+                        <i data-lucide="chevron-left" class="w-3 h-3"></i> \u0e01\u0e48\u0e2d\u0e19\u0e2b\u0e19\u0e49\u0e32
+                    </button>
+                    <span class="text-[10px] font-bold text-slate-500">
+                        \u0e2b\u0e19\u0e49\u0e32 <span class="text-emerald-600">${curPage + 1}</span> / ${totalPages}
+                        <span class="text-slate-400 ml-1">(${start + 1}–${Math.min(start + LEDGER_PAGE_SIZE, total)} จาก ${total})</span>
+                    </span>
+                    <button onclick="goLedgerPage(${curPage + 1})" ${curPage >= totalPages - 1 ? 'disabled' : ''}
+                        class="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all
+                        ${curPage >= totalPages - 1 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 shadow-sm'}">
+                        \u0e2b\u0e19\u0e49\u0e32\u0e16\u0e31\u0e14\u0e44\u0e1b <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                    </button>
+                </div>` : '';
+
+            ledgerCont.innerHTML = `
+                <div class="flex flex-col border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-white">
+                    <div class="bg-slate-50 border-b border-slate-100 px-4 py-3 flex items-center justify-between shrink-0">
+                        <h4 class="text-[11px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
+                            <i data-lucide="list" class="w-3 h-3"></i> \u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e2d\u0e2d\u0e40\u0e14\u0e2d\u0e23\u0e4c\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14
+                        </h4>
+                        <span class="text-[9px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-md font-bold">${total} \u0e23\u0e32\u0e22\u0e01\u0e32\u0e23</span>
                     </div>
-                `;
-            ledgerCont.innerHTML = ledgerHtml;
+                    <div class="overflow-x-auto hide-scrollbar">
+                        <table class="min-w-max w-full text-[10px] text-left">
+                            <thead class="text-slate-400 uppercase tracking-tighter bg-white sticky top-0 z-10 shadow-sm border-b border-slate-50 font-black italic">
+                                <tr>
+                                    <th class="py-2 px-2 whitespace-nowrap">\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48\u0e43\u0e0a\u0e49</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">\u0e27\u0e31\u0e19\u0e02\u0e36\u0e49\u0e19\u0e02\u0e2d\u0e07</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">\u0e40\u0e25\u0e02\u0e17\u0e35\u0e48 CO/Line</th>
+                                    <th class="py-2 px-2">Description/Item</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">\u0e25\u0e39\u0e01\u0e04\u0e49\u0e32/\u0e1d\u0e48\u0e32\u0e22\u0e02\u0e32\u0e22</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">Item Group</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">Plant</th>
+                                    <th class="py-2 px-2 text-right whitespace-nowrap">\u0e15\u0e31\u0e14\u0e2a\u0e15\u0e47\u0e2d\u0e01</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">${rowsHtml}</tbody>
+                        </table>
+                    </div>
+                    ${paginationHtml}
+                </div>`;
             lucide.createIcons();
         };
+
+        function goLedgerPage(page) {
+            window.renderLedgerList(_ledgerAllJobs, '\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e2d\u0e2d\u0e40\u0e14\u0e2d\u0e23\u0e4c\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14', page);
+        }
+
 
         function closeRecModal() {
             if (recChartInstance) {
