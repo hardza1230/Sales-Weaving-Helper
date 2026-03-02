@@ -843,70 +843,76 @@
         เรียบร้อย
     </div>
 
-    <!-- Drill-down Modal -->
-    <div id="recModal"
-        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex-col justify-end md:justify-center items-center p-0 md:p-6 transition-opacity opacity-0 duration-300">
-        <div class="bg-white w-full md:w-11/12 lg:max-w-[1400px] rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col h-[85vh] md:h-auto md:max-h-[90vh] overflow-hidden transform translate-y-full md:translate-y-4 md:scale-95 transition-all duration-300"
-            id="recModalContent">
-            <!-- Header -->
-            <div class="p-6 border-b border-slate-100 flex justify-between items-start bg-slate-50 relative shrink-0">
-                <div class="pr-8">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span id="rm-title"
-                            class="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-widest leading-none font-jakarta"></span>
-                        <span id="rm-group"
-                            class="text-[10px] bg-white border border-slate-200 text-slate-500 px-2 py-0.5 rounded-full font-bold tracking-tighter shadow-sm"></span>
+
+    <!-- 6. หน้ารายละเอียดสเปก (เดิมเป็น Popup) -->
+    <section id="page-rec-spec-detail" class="hidden min-h-screen flex-col bg-slate-50">
+        <!-- Sticky Header -->
+        <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 p-4 shadow-sm shrink-0">
+            <div class="layout-container">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <button onclick="closeRecModal()"
+                            class="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-800 transition-colors">
+                            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                        </button>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span id="rm-title"
+                                    class="text-xl font-black text-slate-800 uppercase tracking-widest leading-none font-jakarta"></span>
+                                <span id="rm-group"
+                                    class="text-[10px] bg-white border border-slate-200 text-slate-500 px-2 py-0.5 rounded-full font-bold tracking-tighter shadow-sm"></span>
+                            </div>
+                            <p id="rm-desc" class="text-xs font-bold text-slate-400 mt-0.5 leading-tight"></p>
+                        </div>
                     </div>
-                    <p id="rm-desc" class="text-xs md:text-sm font-bold text-slate-500 line-clamp-2 leading-tight"></p>
+                    <button onclick="gotoUsageStatsFromModal()"
+                        class="hidden md:flex items-center gap-1.5 text-[10px] font-bold text-sky-600 bg-sky-50 px-3 py-2 rounded-xl border border-sky-100 hover:bg-sky-100 transition-colors">
+                        <i data-lucide="bar-chart-2" class="w-3.5 h-3.5"></i> ดูใน Usage Stats
+                    </button>
                 </div>
-                <button onclick="closeRecModal()"
-                    class="absolute top-6 right-6 w-8 h-8 flex items-center justify-center bg-white rounded-full text-slate-400 hover:text-slate-800 hover:bg-slate-200 transition-colors shadow-sm">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
             </div>
+        </header>
 
-            <!-- Body -->
-            <div class="p-6 overflow-y-auto hide-scrollbar flex flex-col xl:flex-row gap-6 flex-1 bg-slate-50/50">
+        <!-- Body: Stats top, then Chart + Table side-by-side -->
+        <main class="p-5 flex-1 overflow-y-auto hide-scrollbar">
+            <div class="layout-container space-y-5 pb-12">
+                <!-- Stats row -->
+                <div id="rm-stats" class="shrink-0"></div>
 
-                <!-- Left Column (Stats & Chart) -->
-                <div class="flex flex-col gap-6 w-full xl:w-3/4 h-full">
-                    <!-- Data point stats -->
-                    <div id="rm-stats" class="shrink-0"></div>
+                <!-- Chart + Table (side-by-side on wide screens, stacked on mobile) -->
+                <div class="flex flex-col xl:flex-row gap-5" style="min-height: 520px;">
 
-                    <!-- Chart Container -->
-                    <div id="rm-chart-container"
-                        class="hidden flex-col gap-2 flex-1 min-h-[350px] lg:min-h-[500px] shrink-0">
+                    <!-- Left: Chart -->
+                    <div id="rm-chart-container" class="hidden flex-col gap-2 flex-1">
                         <div class="flex items-center justify-between">
-                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider"><i
-                                    data-lucide="activity" class="w-4 h-4 inline mb-1"></i> Running Balance Projection
+                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                <i data-lucide="activity" class="w-4 h-4 inline mb-1"></i> Running Balance Projection
                             </h4>
                             <div
                                 class="flex items-center gap-1.5 p-1 bg-slate-200/50 rounded-xl border border-slate-100">
                                 <button onclick="setChartTimeframe(14)" id="tf-14"
-                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">14
-                                    DAY</button>
+                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">14D</button>
                                 <button onclick="setChartTimeframe(30)" id="tf-30"
-                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">1
-                                    MTH</button>
+                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">1M</button>
                                 <button onclick="setChartTimeframe(60)" id="tf-60"
-                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">2
-                                    MTH</button>
+                                    class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-slate-100">2M</button>
                                 <button onclick="setChartTimeframe('all')" id="tf-all"
                                     class="timeframe-btn text-[10px] font-bold px-3 py-1 rounded-lg bg-sky-100 text-sky-600 shadow-sm transition-all uppercase tracking-tighter">ALL</button>
                             </div>
                         </div>
-                        <div class="flex-1 w-full border border-slate-100 rounded-2xl bg-white p-2 relative shadow-sm">
+                        <div class="flex-1 w-full border border-slate-100 rounded-2xl bg-white p-2 relative shadow-sm"
+                            style="min-height: 420px;">
                             <canvas id="recChart"></canvas>
                         </div>
                     </div>
-                </div>
 
-                <!-- Right Column (Inline Ledger) -->
-                <div id="rm-ledger-container"
-                    class="w-full md:w-1/3 shrink-0 flex flex-col h-full max-h-[500px] md:max-h-full"></div>
+                    <!-- Right: Ledger Table (full height, scrollable) -->
+                    <div id="rm-ledger-container" class="w-full xl:w-[55%] shrink-0 flex flex-col"
+                        style="min-height: 420px;"></div>
+                </div>
             </div>
-        </div>
-    </div>
+        </main>
+    </section>
 
     <script>
         const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhA5Pgw2DjeL_JLpWHruLvV9bMs5Wk2IFU-FA1C5AFUFWkql48YxoS8fVb1ueuaeeG_PwIrFtTjyhi/pub?output=csv';
@@ -1078,7 +1084,7 @@
 
             // Show loading screen, hide all pages
             const allPages = ['page-start', 'page-loading', 'page-menu', 'page-fabric-check',
-                'page-usage-stats', 'page-rec-role-select', 'page-stock-recommend'];
+                'page-usage-stats', 'page-rec-role-select', 'page-stock-recommend', 'page-rec-spec-detail'];
             allPages.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) { el.classList.remove('page-active'); el.classList.add('hidden'); }
@@ -1157,7 +1163,7 @@
 
         function navigate(pageId, mode) {
             if (mode) { viewMode = mode; document.body.className = `view-${mode}`; }
-            const sections = ['page-start', 'page-loading', 'page-menu', 'page-fabric-check', 'page-usage-stats', 'page-rec-role-select', 'page-stock-recommend'];
+            const sections = ['page-start', 'page-loading', 'page-menu', 'page-fabric-check', 'page-usage-stats', 'page-rec-role-select', 'page-stock-recommend', 'page-rec-spec-detail'];
             sections.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.replace('page-active', 'hidden');
@@ -2532,18 +2538,9 @@
                 window.renderLedgerList(fjobs, 'รายการออเดอร์ทั้งหมด');
             }
 
-            const overlay = document.getElementById('recModal');
-            const content = document.getElementById('recModalContent');
-            overlay.classList.remove('hidden');
-            setTimeout(() => {
-                overlay.classList.remove('opacity-0');
-                if (window.innerWidth < 768) {
-                    content.classList.remove('translate-y-full');
-                } else {
-                    content.classList.remove('md:translate-y-4', 'md:scale-95');
-                    content.classList.add('md:translate-y-0', 'md:scale-100');
-                }
-            }, 10);
+            // Navigate to the detail page instead of showing a modal
+            navigate('rec-spec-detail');
+            window.scrollTo(0, 0);
         }
 
         window.renderLedgerList = function (jobsToShow, title) {
@@ -2568,13 +2565,14 @@
                                         <th class="py-2 px-2">Description/Item</th>
                                         <th class="py-2 px-2 whitespace-nowrap">ลูกค้า/ฝ่ายขาย</th>
                                         <th class="py-2 px-2 whitespace-nowrap">Item Group</th>
+                                        <th class="py-2 px-2 whitespace-nowrap">Plant</th>
                                         <th class="py-2 px-2 text-right whitespace-nowrap">ตัดสต็อก</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-50">
                                     ${jobsToShow.length > 0 ? jobsToShow.map(job => `
                                         <tr class="hover:bg-slate-50 transition-colors">
-                                            <td class="py-2.5 px-2 text-slate-500 font-bold whitespace-nowrap">${job['วันที่ใช้'] || job['วันที่'] || '-'}</td>
+                                            <td class="py-2.5 px-2 text-slate-600 font-bold whitespace-nowrap">${(() => { const d = new Date(job._dateObj.getTime() - 5 * 24 * 3600 * 1000); return d.getFullYear() === 2099 ? '-' : (String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0')); })()}</td>
                                             <td class="py-2.5 px-2 font-bold whitespace-nowrap">
                                                 <span class="${formatDateDisplay(job._dateObj).diff < 0 ? 'text-rose-600' : 'text-emerald-700'}">${formatDateDisplay(job._dateObj).text}</span>
                                                 <span class="block text-[8px] text-slate-400 mt-0.5">${formatDateDisplay(job._dateObj).label}</span>
@@ -2592,9 +2590,10 @@
                                                 <span class="block text-[9px] text-slate-400 font-jakarta">${job['ฝ่ายขาย'] || '-'}</span>
                                             </td>
                                             <td class="py-2.5 px-2 text-[10px] font-bold text-slate-500 whitespace-nowrap">${job['ItemGroup'] || '-'}</td>
+                                            <td class="py-2.5 px-2 text-[10px] font-bold text-indigo-600 whitespace-nowrap">${(job['Plant'] || job['plant'] || job[' โรงงาน'] || '-').trim()}</td>
                                             <td class="py-2.5 px-2 text-right font-black text-rose-500 font-jakarta whitespace-nowrap">-${parseNum(job['ใช้ผ้า']).toLocaleString()}</td>
                                         </tr>
-                                    `).join('') : `<tr><td colspan="7" class="text-center py-6 text-slate-400 italic">ไม่มีรายการตัดสต็อกในวันนี้</td></tr>`}
+                                    `).join('') : `<tr><td colspan="8" class="text-center py-6 text-slate-400 italic">ไม่มีรายการตัดสต็อกในวันนี้</td></tr>`}
                                 </tbody>
                             </table>
                         </div>
@@ -2612,23 +2611,12 @@
         };
 
         function closeRecModal() {
-            const overlay = document.getElementById('recModal');
-            const content = document.getElementById('recModalContent');
-            overlay.classList.add('opacity-0');
-            if (window.innerWidth < 768) {
-                content.classList.add('translate-y-full');
-            } else {
-                content.classList.remove('md:translate-y-0', 'md:scale-100');
-                content.classList.add('md:translate-y-4', 'md:scale-95');
+            if (recChartInstance) {
+                recChartInstance.destroy();
+                recChartInstance = null;
             }
-
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-                if (recChartInstance) {
-                    recChartInstance.destroy();
-                    recChartInstance = null;
-                }
-            }, 300);
+            // Navigate back to stock-recommend page
+            navigate('stock-recommend');
         }
 
         function gotoUsageStatsFromModal() {
