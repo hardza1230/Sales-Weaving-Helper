@@ -570,8 +570,7 @@
                             <i data-lucide="arrow-left"></i>
                         </button>
                         <div>
-                            <h2 class="text-lg font-bold text-slate-800 leading-none">
-                                \u0e40\u0e0a\u0e47\u0e04\u0e2d\u0e2d\u0e40\u0e14\u0e2d\u0e23\u0e4c</h2>
+                            <h2 class="text-lg font-bold text-slate-800 leading-none">เช็คออเดอร์</h2>
                             <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Sync: <span
                                     id="sync-time-order">--:--</span></span>
                         </div>
@@ -580,13 +579,12 @@
                 <!-- Fuzzy Search: Item -->
                 <div class="relative mb-3" id="order-search-wrapper">
                     <label
-                        class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic block mb-1">\u0e04\u0e49\u0e19\u0e2b\u0e32\u0e23\u0e2b\u0e31\u0e2a
+                        class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic block mb-1">ค้นหารหัส
                         Item (Fuzzy Search)</label>
                     <div class="relative flex items-center">
                         <i data-lucide="search"
                             class="w-4 h-4 text-violet-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                        <input id="order-search-input" type="text"
-                            placeholder="\u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e23\u0e2b\u0e31\u0e2a Item... \u0e44\u0e21\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07\u0e40\u0e1b\u0e4a\u0e30"
+                        <input id="order-search-input" type="text" placeholder="พิมพ์รหัส Item... ไม่ต้องตรงเป๊ะ"
                             class="w-full pl-9 pr-10 py-3 rounded-2xl bg-white border border-slate-200 text-sm font-bold text-slate-700 placeholder-slate-300 outline-none focus:ring-2 focus:ring-violet-400 shadow-sm transition-all"
                             oninput="handleOrderSearch(this.value)" autocomplete="off">
                         <button id="order-search-clear" onclick="clearOrderSearch()"
@@ -600,61 +598,57 @@
                 </div>
             </div>
         </header>
-
         <main class="p-5 w-full">
             <div class="layout-container space-y-5 pb-20">
                 <div id="order-loading-area" class="hidden flex-col items-center py-20">
                     <div class="w-10 h-10 border-4 border-slate-200 border-t-violet-500 rounded-full animate-spin mb-4">
                     </div>
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest italic">
-                        \u0e01\u0e33\u0e25\u0e31\u0e07\u0e27\u0e34\u0e40\u0e04\u0e23\u0e32\u0e30\u0e2b\u0e4c\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25...
-                    </p>
+                        กำลังวิเคราะห์ข้อมูล...</p>
                 </div>
                 <div id="order-result-view" class="hidden space-y-5">
-                    <!-- Summary Dashboard -->
                     <div class="glass-card p-6 bg-white border-slate-200 overflow-hidden">
                         <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-50">
                             <div>
                                 <span id="order-dash-item-code"
                                     class="text-[10px] font-black text-violet-600 bg-violet-50 px-3 py-1.5 rounded-lg uppercase tracking-widest font-jakarta">#ITEM</span>
-                                <h3 class="text-xl font-bold text-slate-800 mt-2 font-jakarta leading-none">
-                                    \u0e2a\u0e23\u0e38\u0e1b\u0e2d\u0e2d\u0e40\u0e14\u0e2d\u0e23\u0e4c</h3>
+                                <h3 class="text-xl font-bold text-slate-800 mt-2 font-jakarta leading-none">สรุปออเดอร์
+                                </h3>
                             </div>
                             <div class="text-right">
                                 <p class="text-[9px] text-slate-400 font-bold uppercase mb-1 italic leading-none">
-                                    \u0e22\u0e2d\u0e14\u0e43\u0e0a\u0e49\u0e1c\u0e49\u0e32\u0e23\u0e27\u0e21</p>
+                                    ยอดใช้ผ้ารวม</p>
                                 <p id="order-dash-total-use"
-                                    class="text-lg font-black text-violet-600 leading-none font-jakarta">0 \u0e21.</p>
+                                    class="text-lg font-black text-violet-600 leading-none font-jakarta">0 ม.</p>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
                             <div class="space-y-1">
                                 <span
-                                    class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1">\u0e08\u0e33\u0e19\u0e27\u0e19\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23</span>
+                                    class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1">จำนวนรายการ</span>
                                 <span id="order-dash-count"
                                     class="text-2xl font-black text-slate-800 font-jakarta">0</span>
                             </div>
                             <div class="space-y-1">
                                 <span
-                                    class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1">\u0e40\u0e23\u0e47\u0e27\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14</span>
+                                    class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1">เร็วที่สุด</span>
                                 <span id="order-dash-earliest"
                                     class="text-sm font-black text-rose-500 font-jakarta">-</span>
                             </div>
                             <div class="space-y-1">
                                 <span
-                                    class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1">\u0e0a\u0e49\u0e32\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14</span>
+                                    class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1">ช้าที่สุด</span>
                                 <span id="order-dash-latest"
                                     class="text-sm font-black text-emerald-600 font-jakarta">-</span>
                             </div>
                             <div class="space-y-1">
                                 <span
-                                    class="text-[10px] text-violet-500 block font-bold uppercase tracking-tighter italic leading-none mb-1">\u0e1d\u0e48\u0e32\u0e22/\u0e25\u0e39\u0e01\u0e04\u0e49\u0e32</span>
+                                    class="text-[10px] text-violet-500 block font-bold uppercase tracking-tighter italic leading-none mb-1">ฝ่าย/ลูกค้า</span>
                                 <span id="order-dash-parties"
                                     class="text-[11px] font-black text-slate-700 font-jakarta leading-tight">-</span>
                             </div>
                         </div>
                     </div>
-                    <!-- Paginated Order Table -->
                     <div id="order-ledger-container" class="w-full flex flex-col"></div>
                 </div>
             </div>
@@ -775,30 +769,60 @@
                             class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-[2rem] flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-inner">
                             <i data-lucide="factory" class="w-10 h-10"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-slate-800 font-jakarta mt-2">🏭 มุมมองฝ่ายวางแผน</h3>
+                        <h3 class="text-xl font-bold text-slate-800 font-jakarta mt-2">🏻 มุมมองฝ่ายวางแผน</h3>
                         <p class="text-xs text-slate-500 text-center">ดูภาระเครื่องทอ และจำลอง Running Balance ของโรงงาน
                         </p>
                     </button>
-                </div>
-            </div>
 
-            <!-- Step 2: Name Selection (Hidden Initially) -->
-            <div id="rec-step-2" class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 id="rec-step-2-title"
-                        class="text-sm font-bold text-slate-800 tracking-tight uppercase tracking-widest italic flex items-center gap-2">
-                        <i data-lucide="user" class="w-4 h-4 text-emerald-500"></i> เลือกรายชื่อ
-                    </h3>
-                    <button
-                        onclick="document.getElementById('rec-step-1').classList.remove('hidden'); document.getElementById('rec-step-2').classList.add('hidden');"
-                        class="text-[10px] text-slate-400 font-bold hover:text-slate-600 transition-colors uppercase tracking-widest bg-white px-3 py-1.5 rounded-lg border border-slate-200">
-                        ย้อนกลับ
+                    <button onclick="navigate('market-view')"
+                        class="glass-card p-8 flex flex-col items-center justify-center gap-4 group hover:ring-2 hover:ring-fuchsia-400 transition-all border-none shadow-xl active:scale-[0.98] md:col-span-2">
+                        <div
+                            class="w-20 h-20 bg-fuchsia-100 text-fuchsia-600 rounded-[2rem] flex items-center justify-center group-hover:bg-fuchsia-500 group-hover:text-white transition-all shadow-inner">
+                            <i data-lucide="globe-2" class="w-10 h-10"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800 font-jakarta mt-2">🌎 มุมมองตลาด</h3>
+                        <p class="text-xs text-slate-500 text-center">ผ้ายอดนิยม & สต็อกเหลือ — ช่วยออกตลาดได้ตรงจุด</p>
                     </button>
                 </div>
-                <div id="rec-name-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    <!-- Populated by JS -->
+                <div
+                    class="w-20 h-20 bg-sky-100 text-sky-600 rounded-[2rem] flex items-center justify-center group-hover:bg-sky-500 group-hover:text-white transition-all shadow-inner">
+                    <i data-lucide="briefcase" class="w-10 h-10"></i>
                 </div>
+                <h3 class="text-xl font-bold text-slate-800 font-jakarta mt-2">👔 มุมมองฝ่ายขาย</h3>
+                <p class="text-xs text-slate-500 text-center">ดูยอดค้างส่ง และสถานะผ้าที่สั่งผลิตเฉพาะของตัวเอง
+                </p>
+                </button>
+
+                <button onclick="selectRecRole('planner')"
+                    class="glass-card p-8 flex flex-col items-center justify-center gap-4 group hover:ring-2 hover:ring-emerald-400 transition-all border-none shadow-xl active:scale-[0.98]">
+                    <div
+                        class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-[2rem] flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-inner">
+                        <i data-lucide="factory" class="w-10 h-10"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 font-jakarta mt-2">🏭 มุมมองฝ่ายวางแผน</h3>
+                    <p class="text-xs text-slate-500 text-center">ดูภาระเครื่องทอ และจำลอง Running Balance ของโรงงาน
+                    </p>
+                </button>
             </div>
+        </div>
+
+        <!-- Step 2: Name Selection (Hidden Initially) -->
+        <div id="rec-step-2" class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="rec-step-2-title"
+                    class="text-sm font-bold text-slate-800 tracking-tight uppercase tracking-widest italic flex items-center gap-2">
+                    <i data-lucide="user" class="w-4 h-4 text-emerald-500"></i> เลือกรายชื่อ
+                </h3>
+                <button
+                    onclick="document.getElementById('rec-step-1').classList.remove('hidden'); document.getElementById('rec-step-2').classList.add('hidden');"
+                    class="text-[10px] text-slate-400 font-bold hover:text-slate-600 transition-colors uppercase tracking-widest bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                    ย้อนกลับ
+                </button>
+            </div>
+            <div id="rec-name-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                <!-- Populated by JS -->
+            </div>
+        </div>
         </div>
     </section>
 
