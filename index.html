@@ -365,6 +365,29 @@
                     </button>
                 </div>
 
+                <!-- Fuzzy Search Bar for Weaving Item -->
+                <div class="relative mb-4" id="fabric-search-wrapper">
+                    <label
+                        class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic block mb-1">ค้นหารหัส
+                        Weaving Item (Fuzzy Search)</label>
+                    <div class="relative flex items-center">
+                        <i data-lucide="search"
+                            class="w-4 h-4 text-emerald-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                        <input id="fabric-search-input" type="text"
+                            placeholder="พิมพ์รหัสสเปกหรือชื่อผ้า... ไม่ต้องเล็พะเป๊ะ"
+                            class="w-full pl-9 pr-4 py-3 rounded-2xl bg-white border border-slate-200 text-sm font-bold text-slate-700 placeholder-slate-300 outline-none focus:ring-2 focus:ring-emerald-400 shadow-sm transition-all"
+                            oninput="handleFabricSearch(this.value)" autocomplete="off">
+                        <button id="fabric-search-clear" onclick="clearFabricSearch()"
+                            class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center hover:bg-rose-100 hover:text-rose-500 transition-colors">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                    <!-- Suggestions Dropdown -->
+                    <div id="fabric-search-suggestions"
+                        class="hidden absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden max-h-60 overflow-y-auto">
+                    </div>
+                </div>
+
                 <div id="filter-container" class="transition-all duration-300 overflow-hidden">
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                         <div class="space-y-1">
@@ -457,6 +480,33 @@
                                 <span id="dash-final-balance"
                                     class="text-3xl font-black text-emerald-500 font-jakarta italic">0</span>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Running Balance Chart -->
+                    <div id="ledger-chart-section"
+                        class="glass-card p-6 bg-white border-slate-200 overflow-hidden relative hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="activity" class="w-4 h-4 text-emerald-500"></i>
+                                <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Running
+                                    Balance Projection</h3>
+                            </div>
+                            <div
+                                class="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-xl border border-slate-100">
+                                <button onclick="setLedgerChartTf(14)" id="ltf-14"
+                                    class="ltf-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-white">14D</button>
+                                <button onclick="setLedgerChartTf(30)" id="ltf-30"
+                                    class="ltf-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-white">1M</button>
+                                <button onclick="setLedgerChartTf(60)" id="ltf-60"
+                                    class="ltf-btn text-[10px] font-bold px-3 py-1 rounded-lg text-slate-500 transition-all uppercase tracking-tighter hover:bg-white">2M</button>
+                                <button onclick="setLedgerChartTf('all')" id="ltf-all"
+                                    class="ltf-btn text-[10px] font-bold px-3 py-1 rounded-lg bg-emerald-100 text-emerald-700 shadow-sm transition-all uppercase tracking-tighter">ALL</button>
+                            </div>
+                        </div>
+                        <div class="w-full border border-slate-100 rounded-2xl bg-slate-50/50 p-3 relative"
+                            style="min-height: 280px;">
+                            <canvas id="ledgerChart"></canvas>
                         </div>
                     </div>
 
@@ -1221,6 +1271,213 @@
                 `;
             }).join('');
             lucide.createIcons();
+
+            // Draw the Running Balance chart for this filtered result
+            drawLedgerChart(items);
+        }
+
+        // ============================================================
+        //  FUZZY SEARCH FOR WEAVING ITEM (page-fabric-check)
+        // ============================================================
+
+        let ledgerChartInstance = null;
+        let ledgerChartTf = 'all';
+        let _lastLedgerItems = [];
+
+        // Simple fuzzy score: boost consecutive matches, penalise gaps
+        function fuzzyScore(needle, haystack) {
+            const n = needle.toLowerCase();
+            const h = haystack.toLowerCase();
+            if (h.includes(n)) return 200 + (100 - h.length); // exact substring
+            let score = 0, hi = 0;
+            for (let ni = 0; ni < n.length; ni++) {
+                const found = h.indexOf(n[ni], hi);
+                if (found === -1) return 0; // required char missing
+                score += Math.max(0, 10 - (found - hi)); // reward proximity
+                hi = found + 1;
+            }
+            return score;
+        }
+
+        function handleFabricSearch(val) {
+            const sugg = document.getElementById('fabric-search-suggestions');
+            const clearBtn = document.getElementById('fabric-search-clear');
+            clearBtn.classList.toggle('hidden', !val);
+            if (!val || val.length < 1) { sugg.classList.add('hidden'); return; }
+
+            // Collect unique Weaving Items + first Description
+            const items = {};
+            rawData.forEach(r => {
+                const id = (r['Weaving Item'] || '').trim();
+                if (!id) return;
+                if (!items[id]) items[id] = { desc: r['Description'] || '', group: r['ItemGroup'] || '' };
+            });
+
+            // Score
+            const scored = Object.entries(items)
+                .map(([id, info]) => {
+                    const s1 = fuzzyScore(val, id);
+                    const s2 = fuzzyScore(val, info.desc) * 0.6;
+                    return { id, desc: info.desc, group: info.group, score: Math.max(s1, s2) };
+                })
+                .filter(x => x.score > 0)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 8);
+
+            if (scored.length === 0) {
+                sugg.innerHTML = `<div class="px-4 py-3 text-[11px] text-slate-400 italic">\u0e44\u0e21\u0e48\u0e1e\u0e1a\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e17\u0e35\u0e48\u0e43\u0e01\u0e25\u0e49\u0e40\u0e04\u0e35\u0e22\u0e07 "\u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22 ${val}"</div>`;
+                sugg.classList.remove('hidden');
+                return;
+            }
+
+            sugg.innerHTML = scored.map((x, i) => `
+                <button onclick="selectFabricItem('${x.id.replace(/'/g, "\\'")}')"
+                    class="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-50 transition-colors border-b border-slate-50 last:border-0 group">
+                    <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 text-[9px] font-black flex items-center justify-center shrink-0">${i + 1}</span>
+                    <div class="min-w-0">
+                        <span class="block text-[11px] font-black text-slate-800 group-hover:text-emerald-700 truncate">${x.id}</span>
+                        <span class="block text-[9px] text-slate-400 truncate">${x.desc} ${x.group ? '• ' + x.group : ''}</span>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300 group-hover:text-emerald-400 ml-auto shrink-0"></i>
+                </button>
+            `).join('');
+            sugg.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function selectFabricItem(itemId) {
+            const input = document.getElementById('fabric-search-input');
+            const sugg = document.getElementById('fabric-search-suggestions');
+            input.value = itemId;
+            sugg.classList.add('hidden');
+            document.getElementById('fabric-search-clear').classList.remove('hidden');
+
+            // Filter rawData for this specific Weaving Item and render
+            const results = rawData.filter(r => (r['Weaving Item'] || '').trim() === itemId);
+            results.sort((a, b) => a._sortDate - b._sortDate);
+            document.getElementById('loading-area').classList.remove('hidden');
+            document.getElementById('result-view').classList.add('hidden');
+            setTimeout(() => {
+                renderLedger(results);
+                document.getElementById('loading-area').classList.add('hidden');
+                document.getElementById('result-view').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 300);
+        }
+
+        function clearFabricSearch() {
+            const input = document.getElementById('fabric-search-input');
+            input.value = '';
+            document.getElementById('fabric-search-suggestions').classList.add('hidden');
+            document.getElementById('fabric-search-clear').classList.add('hidden');
+            input.focus();
+        }
+
+        // Close suggestions on outside click
+        document.addEventListener('click', e => {
+            if (!e.target.closest('#fabric-search-wrapper')) {
+                document.getElementById('fabric-search-suggestions')?.classList.add('hidden');
+            }
+        });
+
+        // ============================================================
+        //  RUNNING BALANCE CHART for page-fabric-check
+        // ============================================================
+
+        function setLedgerChartTf(tf) {
+            ledgerChartTf = tf;
+            document.querySelectorAll('.ltf-btn').forEach(b => {
+                b.classList.remove('bg-emerald-100', 'text-emerald-700', 'shadow-sm');
+                b.classList.add('text-slate-500');
+            });
+            const active = document.getElementById(`ltf-${tf}`);
+            if (active) {
+                active.classList.remove('text-slate-500');
+                active.classList.add('bg-emerald-100', 'text-emerald-700', 'shadow-sm');
+            }
+            if (_lastLedgerItems.length > 0) drawLedgerChart(_lastLedgerItems);
+        }
+
+        function drawLedgerChart(items) {
+            _lastLedgerItems = items;
+            const section = document.getElementById('ledger-chart-section');
+            if (!items || items.length === 0) { section.classList.add('hidden'); return; }
+
+            // Reuse calculateDailyRunningBalance from the recommendation engine
+            const startBal = parseNum(items[0]['Stock ยกมา']);
+            const maxMc = Math.max(...items.map(i => parseNum(i['เกิดจริง'])), 0);
+            const sim = calculateDailyRunningBalance(items, startBal, maxMc, null);
+            if (!sim || !sim.timeline || sim.timeline.length === 0) { section.classList.add('hidden'); return; }
+
+            section.classList.remove('hidden');
+
+            let timeline = sim.timeline;
+            if (ledgerChartTf !== 'all') timeline = timeline.slice(0, ledgerChartTf);
+
+            const labels = timeline.map(t => `${t.date.getDate()}/${t.date.getMonth() + 1}`);
+            const data = timeline.map(t => t.bal);
+
+            const bgColors = data.map(v => v < 0 ? 'rgba(244,63,94,0.18)' : 'rgba(16,185,129,0.15)');
+
+            if (ledgerChartInstance) { ledgerChartInstance.destroy(); ledgerChartInstance = null; }
+            const ctx = document.getElementById('ledgerChart').getContext('2d');
+
+            ledgerChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Running Balance',
+                        data,
+                        borderColor: ctx2 => {
+                            const v = ctx2.p1?.parsed?.y;
+                            return v !== undefined && v < 0 ? 'rgb(244,63,94)' : 'rgb(16,185,129)';
+                        },
+                        backgroundColor: bgColors,
+                        borderWidth: 2,
+                        fill: true,
+                        stepped: true,
+                        pointRadius: data.map(v => v < 0 ? 3 : 0),
+                        pointBackgroundColor: data.map(v => v < 0 ? '#f43f5e' : '#10b981'),
+                        pointHoverRadius: 5,
+                        segment: {
+                            borderColor: ctx2 => data[ctx2.p1DataIndex] < 0 ? 'rgb(244,63,94)' : 'rgb(16,185,129)'
+                        }
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx2 => `\u0e22\u0e2d\u0e14\u0e04\u0e07\u0e40\u0e2b\u0e25\u0e37\u0e2d: ${ctx2.raw.toLocaleString()} \u0e21.`,
+                                afterBody: ctxs => {
+                                    const idx = ctxs[0].dataIndex;
+                                    const pt = sim.timeline[idx];
+                                    const msgs = [];
+                                    if (pt?.drain > 0) msgs.push(`🚨 \u0e15\u0e31\u0e14\u0e2a\u0e15\u0e47\u0e2d\u0e01: -${pt.drain.toLocaleString()} \u0e21.`);
+                                    if (pt?.added > 0) msgs.push(`🏭 \u0e40\u0e15\u0e34\u0e21: +${pt.added.toLocaleString()} \u0e21.`);
+                                    return msgs;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(0,0,0,0.04)' },
+                            ticks: { font: { family: 'Plus Jakarta Sans', size: 9, weight: 'bold' } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Kanit', size: 9 }, maxTicksLimit: 14 }
+                        }
+                    },
+                    interaction: { intersect: false, mode: 'index' }
+                }
+            });
         }
 
         // --- OVERALL STATS ENGINE ---
@@ -2304,19 +2561,40 @@
                         <div class="overflow-x-auto hide-scrollbar flex-1 overflow-y-auto relative min-h-[150px]">
                             <table class="w-full text-[10px] text-left">
                                 <thead class="text-slate-400 uppercase tracking-tighter bg-white sticky top-0 z-10 shadow-sm border-b border-slate-50 font-black italic">
-                                    <tr><th class="py-2 px-3">วันขึ้นของ</th><th class="py-2 px-3">ลูกค้า/ฝ่ายขาย</th><th class="py-2 text-right">จำนวนตัดสต็อก</th></tr>
+                                    <tr>
+                                        <th class="py-2 px-2 whitespace-nowrap">วันที่ใช้</th>
+                                        <th class="py-2 px-2 whitespace-nowrap">วันขึ้นของ</th>
+                                        <th class="py-2 px-2 whitespace-nowrap">เลขที่ CO/Line</th>
+                                        <th class="py-2 px-2">Description/Item</th>
+                                        <th class="py-2 px-2 whitespace-nowrap">ลูกค้า/ฝ่ายขาย</th>
+                                        <th class="py-2 px-2 whitespace-nowrap">Item Group</th>
+                                        <th class="py-2 px-2 text-right whitespace-nowrap">ตัดสต็อก</th>
+                                    </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-50">
                                     ${jobsToShow.length > 0 ? jobsToShow.map(job => `
                                         <tr class="hover:bg-slate-50 transition-colors">
-                                            <td class="py-2.5 px-3 font-bold text-slate-700 whitespace-nowrap">${formatDateDisplay(job._dateObj).text}</td>
-                                            <td class="py-2.5 px-3">
-                                                <span class="block text-[11px] text-slate-700 font-bold line-clamp-1">${job['Name'] || '-'}</span>
+                                            <td class="py-2.5 px-2 text-slate-500 font-bold whitespace-nowrap">${job['วันที่ใช้'] || job['วันที่'] || '-'}</td>
+                                            <td class="py-2.5 px-2 font-bold whitespace-nowrap">
+                                                <span class="${formatDateDisplay(job._dateObj).diff < 0 ? 'text-rose-600' : 'text-emerald-700'}">${formatDateDisplay(job._dateObj).text}</span>
+                                                <span class="block text-[8px] text-slate-400 mt-0.5">${formatDateDisplay(job._dateObj).label}</span>
+                                            </td>
+                                            <td class="py-2.5 px-2 font-jakarta whitespace-nowrap">
+                                                <span class="block text-[10px] font-bold text-sky-700">${job['เลขที่ CO'] || '-'}</span>
+                                                <span class="block text-[9px] text-slate-400">${job['Line'] || job['Item'] || '-'}</span>
+                                            </td>
+                                            <td class="py-2.5 px-2 max-w-[120px]">
+                                                <span class="block text-[10px] font-bold text-slate-700 line-clamp-2 leading-tight">${job['Description'] || '-'}</span>
+                                                <span class="block text-[9px] text-slate-400 font-jakarta mt-0.5">${job['Item'] || ''}</span>
+                                            </td>
+                                            <td class="py-2.5 px-2">
+                                                <span class="block text-[10px] font-bold text-slate-700 line-clamp-1">${job['Name'] || '-'}</span>
                                                 <span class="block text-[9px] text-slate-400 font-jakarta">${job['ฝ่ายขาย'] || '-'}</span>
                                             </td>
-                                            <td class="py-2.5 text-right px-3 font-black text-rose-500 font-jakarta">-${parseNum(job['ใช้ผ้า']).toLocaleString()}</td>
+                                            <td class="py-2.5 px-2 text-[10px] font-bold text-slate-500 whitespace-nowrap">${job['ItemGroup'] || '-'}</td>
+                                            <td class="py-2.5 px-2 text-right font-black text-rose-500 font-jakarta whitespace-nowrap">-${parseNum(job['ใช้ผ้า']).toLocaleString()}</td>
                                         </tr>
-                                    `).join('') : `<tr><td colspan="3" class="text-center py-6 text-slate-400 italic">ไม่มีรายการตัดสต็อกในวันนี้</td></tr>`}
+                                    `).join('') : `<tr><td colspan="7" class="text-center py-6 text-slate-400 italic">ไม่มีรายการตัดสต็อกในวันนี้</td></tr>`}
                                 </tbody>
                             </table>
                         </div>
