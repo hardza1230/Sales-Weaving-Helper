@@ -291,6 +291,20 @@
                         class="absolute right-8 text-slate-200 group-hover:text-emerald-400 transition-colors w-6 h-6 hide-on-mobile"></i>
                 </button>
 
+                <button onclick="navigate('order-check')"
+                    class="glass-card p-8 w-full flex items-center gap-6 active:scale-[0.98] transition-all group overflow-hidden relative border-none ring-1 ring-slate-200 hover:ring-2 hover:ring-violet-400">
+                    <div
+                        class="w-16 h-16 bg-violet-100 rounded-[1.5rem] flex items-center justify-center text-violet-600 group-hover:bg-violet-600 group-hover:text-white transition-all shrink-0 shadow-sm">
+                        <i data-lucide="clipboard-list" class="w-7 h-7"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-xl leading-tight text-left">เช็คออเดอร์</h3>
+                        <p class="text-xs text-slate-500 mt-1 italic text-left">ค้นหาสถานะเอกสารสั่งผลิต ราย Item</p>
+                    </div>
+                    <i data-lucide="arrow-right"
+                        class="absolute right-8 text-slate-200 group-hover:text-violet-400 transition-colors w-6 h-6 hide-on-mobile"></i>
+                </button>
+
                 <button onclick="navigate('usage-stats')"
                     class="glass-card p-8 w-full flex items-center gap-6 active:scale-[0.98] transition-all group overflow-hidden relative border-none ring-1 ring-slate-200 hover:ring-2 hover:ring-sky-400">
                     <div
@@ -545,6 +559,108 @@
         </main>
     </section>
 
+    <!-- 3b. หน้าเช็คออเดอร์ (ค้นหาราย Item) -->
+    <section id="page-order-check" class="hidden min-h-screen flex-col bg-slate-50">
+        <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 p-4 shadow-sm shrink-0">
+            <div class="layout-container">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <button onclick="navigate('menu')"
+                            class="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-800">
+                            <i data-lucide="arrow-left"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800 leading-none">
+                                \u0e40\u0e0a\u0e47\u0e04\u0e2d\u0e2d\u0e40\u0e14\u0e2d\u0e23\u0e4c</h2>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Sync: <span
+                                    id="sync-time-order">--:--</span></span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Fuzzy Search: Item -->
+                <div class="relative mb-3" id="order-search-wrapper">
+                    <label
+                        class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic block mb-1">\u0e04\u0e49\u0e19\u0e2b\u0e32\u0e23\u0e2b\u0e31\u0e2a
+                        Item (Fuzzy Search)</label>
+                    <div class="relative flex items-center">
+                        <i data-lucide="search"
+                            class="w-4 h-4 text-violet-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                        <input id="order-search-input" type="text"
+                            placeholder="\u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e23\u0e2b\u0e31\u0e2a Item... \u0e44\u0e21\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e15\u0e23\u0e07\u0e40\u0e1b\u0e4a\u0e30"
+                            class="w-full pl-9 pr-10 py-3 rounded-2xl bg-white border border-slate-200 text-sm font-bold text-slate-700 placeholder-slate-300 outline-none focus:ring-2 focus:ring-violet-400 shadow-sm transition-all"
+                            oninput="handleOrderSearch(this.value)" autocomplete="off">
+                        <button id="order-search-clear" onclick="clearOrderSearch()"
+                            class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center hover:bg-rose-100 hover:text-rose-500 transition-colors">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                    <div id="order-search-suggestions"
+                        class="hidden absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden max-h-64 overflow-y-auto">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="p-5 w-full">
+            <div class="layout-container space-y-5 pb-20">
+                <div id="order-loading-area" class="hidden flex-col items-center py-20">
+                    <div class="w-10 h-10 border-4 border-slate-200 border-t-violet-500 rounded-full animate-spin mb-4">
+                    </div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest italic">
+                        \u0e01\u0e33\u0e25\u0e31\u0e07\u0e27\u0e34\u0e40\u0e04\u0e23\u0e32\u0e30\u0e2b\u0e4c\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25...
+                    </p>
+                </div>
+                <div id="order-result-view" class="hidden space-y-5">
+                    <!-- Summary Dashboard -->
+                    <div class="glass-card p-6 bg-white border-slate-200 overflow-hidden">
+                        <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-50">
+                            <div>
+                                <span id="order-dash-item-code"
+                                    class="text-[10px] font-black text-violet-600 bg-violet-50 px-3 py-1.5 rounded-lg uppercase tracking-widest font-jakarta">#ITEM</span>
+                                <h3 class="text-xl font-bold text-slate-800 mt-2 font-jakarta leading-none">
+                                    \u0e2a\u0e23\u0e38\u0e1b\u0e2d\u0e2d\u0e40\u0e14\u0e2d\u0e23\u0e4c</h3>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[9px] text-slate-400 font-bold uppercase mb-1 italic leading-none">
+                                    \u0e22\u0e2d\u0e14\u0e43\u0e0a\u0e49\u0e1c\u0e49\u0e32\u0e23\u0e27\u0e21</p>
+                                <p id="order-dash-total-use"
+                                    class="text-lg font-black text-violet-600 leading-none font-jakarta">0 \u0e21.</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+                            <div class="space-y-1">
+                                <span
+                                    class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1">\u0e08\u0e33\u0e19\u0e27\u0e19\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23</span>
+                                <span id="order-dash-count"
+                                    class="text-2xl font-black text-slate-800 font-jakarta">0</span>
+                            </div>
+                            <div class="space-y-1">
+                                <span
+                                    class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1">\u0e40\u0e23\u0e47\u0e27\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14</span>
+                                <span id="order-dash-earliest"
+                                    class="text-sm font-black text-rose-500 font-jakarta">-</span>
+                            </div>
+                            <div class="space-y-1">
+                                <span
+                                    class="text-[10px] text-slate-400 block font-bold uppercase tracking-tighter italic leading-none mb-1">\u0e0a\u0e49\u0e32\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14</span>
+                                <span id="order-dash-latest"
+                                    class="text-sm font-black text-emerald-600 font-jakarta">-</span>
+                            </div>
+                            <div class="space-y-1">
+                                <span
+                                    class="text-[10px] text-violet-500 block font-bold uppercase tracking-tighter italic leading-none mb-1">\u0e1d\u0e48\u0e32\u0e22/\u0e25\u0e39\u0e01\u0e04\u0e49\u0e32</span>
+                                <span id="order-dash-parties"
+                                    class="text-[11px] font-black text-slate-700 font-jakarta leading-tight">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Paginated Order Table -->
+                    <div id="order-ledger-container" class="w-full flex flex-col"></div>
+                </div>
+            </div>
+        </main>
+    </section>
+
     <!-- 4. หน้าวิเคราะห์ภาพรวม (Consolidated) -->
     <section id="page-usage-stats" class="hidden min-h-screen flex-col p-6 overflow-y-auto hide-scrollbar bg-slate-50">
         <div class="layout-container">
@@ -690,7 +806,7 @@
         class="page hidden min-h-screen flex-col p-6 overflow-y-auto hide-scrollbar bg-slate-50">
         <div class="layout-container">
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6">
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
                     <button onclick="navigate('rec-role-select')"
                         class="p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800 border border-slate-100"><i
                             data-lucide="arrow-left"></i></button>
@@ -703,6 +819,11 @@
                             <i data-lucide="user" class="w-3 h-3"></i> <span>-</span>
                         </div>
                     </div>
+                    <button onclick="navigate('market-view')"
+                        class="ml-2 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-violet-600 text-white text-[10px] font-bold shadow-sm hover:opacity-90 transition-opacity">
+                        <i data-lucide="globe-2" class="w-3.5 h-3.5"></i>
+                        มุมมองตลาด
+                    </button>
                 </div>
 
                 <!-- Mini Dashboards - Smart Dashboard Layout -->
@@ -836,6 +957,126 @@
             </div>
         </div>
         </div>
+    </section>
+
+    <!-- 7. หน้ามุมมองตลาด -->
+    <section id="page-market-view" class="hidden min-h-screen flex-col bg-slate-50">
+        <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 shadow-sm shrink-0">
+            <div class="layout-container px-4 pt-4 pb-3">
+                <div class="flex items-center gap-3 mb-3">
+                    <button onclick="navigate('stock-recommend')"
+                        class="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-800">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-lg font-black text-slate-800 leading-none font-jakarta">&#x1F30E;
+                            \u0e21\u0e38\u0e21\u0e21\u0e2d\u0e07\u0e15\u0e25\u0e32\u0e14</h2>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Market
+                            Intelligence</p>
+                    </div>
+                </div>
+                <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-2" id="mv-group-pills"></div>
+            </div>
+        </header>
+        <main class="p-4 flex-1">
+            <div class="layout-container space-y-5 pb-20">
+                <div id="mv-group-banner"
+                    class="hidden items-center justify-between bg-gradient-to-r from-fuchsia-600 to-violet-700 text-white rounded-2xl px-5 py-4 shadow-lg">
+                    <div>
+                        <p class="text-[9px] font-bold uppercase tracking-widest opacity-70 mb-0.5">
+                            \u0e01\u0e25\u0e38\u0e48\u0e21\u0e17\u0e35\u0e48\u0e40\u0e25\u0e37\u0e2d\u0e01</p>
+                        <h3 id="mv-group-name" class="text-xl font-black font-jakarta leading-none">
+                            \u0e01\u0e25\u0e38\u0e48\u0e21...</h3>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[9px] opacity-70 font-bold">
+                            \u0e1c\u0e37\u0e19\u0e1c\u0e49\u0e32\u0e43\u0e19\u0e01\u0e25\u0e38\u0e48\u0e21</p>
+                        <p id="mv-group-count" class="text-2xl font-black font-jakarta">0</p>
+                    </div>
+                </div>
+                <div id="mv-empty-state" class="flex flex-col items-center justify-center py-20 text-center">
+                    <div class="w-16 h-16 rounded-2xl bg-violet-100 flex items-center justify-center mb-4">
+                        <i data-lucide="globe-2" class="w-8 h-8 text-violet-400"></i>
+                    </div>
+                    <p class="text-slate-400 font-bold text-sm">
+                        \u0e40\u0e25\u0e37\u0e2d\u0e01\u0e01\u0e25\u0e38\u0e48\u0e21\u0e2a\u0e34\u0e19\u0e04\u0e49\u0e32\u0e14\u0e49\u0e32\u0e19\u0e1a\u0e19
+                    </p>
+                </div>
+                <div id="mv-content" class="hidden space-y-5">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <!-- Popular -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-violet-100 overflow-hidden">
+                            <div class="px-5 py-4 border-b border-slate-50 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 bg-fuchsia-100 rounded-xl flex items-center justify-center"><i
+                                            data-lucide="star" class="w-4 h-4 text-fuchsia-600"></i></div>
+                                    <div>
+                                        <h4 class="text-[11px] font-black text-slate-700 uppercase tracking-wider">
+                                            \u0e1c\u0e37\u0e19\u0e1c\u0e49\u0e32\u0e22\u0e2d\u0e14\u0e19\u0e34\u0e22\u0e21
+                                        </h4>
+                                        <p class="text-[9px] text-slate-400">
+                                            \u0e43\u0e0a\u0e49\u0e21\u0e32\u0e01\u0e17\u0e35\u0e48\u0e2a\u0e38\u0e14 —
+                                            \u0e40\u0e1b\u0e34\u0e14\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22</p>
+                                    </div>
+                                </div>
+                                <span
+                                    class="text-[9px] bg-fuchsia-50 text-fuchsia-600 px-2 py-1 rounded-lg font-bold">Top
+                                    10</span>
+                            </div>
+                            <div id="mv-popular-list"
+                                class="p-3 space-y-2 max-h-[440px] overflow-y-auto hide-scrollbar"></div>
+                        </div>
+                        <!-- Excess -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden">
+                            <div class="px-5 py-4 border-b border-slate-50 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 bg-emerald-100 rounded-xl flex items-center justify-center"><i
+                                            data-lucide="package" class="w-4 h-4 text-emerald-600"></i></div>
+                                    <div>
+                                        <h4 class="text-[11px] font-black text-slate-700 uppercase tracking-wider">
+                                            \u0e1c\u0e37\u0e19\u0e1c\u0e49\u0e32\u0e40\u0e2b\u0e25\u0e37\u0e2d\u0e40\u0e22\u0e2d\u0e30
+                                        </h4>
+                                        <p class="text-[9px] text-slate-400">
+                                            \u0e2a\u0e15\u0e47\u0e2d\u0e01\u0e40\u0e2b\u0e25\u0e37\u0e2d\u0e21\u0e32\u0e01
+                                            —
+                                            \u0e1d\u0e48\u0e32\u0e22\u0e02\u0e32\u0e22\u0e40\u0e1b\u0e34\u0e14\u0e44\u0e14\u0e49\u0e40\u0e25\u0e22
+                                        </p>
+                                    </div>
+                                </div>
+                                <span
+                                    class="text-[9px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg font-bold">Top
+                                    10</span>
+                            </div>
+                            <div id="mv-excess-list" class="p-3 space-y-2 max-h-[440px] overflow-y-auto hide-scrollbar">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Running Balance Chart -->
+                    <div id="mv-chart-section"
+                        class="hidden bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                        <div class="px-5 py-4 border-b border-slate-50 flex items-center justify-between">
+                            <div>
+                                <span id="mv-chart-title"
+                                    class="text-[11px] font-black text-slate-600 uppercase tracking-wider">Running
+                                    Balance Projection</span>
+                                <p id="mv-chart-spec" class="text-[9px] text-violet-500 font-bold mt-0.5"></p>
+                            </div>
+                            <div class="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
+                                <button onclick="setMvChartTf(14)" id="mv-tf-14"
+                                    class="mv-tf text-[10px] font-bold px-2 py-1 rounded-lg text-slate-500 hover:bg-white">14D</button>
+                                <button onclick="setMvChartTf(30)" id="mv-tf-30"
+                                    class="mv-tf text-[10px] font-bold px-2 py-1 rounded-lg text-slate-500 hover:bg-white">1M</button>
+                                <button onclick="setMvChartTf(60)" id="mv-tf-60"
+                                    class="mv-tf text-[10px] font-bold px-2 py-1 rounded-lg text-slate-500 hover:bg-white">2M</button>
+                                <button onclick="setMvChartTf('all')" id="mv-tf-all"
+                                    class="mv-tf text-[10px] font-bold px-2 py-1 rounded-lg bg-violet-100 text-violet-600 shadow-sm">ALL</button>
+                            </div>
+                        </div>
+                        <div class="p-4" style="min-height:300px;"><canvas id="mv-chart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </section>
 
     <div id="toast"
@@ -1077,8 +1318,8 @@
             window.preloadComplete = false;
 
             // Show loading screen, hide all pages
-            const allPages = ['page-start', 'page-loading', 'page-menu', 'page-fabric-check',
-                'page-usage-stats', 'page-rec-role-select', 'page-stock-recommend', 'page-rec-spec-detail'];
+            const allPages = ['page-start', 'page-loading', 'page-menu', 'page-fabric-check', 'page-order-check',
+                'page-usage-stats', 'page-rec-role-select', 'page-stock-recommend', 'page-market-view', 'page-rec-spec-detail'];
             allPages.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) { el.classList.remove('page-active'); el.classList.add('hidden'); }
@@ -1157,7 +1398,7 @@
 
         function navigate(pageId, mode) {
             if (mode) { viewMode = mode; document.body.className = `view-${mode}`; }
-            const sections = ['page-start', 'page-loading', 'page-menu', 'page-fabric-check', 'page-usage-stats', 'page-rec-role-select', 'page-stock-recommend', 'page-rec-spec-detail'];
+            const sections = ['page-start', 'page-loading', 'page-menu', 'page-fabric-check', 'page-order-check', 'page-usage-stats', 'page-rec-role-select', 'page-stock-recommend', 'page-market-view', 'page-rec-spec-detail'];
             sections.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.replace('page-active', 'hidden');
@@ -1166,6 +1407,7 @@
             if (pageId === 'menu' && rawData.length === 0) refreshData(); // fallback only if navigated directly
             if (pageId === 'usage-stats') { showStatsMain(); renderUsageStats(); }
             if (pageId === 'stock-recommend') renderStockRecommendations();
+            if (pageId === 'market-view') renderMarketView();
             lucide.createIcons();
             window.scrollTo(0, 0);
         }
@@ -1378,10 +1620,340 @@
             if (!e.target.closest('#fabric-search-wrapper')) {
                 document.getElementById('fabric-search-suggestions')?.classList.add('hidden');
             }
+            if (!e.target.closest('#order-search-wrapper')) {
+                document.getElementById('order-search-suggestions')?.classList.add('hidden');
+            }
         });
 
         // ============================================================
-        //  RUNNING BALANCE CHART for page-fabric-check
+        //  ORDER CHECK PAGE  —  fuzzy search by "Item" column
+        // ============================================================
+
+        let _orderAllJobs = [];
+        let _orderPage = 0;
+        const ORDER_PAGE_SIZE = 25;
+
+        function handleOrderSearch(val) {
+            const sugg = document.getElementById('order-search-suggestions');
+            const clearBtn = document.getElementById('order-search-clear');
+            clearBtn.classList.toggle('hidden', !val);
+            if (!val) { sugg.classList.add('hidden'); return; }
+
+            // Collect unique Item values
+            const items = {};
+            rawData.forEach(r => {
+                const id = (r['Item'] || '').trim();
+                if (!id) return;
+                if (!items[id]) items[id] = { desc: r['Description'] || '', spec: r['Weaving Item'] || '' };
+            });
+
+            const scored = Object.entries(items)
+                .map(([id, info]) => {
+                    const s1 = fuzzyScore(val, id);
+                    const s2 = fuzzyScore(val, info.desc) * 0.5;
+                    const s3 = fuzzyScore(val, info.spec) * 0.4;
+                    return { id, desc: info.desc, spec: info.spec, score: Math.max(s1, s2, s3) };
+                })
+                .filter(x => x.score > 0)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 8);
+
+            if (scored.length === 0) {
+                sugg.innerHTML = `<div class="px-4 py-3 text-[11px] text-slate-400 italic">\u0e44\u0e21\u0e48\u0e1e\u0e1a Item "\u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22 ${val}"</div>`;
+                sugg.classList.remove('hidden');
+                return;
+            }
+
+            sugg.innerHTML = scored.map((x, i) => `
+                <button onclick="selectOrderItem('${x.id.replace(/'/g, "\\'")}')"
+                    class="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-violet-50 transition-colors border-b border-slate-50 last:border-0 group">
+                    <span class="w-6 h-6 rounded-lg bg-violet-100 text-violet-600 text-[9px] font-black flex items-center justify-center shrink-0">${i + 1}</span>
+                    <div class="min-w-0">
+                        <span class="block text-[11px] font-black text-slate-800 group-hover:text-violet-700 truncate">${x.id}</span>
+                        <span class="block text-[9px] text-slate-400 truncate">${x.desc} ${x.spec ? '• ' + x.spec : ''}</span>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300 group-hover:text-violet-400 ml-auto shrink-0"></i>
+                </button>
+            `).join('');
+            sugg.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function selectOrderItem(itemId) {
+            const input = document.getElementById('order-search-input');
+            document.getElementById('order-search-suggestions').classList.add('hidden');
+            document.getElementById('order-search-clear').classList.remove('hidden');
+            input.value = itemId;
+
+            const results = rawData.filter(r => (r['Item'] || '').trim() === itemId);
+            results.sort((a, b) => a._sortDate - b._sortDate);
+
+            document.getElementById('order-loading-area').classList.remove('hidden');
+            document.getElementById('order-result-view').classList.add('hidden');
+
+            setTimeout(() => {
+                // Update dashboard
+                const totalUse = results.reduce((s, r) => s + parseNum(r['\u0e43\u0e0a\u0e49\u0e1c\u0e49\u0e32']), 0);
+                const validDates = results.filter(r => r._dateObj && r._dateObj.getFullYear() !== 2099);
+                const earliest = validDates.length ? validDates[0]._dateObj : null;
+                const latest = validDates.length ? validDates[validDates.length - 1]._dateObj : null;
+                const parties = [...new Set(results.map(r => r['Name'] || r['\u0e1d\u0e48\u0e32\u0e22\u0e02\u0e32\u0e22'] || '').filter(Boolean))].slice(0, 4).join(', ');
+
+                document.getElementById('order-dash-item-code').textContent = `#${itemId}`;
+                document.getElementById('order-dash-total-use').textContent = `${totalUse.toLocaleString()} \u0e21.`;
+                document.getElementById('order-dash-count').textContent = results.length;
+                document.getElementById('order-dash-earliest').textContent = earliest ? formatDateDisplay(earliest).text : '-';
+                document.getElementById('order-dash-latest').textContent = latest ? formatDateDisplay(latest).text : '-';
+                document.getElementById('order-dash-parties').textContent = parties || '-';
+
+                renderOrderTable(results, 0);
+
+                document.getElementById('order-loading-area').classList.add('hidden');
+                document.getElementById('order-result-view').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 300);
+        }
+
+        function clearOrderSearch() {
+            document.getElementById('order-search-input').value = '';
+            document.getElementById('order-search-suggestions').classList.add('hidden');
+            document.getElementById('order-search-clear').classList.add('hidden');
+            document.getElementById('order-search-input').focus();
+        }
+
+        function renderOrderTable(jobs, page) {
+            _orderAllJobs = jobs;
+            _orderPage = page || 0;
+            const cont = document.getElementById('order-ledger-container');
+            if (!cont) return;
+
+            const total = jobs.length;
+            const totalPages = Math.max(1, Math.ceil(total / ORDER_PAGE_SIZE));
+            const curPage = Math.min(_orderPage, totalPages - 1);
+            const start = curPage * ORDER_PAGE_SIZE;
+            const pageJobs = jobs.slice(start, start + ORDER_PAGE_SIZE);
+
+            const rowsHtml = pageJobs.length > 0 ? pageJobs.map(job => `
+                <tr class="hover:bg-violet-50/40 transition-colors">
+                    <td class="py-2.5 px-2 whitespace-nowrap">
+                        <span class="block text-[10px] font-bold text-sky-700">${job['\u0e40\u0e25\u0e02\u0e17\u0e35\u0e48 CO'] || '-'}</span>
+                        <span class="block text-[9px] text-slate-400">${job['Line'] || '-'}</span>
+                    </td>
+                    <td class="py-2.5 px-2 whitespace-nowrap">
+                        <span class="text-[10px] font-bold text-violet-700">${job['Item'] || '-'}</span>
+                    </td>
+                    <td class="py-2.5 px-2 whitespace-nowrap">
+                        <span class="block font-bold ${formatDateDisplay(job._dateObj).diff < 0 ? 'text-rose-600' : 'text-emerald-700'}">${formatDateDisplay(job._dateObj).text}</span>
+                        <span class="block text-[8px] text-slate-400 mt-0.5">${formatDateDisplay(job._dateObj).label}</span>
+                    </td>
+                    <td class="py-2.5 px-2 whitespace-nowrap">
+                        <span class="block text-[10px] font-bold text-slate-700">${job['Description'] || '-'}</span>
+                    </td>
+                    <td class="py-2.5 px-2 whitespace-nowrap">
+                        <span class="block text-[10px] font-bold text-slate-700">${job['Name'] || '-'}</span>
+                        <span class="block text-[9px] text-slate-400">${job['\u0e1d\u0e48\u0e32\u0e22\u0e02\u0e32\u0e22'] || '-'}</span>
+                    </td>
+                    <td class="py-2.5 px-2 whitespace-nowrap text-[10px] font-bold text-slate-500">${job['ItemGroup'] || '-'}</td>
+                    <td class="py-2.5 px-2 whitespace-nowrap text-[10px] font-bold text-indigo-600">${(job['Plant'] || '-').trim()}</td>
+                    <td class="py-2.5 px-2 whitespace-nowrap">
+                        <span class="block text-[10px] font-bold text-slate-600">${job['Weaving Item'] || '-'}</span>
+                    </td>
+                    <td class="py-2.5 px-2 text-right whitespace-nowrap font-black text-rose-500 font-jakarta">-${parseNum(job['\u0e43\u0e0a\u0e49\u0e1c\u0e49\u0e32']).toLocaleString()}</td>
+                </tr>
+            `).join('') : `<tr><td colspan="9" class="text-center py-6 text-slate-400 italic">\u0e44\u0e21\u0e48\u0e1e\u0e1a\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23</td></tr>`;
+
+            const paginationHtml = totalPages > 1 ? `
+                <div class="px-4 py-2.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+                    <button onclick="goOrderPage(${curPage - 1})" ${curPage === 0 ? 'disabled' : ''}
+                        class="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all
+                        ${curPage === 0 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 shadow-sm'}">
+                        <i data-lucide="chevron-left" class="w-3 h-3"></i> \u0e01\u0e48\u0e2d\u0e19\u0e2b\u0e19\u0e49\u0e32
+                    </button>
+                    <span class="text-[10px] font-bold text-slate-500">
+                        \u0e2b\u0e19\u0e49\u0e32 <span class="text-violet-600">${curPage + 1}</span> / ${totalPages}
+                        <span class="text-slate-400 ml-1">(${start + 1}–${Math.min(start + ORDER_PAGE_SIZE, total)} จาก ${total})</span>
+                    </span>
+                    <button onclick="goOrderPage(${curPage + 1})" ${curPage >= totalPages - 1 ? 'disabled' : ''}
+                        class="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all
+                        ${curPage >= totalPages - 1 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 shadow-sm'}">
+                        \u0e2b\u0e19\u0e49\u0e32\u0e16\u0e31\u0e14\u0e44\u0e1b <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                    </button>
+                </div>` : '';
+
+            cont.innerHTML = `
+                <div class="flex flex-col border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-white">
+                    <div class="bg-slate-50 border-b border-slate-100 px-4 py-3 flex items-center justify-between shrink-0">
+                        <h4 class="text-[11px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
+                            <i data-lucide="clipboard-list" class="w-3 h-3"></i> \u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e2d\u0e2d\u0e40\u0e14\u0e2d\u0e23\u0e4c
+                        </h4>
+                        <span class="text-[9px] bg-violet-100 text-violet-600 px-2 py-0.5 rounded-md font-bold">${total} \u0e23\u0e32\u0e22\u0e01\u0e32\u0e23</span>
+                    </div>
+                    <div class="overflow-x-auto hide-scrollbar">
+                        <table class="min-w-max w-full text-[10px] text-left">
+                            <thead class="text-slate-400 uppercase tracking-tighter bg-white sticky top-0 z-10 shadow-sm border-b border-slate-50 font-black italic">
+                                <tr>
+                                    <th class="py-2 px-2 whitespace-nowrap">\u0e40\u0e25\u0e02\u0e17\u0e35\u0e48 CO/Line</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">Item</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">\u0e27\u0e31\u0e19\u0e02\u0e36\u0e49\u0e19\u0e02\u0e2d\u0e07</th>
+                                    <th class="py-2 px-2">Description</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">\u0e25\u0e39\u0e01\u0e04\u0e49\u0e32/\u0e1d\u0e48\u0e32\u0e22\u0e02\u0e32\u0e22</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">Item Group</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">Plant</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">Weaving Item</th>
+                                    <th class="py-2 px-2 text-right whitespace-nowrap">\u0e15\u0e31\u0e14\u0e2a\u0e15\u0e47\u0e2d\u0e01</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">${rowsHtml}</tbody>
+                        </table>
+                    </div>
+                    ${paginationHtml}
+                </div>`;
+            lucide.createIcons();
+        }
+
+        function goOrderPage(page) { renderOrderTable(_orderAllJobs, page); }
+
+        // ============================================================
+        //  MARKET VIEW PAGE
+        // ============================================================
+        let mvChartInstance = null;
+        let mvChartTf = 'all';
+        let mvCurrentTimeline = null;
+
+        function renderMarketView() {
+            const groups = {};
+            Object.values(window.fabricCache || {}).forEach(f => {
+                const g = f.group || '-';
+                if (!groups[g]) groups[g] = 0;
+                groups[g]++;
+            });
+            const pills = document.getElementById('mv-group-pills');
+            if (!pills) return;
+            const sorted = Object.entries(groups).sort((a, b) => b[1] - a[1]);
+            pills.innerHTML = sorted.map(([g, cnt]) => `
+                <button onclick="selectMvGroup('${g.replace(/'/g, "\\'")}')"
+                    class="mv-pill shrink-0 px-4 py-2 rounded-xl text-[10px] font-bold border border-slate-200
+                    bg-white text-slate-600 hover:border-violet-400 hover:text-violet-700 transition-all whitespace-nowrap shadow-sm">
+                    ${g} <span class="ml-1 bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full text-[8px]">${cnt}</span>
+                </button>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function selectMvGroup(group) {
+            document.querySelectorAll('.mv-pill').forEach(b => {
+                const isActive = b.textContent.trim().startsWith(group);
+                b.className = b.className
+                    .replace(/bg-gradient-to-r|from-fuchsia-500|to-violet-600|text-white|border-transparent/g, '').trim();
+                if (isActive) {
+                    b.classList.add('bg-gradient-to-r', 'from-fuchsia-500', 'to-violet-600', 'text-white', 'border-transparent');
+                    b.classList.remove('bg-white', 'text-slate-600');
+                } else {
+                    b.classList.add('bg-white', 'text-slate-600');
+                }
+            });
+
+            const fabrics = Object.values(window.fabricCache || {}).filter(f => f.group === group);
+            fabrics.forEach(f => {
+                f._totalUsed = (f.jobs || []).reduce((s, j) => s + parseNum(j['\u0e43\u0e0a\u0e49\u0e1c\u0e49\u0e32']), 0);
+                if (!f.runSim) f.runSim = calculateDailyRunningBalance(f.start, f.jobs);
+                f._balance = f.runSim ? (f.runSim.finalBalance || 0) : 0;
+            });
+
+            document.getElementById('mv-group-name').textContent = group;
+            document.getElementById('mv-group-count').textContent = `${fabrics.length} \u0e23\u0e32\u0e22\u0e01\u0e32\u0e23`;
+            const banner = document.getElementById('mv-group-banner');
+            banner.classList.remove('hidden'); banner.classList.add('flex');
+
+            const popular = [...fabrics].sort((a, b) => b._totalUsed - a._totalUsed).slice(0, 10);
+            const maxUsed = popular[0]?._totalUsed || 1;
+            document.getElementById('mv-popular-list').innerHTML = popular.length ? popular.map((f, i) => `
+                <button onclick="showMvChart('${f.id.replace(/'/g, "\\'")}')"
+                    class="w-full text-left p-3 rounded-xl border border-slate-100 hover:border-fuchsia-300 hover:bg-fuchsia-50 transition-all group">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-5 h-5 rounded-lg bg-fuchsia-100 text-fuchsia-600 text-[8px] font-black flex items-center justify-center shrink-0">${i + 1}</span>
+                            <span class="text-[11px] font-black text-slate-800 group-hover:text-fuchsia-700 truncate">${f.id}</span>
+                        </div>
+                        <span class="ml-2 shrink-0 text-[10px] font-black text-fuchsia-600 font-jakarta">${f._totalUsed.toLocaleString()} m.</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 rounded-full"><div class="h-full bg-gradient-to-r from-fuchsia-400 to-violet-500 rounded-full" style="width:${Math.round(f._totalUsed / maxUsed * 100)}%"></div></div>
+                    <p class="text-[9px] text-slate-400 mt-1 truncate">${f.desc}</p>
+                </button>`).join('') : '<p class="text-center text-slate-300 text-xs py-6">\u0e44\u0e21\u0e48\u0e1e\u0e1a\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25</p>';
+
+            const excess = [...fabrics].filter(f => f._balance > 0).sort((a, b) => b._balance - a._balance).slice(0, 10);
+            const maxBal = excess[0]?._balance || 1;
+            document.getElementById('mv-excess-list').innerHTML = excess.length ? excess.map((f, i) => `
+                <button onclick="showMvChart('${f.id.replace(/'/g, "\\'")}')"
+                    class="w-full text-left p-3 rounded-xl border border-slate-100 hover:border-emerald-300 hover:bg-emerald-50 transition-all group">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-600 text-[8px] font-black flex items-center justify-center shrink-0">${i + 1}</span>
+                            <span class="text-[11px] font-black text-slate-800 group-hover:text-emerald-700 truncate">${f.id}</span>
+                        </div>
+                        <span class="ml-2 shrink-0 text-[10px] font-black text-emerald-600 font-jakarta">${f._balance.toLocaleString()} m.</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 rounded-full"><div class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full" style="width:${Math.round(f._balance / maxBal * 100)}%"></div></div>
+                    <p class="text-[9px] text-slate-400 mt-1 truncate">${f.desc}</p>
+                </button>`).join('') : '<p class="text-center text-slate-300 text-xs py-6">\u0e44\u0e21\u0e48\u0e21\u0e35\u0e1c\u0e49\u0e32\u0e40\u0e2b\u0e25\u0e37\u0e2d</p>';
+
+            document.getElementById('mv-empty-state').classList.add('hidden');
+            document.getElementById('mv-content').classList.remove('hidden');
+            document.getElementById('mv-chart-section').classList.add('hidden');
+        }
+
+        function showMvChart(specId) {
+            const f = window.fabricCache[specId];
+            if (!f) return;
+            const sim = f.runSim || calculateDailyRunningBalance(f.start, f.jobs);
+            mvCurrentTimeline = sim.timeline;
+            document.getElementById('mv-chart-title').textContent = specId;
+            document.getElementById('mv-chart-spec').textContent = f.desc;
+            const cs = document.getElementById('mv-chart-section');
+            cs.classList.remove('hidden');
+            cs.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            drawMvChart(sim.timeline);
+        }
+
+        function drawMvChart(timeline) {
+            if (!timeline || !timeline.length) return;
+            const tf = mvChartTf;
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            let filtered = tf === 'all' ? timeline : timeline.filter(p => {
+                const cutoff = new Date(today); cutoff.setDate(cutoff.getDate() - Number(tf));
+                return p.date >= cutoff;
+            });
+            const labels = filtered.map(p => `${p.date.getDate()}/${p.date.getMonth() + 1}`);
+            const data = filtered.map(p => p.balance);
+            if (mvChartInstance) { mvChartInstance.destroy(); mvChartInstance = null; }
+            const ctx = document.getElementById('mv-chart');
+            if (!ctx) return;
+            mvChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets: [{ label: '\u0e40\u0e2b\u0e25\u0e37\u0e2d (m.)', data, borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.07)', pointRadius: 0, borderWidth: 2.5, fill: true, tension: 0.35 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+                    scales: {
+                        x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 10, font: { size: 9 } }, grid: { display: false } },
+                        y: { ticks: { font: { size: 9 }, callback: v => v.toLocaleString() }, grid: { color: 'rgba(0,0,0,0.04)' } }
+                    }
+                }
+            });
+        }
+
+        function setMvChartTf(tf) {
+            mvChartTf = tf;
+            document.querySelectorAll('.mv-tf').forEach(b => {
+                const active = b.id === `mv-tf-${tf}`;
+                b.classList.toggle('bg-violet-100', active); b.classList.toggle('text-violet-600', active);
+                b.classList.toggle('shadow-sm', active); b.classList.toggle('text-slate-500', !active);
+            });
+            if (mvCurrentTimeline) drawMvChart(mvCurrentTimeline);
+        }
+
+        // ============================================================
+
         // ============================================================
 
         function setLedgerChartTf(tf) {
