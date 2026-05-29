@@ -1038,8 +1038,15 @@ function confirmRecRoleSelection(name) {
 }
 
 function calculateDailyRunningBalance(jobs, startBalance, currentMachines, activePlant) {
-    // Find valid timeframe
-    const validJobs = jobs.filter(j => j._dateObj.getFullYear() !== 2099);
+    const plantFilter = activePlant && activePlant !== 'ทั้งหมด';
+    const validJobs = jobs.filter(j => {
+        if (j._dateObj.getFullYear() === 2099) return false;
+        if (plantFilter) {
+            const plant = (j['Plant'] || j['plant'] || j[' โรงงาน'] || '-').trim();
+            return plant === activePlant;
+        }
+        return true;
+    });
     if (validJobs.length === 0) return { minBalance: startBalance, isBottleneck: startBalance < 0, totalDemand: 0, timeline: [] };
 
     const today = new Date();
