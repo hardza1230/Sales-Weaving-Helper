@@ -122,3 +122,33 @@ select {
         padding: 4px 2px !important;
     }
 }
+
+/* ============================
+   Bottom Navigation Bar
+   ============================ */
+.bnav-btn {
+    color: #94a3b8;
+    transition: color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.bnav-btn.active {
+    color: #10b981;
+}
+
+.bnav-btn .bnav-icon-wrap {
+    transition: background-color 0.2s;
+}
+
+.bnav-btn.active .bnav-icon-wrap {
+    background-color: rgba(16, 185, 129, 0.12);
+}
+
+/* Push content above bottom nav when visible */
+body.mobile-nav-active .page-active {
+    padding-bottom: 5rem;
+}
+
+body.mobile-nav-active #page-rec-spec-detail main {
+    padding-bottom: 5rem;
+}

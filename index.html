@@ -225,7 +225,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
                         <button onclick="navigate('menu')"
-                            class="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-800"><i
+                            class="hide-on-mobile p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-800"><i
                                 data-lucide="arrow-left"></i></button>
                         <div>
                             <h2 class="text-lg font-bold text-slate-800 leading-none">บัญชีสถานะผืนผ้า</h2>
@@ -426,7 +426,7 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6">
                 <div class="flex items-center gap-4">
                     <button onclick="navigate('menu')"
-                        class="p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800 border border-slate-100"><i
+                        class="hide-on-mobile p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800 border border-slate-100"><i
                             data-lucide="arrow-left"></i></button>
                     <div>
                         <h2 id="stats-page-title"
@@ -505,7 +505,7 @@
         <div class="layout-container max-w-4xl mx-auto">
             <div class="flex items-center gap-4 mb-8">
                 <button onclick="navigate('menu')"
-                    class="p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800 border border-slate-100"><i
+                    class="hide-on-mobile p-2.5 bg-white rounded-2xl shadow-sm text-slate-400 hover:text-slate-800 border border-slate-100"><i
                         data-lucide="arrow-left"></i></button>
                 <div>
                     <h2 class="text-2xl font-bold text-slate-800 font-jakarta tracking-tight leading-none mb-1">
@@ -782,6 +782,41 @@
             </div>
         </main>
     </section>
+
+    <!-- Bottom Navigation Bar (Mobile Only) -->
+    <nav id="bottom-nav"
+        class="hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-slate-200 shadow-2xl">
+        <div class="grid grid-cols-4 h-16 px-1">
+            <button onclick="navigate('menu')" id="bnav-menu"
+                class="bnav-btn flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-transform">
+                <div class="bnav-icon-wrap w-10 h-7 rounded-xl flex items-center justify-center">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[9px] font-bold tracking-tight">เมนู</span>
+            </button>
+            <button onclick="navigate('fabric-check')" id="bnav-fabric"
+                class="bnav-btn flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-transform">
+                <div class="bnav-icon-wrap w-10 h-7 rounded-xl flex items-center justify-center">
+                    <i data-lucide="table-2" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[9px] font-bold tracking-tight">เช็คผ้า</span>
+            </button>
+            <button onclick="navigate('usage-stats')" id="bnav-stats"
+                class="bnav-btn flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-transform">
+                <div class="bnav-icon-wrap w-10 h-7 rounded-xl flex items-center justify-center">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[9px] font-bold tracking-tight">ภาพรวม</span>
+            </button>
+            <button onclick="bnavRec()" id="bnav-rec"
+                class="bnav-btn flex flex-col items-center justify-center gap-0.5 active:scale-95 transition-transform">
+                <div class="bnav-icon-wrap w-10 h-7 rounded-xl flex items-center justify-center">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                </div>
+                <span class="text-[9px] font-bold tracking-tight">แนะนำ</span>
+            </button>
+        </div>
+    </nav>
 
     <script src="app.js"></script>
 

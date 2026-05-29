@@ -23,6 +23,29 @@ function showToast(msg) {
     setTimeout(() => { el.style.opacity = '0'; }, 2500);
 }
 
+function bnavRec() {
+    if (recRoleSelection) navigate('stock-recommend');
+    else openRecRoleSelection();
+}
+
+function updateBottomNav(pageId) {
+    const nav = document.getElementById('bottom-nav');
+    if (!nav) return;
+    const hiddenPages = ['start', 'loading'];
+    const showNav = viewMode === 'mobile' && !hiddenPages.includes(pageId);
+    nav.classList.toggle('hidden', !showNav);
+    if (showNav) document.body.classList.add('mobile-nav-active');
+    else document.body.classList.remove('mobile-nav-active');
+    document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+    const tabMap = {
+        'menu': 'bnav-menu', 'fabric-check': 'bnav-fabric',
+        'usage-stats': 'bnav-stats', 'stock-recommend': 'bnav-rec',
+        'rec-role-select': 'bnav-rec', 'rec-spec-detail': 'bnav-rec'
+    };
+    const activeEl = document.getElementById(tabMap[pageId]);
+    if (activeEl) activeEl.classList.add('active');
+}
+
 const METERS_PER_MC_PER_DAY = 2500;
 
 function getMinMaxCtrl(jobs) {
@@ -294,6 +317,14 @@ function navigate(pageId, mode) {
     if (pageId === 'menu' && rawData.length === 0) refreshData(); // fallback only if navigated directly
     if (pageId === 'usage-stats') { showStatsMain(); renderUsageStats(); }
     if (pageId === 'stock-recommend') renderStockRecommendations();
+    if (pageId === 'fabric-check' && viewMode === 'mobile' && isFilterOpen) {
+        isFilterOpen = false;
+        const fc = document.getElementById('filter-container');
+        const ft = document.getElementById('filter-status-text');
+        if (fc) { fc.style.maxHeight = '0px'; fc.style.opacity = '0'; }
+        if (ft) ft.textContent = 'แสดงตัวกรอง';
+    }
+    updateBottomNav(pageId);
     lucide.createIcons();
     window.scrollTo(0, 0);
 }
@@ -1007,8 +1038,15 @@ function confirmRecRoleSelection(name) {
 }
 
 function calculateDailyRunningBalance(jobs, startBalance, currentMachines, activePlant) {
-    // Find valid timeframe
-    const validJobs = jobs.filter(j => j._dateObj.getFullYear() !== 2099);
+    const plantFilter = activePlant && activePlant !== 'ทั้งหมด';
+    const validJobs = jobs.filter(j => {
+        if (j._dateObj.getFullYear() === 2099) return false;
+        if (plantFilter) {
+            const plant = (j['Plant'] || j['plant'] || j[' โรงงาน'] || '-').trim();
+            return plant === activePlant;
+        }
+        return true;
+    });
     if (validJobs.length === 0) return { minBalance: startBalance, isBottleneck: startBalance < 0, totalDemand: 0, timeline: [] };
 
     const today = new Date();
@@ -1635,7 +1673,7 @@ window.renderLedgerList = function (jobsToShow, title, page) {
 
     const rowsHtml = pageJobs.length > 0 ? pageJobs.map(job => `
         <tr class="hover:bg-slate-50 transition-colors">
-            <td class="py-2.5 px-2 text-slate-600 font-bold whitespace-nowrap">${(() => { const d = new Date(job._dateObj.getTime() - 5 * 24 * 3600 * 1000); return d.getFullYear() === 2099 ? '-' : (String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0')); })()}</td>
+            <td class="py-2.5 px-2 text-slate-600 font-bold whitespace-nowrap hide-on-mobile">${(() => { const d = new Date(job._dateObj.getTime() - 5 * 24 * 3600 * 1000); return d.getFullYear() === 2099 ? '-' : (String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0')); })()}</td>
             <td class="py-2.5 px-2 font-bold whitespace-nowrap">
                 <span class="${formatDateDisplay(job._dateObj).diff < 0 ? 'text-rose-600' : 'text-emerald-700'}">${formatDateDisplay(job._dateObj).text}</span>
                 <span class="block text-[8px] text-slate-400 mt-0.5">${formatDateDisplay(job._dateObj).label}</span>
@@ -1652,8 +1690,8 @@ window.renderLedgerList = function (jobsToShow, title, page) {
                 <span class="block text-[10px] font-bold text-slate-700">${job['Name'] || '-'}</span>
                 <span class="block text-[9px] text-slate-400 font-jakarta">${job['ฝ่ายขาย'] || '-'}</span>
             </td>
-            <td class="py-2.5 px-2 text-[10px] font-bold text-slate-500 whitespace-nowrap">${job['ItemGroup'] || '-'}</td>
-            <td class="py-2.5 px-2 text-[10px] font-bold text-indigo-600 whitespace-nowrap">${(job['Plant'] || job['plant'] || job[' โรงงาน'] || '-').trim()}</td>
+            <td class="py-2.5 px-2 text-[10px] font-bold text-slate-500 whitespace-nowrap hide-on-mobile">${job['ItemGroup'] || '-'}</td>
+            <td class="py-2.5 px-2 text-[10px] font-bold text-indigo-600 whitespace-nowrap hide-on-mobile">${(job['Plant'] || job['plant'] || job[' โรงงาน'] || '-').trim()}</td>
             <td class="py-2.5 px-2 text-right font-black text-rose-500 font-jakarta whitespace-nowrap">-${parseNum(job['ใช้ผ้า']).toLocaleString()}</td>
         </tr>
     `).join('') : `<tr><td colspan="8" class="text-center py-6 text-slate-400 italic">ไม่มีรายการ</td></tr>`;
@@ -1688,13 +1726,13 @@ window.renderLedgerList = function (jobsToShow, title, page) {
                 <table class="min-w-max w-full text-[10px] text-left">
                     <thead class="text-slate-400 uppercase tracking-tighter bg-white sticky top-0 z-10 shadow-sm border-b border-slate-50 font-black italic">
                         <tr>
-                            <th class="py-2 px-2 whitespace-nowrap">วันที่ใช้</th>
+                            <th class="py-2 px-2 whitespace-nowrap hide-on-mobile">วันที่ใช้</th>
                             <th class="py-2 px-2 whitespace-nowrap">วันขึ้นของ</th>
                             <th class="py-2 px-2 whitespace-nowrap">เลขที่ CO/Line</th>
                             <th class="py-2 px-2">Description/Item</th>
                             <th class="py-2 px-2 whitespace-nowrap">ลูกค้า/ฝ่ายขาย</th>
-                            <th class="py-2 px-2 whitespace-nowrap">Item Group</th>
-                            <th class="py-2 px-2 whitespace-nowrap">Plant</th>
+                            <th class="py-2 px-2 whitespace-nowrap hide-on-mobile">Item Group</th>
+                            <th class="py-2 px-2 whitespace-nowrap hide-on-mobile">Plant</th>
                             <th class="py-2 px-2 text-right whitespace-nowrap">ตัดสต็อก</th>
                         </tr>
                     </thead>
