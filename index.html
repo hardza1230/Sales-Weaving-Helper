@@ -392,7 +392,7 @@
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                         <div class="space-y-1">
                             <label
-                                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Wildth</label>
+                                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1 italic">Width</label>
                             <select id="sel-width" onchange="updateFilters()"
                                 class="w-full bg-slate-50 border-slate-100 rounded-xl py-2.5 px-3 text-xs font-bold outline-none text-slate-600"></select>
                         </div>
@@ -934,6 +934,31 @@
             setTimeout(() => { el.style.opacity = '0'; }, 2500);
         }
 
+        const METERS_PER_MC_PER_DAY = 2500;
+
+        function getMinMaxCtrl(jobs) {
+            if (!jobs || jobs.length === 0) return { hasMinMaxCtrl: false, minLimit: 0, maxLimit: 0, midPoint: 0 };
+            const rawMinStr = String(jobs[0]['Min'] || jobs[0]['min'] || '').trim();
+            const rawMaxStr = String(jobs[0]['Max'] || jobs[0]['max'] || '').trim();
+            const hasMinMaxCtrl = rawMinStr !== '' || rawMaxStr !== '';
+            const minLimit = hasMinMaxCtrl ? parseNum(rawMinStr) : 0;
+            const maxLimit = hasMinMaxCtrl ? parseNum(rawMaxStr) : 0;
+            return { hasMinMaxCtrl, minLimit, maxLimit, midPoint: (minLimit + maxLimit) / 2 };
+        }
+
+        function getControlStrategyTag({ hasMinMaxCtrl, minLimit, maxLimit }) {
+            return hasMinMaxCtrl
+                ? `<span class="text-[8px] bg-slate-700 text-white px-2 py-0.5 rounded-full font-bold shadow-inner">Min/Max Ctrl (${minLimit.toLocaleString()}-${maxLimit.toLocaleString()})</span>`
+                : `<span class="text-[8px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold shadow-inner">By Order</span>`;
+        }
+
+        function calcLeadTimeDays(jobs) {
+            const today = new Date();
+            const validJobs = jobs.filter(j => j._dateObj.getFullYear() !== 2099);
+            const finalDate = validJobs.length > 0 ? new Date(Math.max(...validJobs.map(j => j._dateObj))) : today;
+            return Math.max(1, Math.ceil((finalDate - today) / (1000 * 3600 * 24)));
+        }
+
         const dateParser = (dateStr) => {
             if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '' || dateStr === '-') return new Date(2099, 11, 31);
             const cleanStr = dateStr.trim().split(' ')[0];
@@ -983,8 +1008,9 @@
                         return { ...cleanRow, _sortDate: dateObj.getTime(), _dateObj: dateObj };
                     });
 
-                    // Clear the cache so it will be rebuilt on the next render
+                    // Clear caches so they will be rebuilt on the next render
                     window.fabricCache = {};
+                    _fabricSearchIndex = null;
 
                     updateFilters();
                     const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
@@ -1222,22 +1248,17 @@
         }
 
         function processLedger() {
-            document.getElementById('loading-area').classList.remove('hidden');
-            document.getElementById('result-view').classList.add('hidden');
             const selections = {};
             filterFields.forEach(f => selections[f] = document.getElementById(getFieldId(f)).value);
-            setTimeout(() => {
-                const results = rawData.filter(item => {
-                    return filterFields.every(f => {
-                        if (selections[f] === "ทั้งหมด" || !selections[f]) return true;
-                        return String(item[f]) === selections[f];
-                    });
+            const results = rawData.filter(item => {
+                return filterFields.every(f => {
+                    if (selections[f] === "ทั้งหมด" || !selections[f]) return true;
+                    return String(item[f]) === selections[f];
                 });
-                results.sort((a, b) => a._sortDate - b._sortDate);
-                renderLedger(results);
-                document.getElementById('loading-area').classList.add('hidden');
-                document.getElementById('result-view').classList.remove('hidden');
-            }, 500);
+            });
+            results.sort((a, b) => a._sortDate - b._sortDate);
+            renderLedger(results);
+            document.getElementById('result-view').classList.remove('hidden');
         }
 
         function renderLedger(items) {
@@ -1256,7 +1277,7 @@
             document.getElementById('dash-total-stock').textContent = parseNum(items[0]['Stock ยกมา']).toLocaleString();
             document.getElementById('dash-actual-mc').textContent = maxActualMc.toLocaleString();
             document.getElementById('dash-target-mc').textContent = maxTargetMc.toLocaleString();
-            document.getElementById('dash-capacity').textContent = `${(maxActualMc * 2500).toLocaleString()} ม.`;
+            document.getElementById('dash-capacity').textContent = `${(maxActualMc * METERS_PER_MC_PER_DAY).toLocaleString()} ม.`;
             document.getElementById('dash-required').textContent = totalRequired.toLocaleString();
             document.getElementById('dash-final-balance').textContent = finalBalance.toLocaleString();
 
@@ -1296,6 +1317,19 @@
         let ledgerChartInstance = null;
         let ledgerChartTf = 'all';
         let _lastLedgerItems = [];
+        let _fabricSearchIndex = null;
+
+        function getFabricSearchIndex() {
+            if (_fabricSearchIndex) return _fabricSearchIndex;
+            const items = {};
+            rawData.forEach(r => {
+                const id = (r['Weaving Item'] || '').trim();
+                if (!id) return;
+                if (!items[id]) items[id] = { desc: r['Description'] || '', group: r['ItemGroup'] || '' };
+            });
+            _fabricSearchIndex = Object.entries(items);
+            return _fabricSearchIndex;
+        }
 
         // Simple fuzzy score: boost consecutive matches, penalise gaps
         function fuzzyScore(needle, haystack) {
@@ -1318,16 +1352,8 @@
             clearBtn.classList.toggle('hidden', !val);
             if (!val || val.length < 1) { sugg.classList.add('hidden'); return; }
 
-            // Collect unique Weaving Items + first Description
-            const items = {};
-            rawData.forEach(r => {
-                const id = (r['Weaving Item'] || '').trim();
-                if (!id) return;
-                if (!items[id]) items[id] = { desc: r['Description'] || '', group: r['ItemGroup'] || '' };
-            });
-
-            // Score
-            const scored = Object.entries(items)
+            // Score against cached index (built once per data load)
+            const scored = getFabricSearchIndex()
                 .map(([id, info]) => {
                     const s1 = fuzzyScore(val, id);
                     const s2 = fuzzyScore(val, info.desc) * 0.6;
@@ -1338,7 +1364,7 @@
                 .slice(0, 8);
 
             if (scored.length === 0) {
-                sugg.innerHTML = `<div class="px-4 py-3 text-[11px] text-slate-400 italic">\u0e44\u0e21\u0e48\u0e1e\u0e1a\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e17\u0e35\u0e48\u0e43\u0e01\u0e25\u0e49\u0e40\u0e04\u0e35\u0e22\u0e07 "\u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22 ${val}"</div>`;
+                sugg.innerHTML = `<div class="px-4 py-3 text-[11px] text-slate-400 italic">ไม่พบรายการที่ใกล้เคียง "ภาษาไทย ${val}"</div>`;
                 sugg.classList.remove('hidden');
                 return;
             }
@@ -1368,14 +1394,9 @@
             // Filter rawData for this specific Weaving Item and render
             const results = rawData.filter(r => (r['Weaving Item'] || '').trim() === itemId);
             results.sort((a, b) => a._sortDate - b._sortDate);
-            document.getElementById('loading-area').classList.remove('hidden');
-            document.getElementById('result-view').classList.add('hidden');
-            setTimeout(() => {
-                renderLedger(results);
-                document.getElementById('loading-area').classList.add('hidden');
-                document.getElementById('result-view').classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }, 300);
+            renderLedger(results);
+            document.getElementById('result-view').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function clearFabricSearch() {
@@ -1466,13 +1487,13 @@
                         datalabels: { display: false },
                         tooltip: {
                             callbacks: {
-                                label: ctx2 => `\u0e22\u0e2d\u0e14\u0e04\u0e07\u0e40\u0e2b\u0e25\u0e37\u0e2d: ${ctx2.raw.toLocaleString()} \u0e21.`,
+                                label: ctx2 => `ยอดคงเหลือ: ${ctx2.raw.toLocaleString()} ม.`,
                                 afterBody: ctxs => {
                                     const idx = ctxs[0].dataIndex;
                                     const pt = sim.timeline[idx];
                                     const msgs = [];
-                                    if (pt?.drain > 0) msgs.push(`🚨 \u0e15\u0e31\u0e14\u0e2a\u0e15\u0e47\u0e2d\u0e01: -${pt.drain.toLocaleString()} \u0e21.`);
-                                    if (pt?.added > 0) msgs.push(`🏭 \u0e40\u0e15\u0e34\u0e21: +${pt.added.toLocaleString()} \u0e21.`);
+                                    if (pt?.drain > 0) msgs.push(`🚨 ตัดสต็อก: -${pt.drain.toLocaleString()} ม.`);
+                                    if (pt?.added > 0) msgs.push(`🏭 เติม: +${pt.added.toLocaleString()} ม.`);
                                     return msgs;
                                 }
                             }
@@ -1637,20 +1658,8 @@
                 // Add the new Unified Machine Recommendation Logic here
                 const sim = calculateDailyRunningBalance(data.jobs, data.startStock, data.maxMc, 'ทั้งหมด');
 
-                // 1. Dynamic Lead Time
-                const todayForLead = new Date();
-                const validJobs = data.jobs.filter(j => j._dateObj.getFullYear() !== 2099);
-                const finalOrderDate = validJobs.length > 0 ? new Date(Math.max(...validJobs.map(j => j._dateObj))) : todayForLead;
-                const msDiff = finalOrderDate.getTime() - todayForLead.getTime();
-                let leadTimeDays = Math.ceil(msDiff / (1000 * 3600 * 24));
-                if (leadTimeDays < 1) leadTimeDays = 1;
-
-                // 2. Extract Min Max Thresholds
-                const rawMinStr = String(data.jobs[0]['Min'] || data.jobs[0]['min'] || '').trim();
-                const rawMaxStr = String(data.jobs[0]['Max'] || data.jobs[0]['max'] || '').trim();
-                const hasMinMaxCtrl = rawMinStr !== '' || rawMaxStr !== '';
-                const minLimit = hasMinMaxCtrl ? parseNum(rawMinStr) : 0;
-                const maxLimit = hasMinMaxCtrl ? parseNum(rawMaxStr) : 0;
+                const leadTimeDays = calcLeadTimeDays(data.jobs);
+                const { hasMinMaxCtrl, minLimit, maxLimit, midPoint } = getMinMaxCtrl(data.jobs);
 
                 let recommendationHtml = '';
                 const isShort = hasMinMaxCtrl ? (sim.minBalance < minLimit) : sim.isBottleneck;
@@ -1658,7 +1667,7 @@
                 if (isShort) {
                     let targetStock = hasMinMaxCtrl ? minLimit : 0;
                     const deficit = targetStock - sim.minBalance;
-                    const extraMcNeeded = Math.ceil(deficit / (2500 * leadTimeDays));
+                    const extraMcNeeded = Math.ceil(deficit / (METERS_PER_MC_PER_DAY * leadTimeDays));
                     recommendationHtml = `
                     <div class="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-100 flex items-center gap-3">
                          <div class="bg-white p-2 rounded-lg shadow-sm border border-rose-100 shrink-0">
@@ -1670,16 +1679,11 @@
                          </div>
                     </div>`;
                 } else {
-                    let isSurplus = false;
-                    let midPoint = 0;
-                    if (hasMinMaxCtrl && maxLimit > 0) {
-                        midPoint = (minLimit + maxLimit) / 2;
-                        isSurplus = (sim.minBalance > midPoint && data.maxMc > 0);
-                    } else {
-                        isSurplus = (sim.minBalance > 50000 && data.maxMc > 0);
-                    }
+                    const isSurplus = hasMinMaxCtrl && maxLimit > 0
+                        ? (sim.minBalance > midPoint && data.maxMc > 0)
+                        : (sim.minBalance > 50000 && data.maxMc > 0);
                     if (isSurplus) {
-                        const reduceMc = Math.max(1, Math.min(data.maxMc, Math.ceil((sim.minBalance - midPoint) / (2500 * leadTimeDays))));
+                        const reduceMc = Math.max(1, Math.min(data.maxMc, Math.ceil((sim.minBalance - midPoint) / (METERS_PER_MC_PER_DAY * leadTimeDays))));
                         recommendationHtml = `
                         <div class="mb-5 p-3 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center gap-3">
                              <div class="bg-white p-2 rounded-lg shadow-sm border border-emerald-100 shrink-0">
@@ -1851,8 +1855,8 @@
                 });
             }
 
-            window.avaiableRecSales = Array.from(uniqueSales).sort();
-            window.avaiableRecPlants = Array.from(uniquePlants).sort();
+            window.availableRecSales = Array.from(uniqueSales).sort();
+            window.availableRecPlants = Array.from(uniquePlants).sort();
         }
 
         function selectRecRole(roleType) {
@@ -1866,10 +1870,10 @@
             let names = [];
             if (roleType === 'sales') {
                 titleEl.innerHTML = `<i data-lucide="briefcase" class="w-4 h-4 text-sky-500"></i> เลือกพนักงานฝ่ายขาย`;
-                names = window.avaiableRecSales || [];
+                names = window.availableRecSales || [];
             } else {
                 titleEl.innerHTML = `<i data-lucide="factory" class="w-4 h-4 text-emerald-500"></i> เลือกโรงงานผลิต`;
-                names = window.avaiableRecPlants || [];
+                names = window.availableRecPlants || [];
             }
 
             const colorClass = roleType === 'sales'
@@ -1931,7 +1935,7 @@
             // Advance simulation day by day
             while (simDate <= maxDate) {
                 // Add daily capacity
-                const dailyProduction = currentMachines * 2500;
+                const dailyProduction = currentMachines * METERS_PER_MC_PER_DAY;
                 currentBalance += dailyProduction;
 
                 // Subtract orders arriving 5 days from now (production buffer)
@@ -2084,19 +2088,8 @@
                     // For sales, we care if the pure snapshot ending balance is negative for their jobs
                     const myFinalBalance = f.start - portfolioJobs.reduce((sum, j) => sum + parseNum(j['ใช้ผ้า']), 0);
 
-                    // Extract Min Max Thresholds
-                    const rawMinStr = String(f.jobs[0]['Min'] || f.jobs[0]['min'] || '').trim();
-                    const rawMaxStr = String(f.jobs[0]['Max'] || f.jobs[0]['max'] || '').trim();
-                    const hasMinMaxCtrl = rawMinStr !== '' || rawMaxStr !== '';
-                    const minLimit = hasMinMaxCtrl ? parseNum(rawMinStr) : 0;
-                    const maxLimit = hasMinMaxCtrl ? parseNum(rawMaxStr) : 0;
-
-                    let controlStrategyTag = '';
-                    if (hasMinMaxCtrl) {
-                        controlStrategyTag = `<span class="text-[8px] bg-slate-700 text-white px-2 py-0.5 rounded-full font-bold shadow-inner">Min/Max Ctrl (${minLimit.toLocaleString()}-${maxLimit.toLocaleString()})</span>`;
-                    } else {
-                        controlStrategyTag = `<span class="text-[8px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold shadow-inner">By Order</span>`;
-                    }
+                    const { hasMinMaxCtrl, minLimit, maxLimit, midPoint } = getMinMaxCtrl(f.jobs);
+                    const controlStrategyTag = getControlStrategyTag({ hasMinMaxCtrl, minLimit, maxLimit });
 
                     const isShort = hasMinMaxCtrl ? (myFinalBalance < minLimit) : (myFinalBalance < 0);
 
@@ -2191,27 +2184,9 @@
 
                     const runningSim = calculateDailyRunningBalance(f.jobs, f.start, f.maxMc, activeRecPlant);
 
-                    // 1. Dynamic Lead Time
-                    const todayForLead = new Date();
-                    const validJobs = f.jobs.filter(j => j._dateObj.getFullYear() !== 2099);
-                    const finalOrderDate = validJobs.length > 0 ? new Date(Math.max(...validJobs.map(j => j._dateObj))) : todayForLead;
-                    const msDiff = finalOrderDate.getTime() - todayForLead.getTime();
-                    let leadTimeDays = Math.ceil(msDiff / (1000 * 3600 * 24));
-                    if (leadTimeDays < 1) leadTimeDays = 1; // Prevent div by 0 and ensure at least 1 day prep
-
-                    // 2. Extract Min Max Thresholds
-                    const rawMinStr = String(f.jobs[0]['Min'] || f.jobs[0]['min'] || '').trim();
-                    const rawMaxStr = String(f.jobs[0]['Max'] || f.jobs[0]['max'] || '').trim();
-                    const hasMinMaxCtrl = rawMinStr !== '' || rawMaxStr !== '';
-                    const minLimit = hasMinMaxCtrl ? parseNum(rawMinStr) : 0;
-                    const maxLimit = hasMinMaxCtrl ? parseNum(rawMaxStr) : 0;
-
-                    let controlStrategyTag = '';
-                    if (hasMinMaxCtrl) {
-                        controlStrategyTag = `<span class="text-[8px] bg-slate-700 text-white px-2 py-0.5 rounded-full font-bold shadow-inner">Min/Max Ctrl (${minLimit.toLocaleString()}-${maxLimit.toLocaleString()})</span>`;
-                    } else {
-                        controlStrategyTag = `<span class="text-[8px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold shadow-inner">By Order</span>`;
-                    }
+                    const leadTimeDays = calcLeadTimeDays(f.jobs);
+                    const { hasMinMaxCtrl, minLimit, maxLimit, midPoint } = getMinMaxCtrl(f.jobs);
+                    const controlStrategyTag = getControlStrategyTag({ hasMinMaxCtrl, minLimit, maxLimit });
 
                     totalRunningMachines += f.maxMc;
 
@@ -2228,7 +2203,7 @@
                         let targetStock = hasMinMaxCtrl ? minLimit : 0;
                         const deficit = targetStock - runningSim.minBalance;
 
-                        const extraMcNeeded = Math.ceil(deficit / (2500 * leadTimeDays));
+                        const extraMcNeeded = Math.ceil(deficit / (METERS_PER_MC_PER_DAY * leadTimeDays));
                         maxCapacityDeficit += extraMcNeeded;
 
                         const impactedNames = Array.from(new Set(f.jobs.map(j => j['Name'] || j['ฝ่ายขาย']).filter(n => n && n !== '-')));
@@ -2481,12 +2456,7 @@
 
             const sim = calculateDailyRunningBalance(fjobs, startBal, maxMc, activeRecPlant);
 
-            const todayForLead = new Date();
-            const validJobs = fjobs.filter(j => j._dateObj.getFullYear() !== 2099);
-            const finalOrderDate = validJobs.length > 0 ? new Date(Math.max(...validJobs.map(j => j._dateObj))) : todayForLead;
-            const msDiff = finalOrderDate.getTime() - todayForLead.getTime();
-            let leadTimeDays = Math.ceil(msDiff / (1000 * 3600 * 24));
-            if (leadTimeDays < 1) leadTimeDays = 1;
+            const leadTimeDays = calcLeadTimeDays(fjobs);
 
             let statsHtml = '';
             if (currentRecTab === 'sales') {
@@ -2582,7 +2552,7 @@
                         <span class="block text-[8px] text-slate-400 mt-0.5">${formatDateDisplay(job._dateObj).label}</span>
                     </td>
                     <td class="py-2.5 px-2 font-jakarta whitespace-nowrap">
-                        <span class="block text-[10px] font-bold text-sky-700">${job['\u0e40\u0e25\u0e02\u0e17\u0e35\u0e48 CO'] || '-'}</span>
+                        <span class="block text-[10px] font-bold text-sky-700">${job['เลขที่ CO'] || '-'}</span>
                         <span class="block text-[9px] text-slate-400">${job['Line'] || job['Item'] || '-'}</span>
                     </td>
                     <td class="py-2.5 px-2 whitespace-nowrap">
@@ -2591,29 +2561,29 @@
                     </td>
                     <td class="py-2.5 px-2 whitespace-nowrap">
                         <span class="block text-[10px] font-bold text-slate-700">${job['Name'] || '-'}</span>
-                        <span class="block text-[9px] text-slate-400 font-jakarta">${job['\u0e1d\u0e48\u0e32\u0e22\u0e02\u0e32\u0e22'] || '-'}</span>
+                        <span class="block text-[9px] text-slate-400 font-jakarta">${job['ฝ่ายขาย'] || '-'}</span>
                     </td>
                     <td class="py-2.5 px-2 text-[10px] font-bold text-slate-500 whitespace-nowrap">${job['ItemGroup'] || '-'}</td>
-                    <td class="py-2.5 px-2 text-[10px] font-bold text-indigo-600 whitespace-nowrap">${(job['Plant'] || job['plant'] || job[' \u0e42\u0e23\u0e07\u0e07\u0e32\u0e19'] || '-').trim()}</td>
-                    <td class="py-2.5 px-2 text-right font-black text-rose-500 font-jakarta whitespace-nowrap">-${parseNum(job['\u0e43\u0e0a\u0e49\u0e1c\u0e49\u0e32']).toLocaleString()}</td>
+                    <td class="py-2.5 px-2 text-[10px] font-bold text-indigo-600 whitespace-nowrap">${(job['Plant'] || job['plant'] || job[' โรงงาน'] || '-').trim()}</td>
+                    <td class="py-2.5 px-2 text-right font-black text-rose-500 font-jakarta whitespace-nowrap">-${parseNum(job['ใช้ผ้า']).toLocaleString()}</td>
                 </tr>
-            `).join('') : `<tr><td colspan="8" class="text-center py-6 text-slate-400 italic">\u0e44\u0e21\u0e48\u0e21\u0e35\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23</td></tr>`;
+            `).join('') : `<tr><td colspan="8" class="text-center py-6 text-slate-400 italic">ไม่มีรายการ</td></tr>`;
 
             const paginationHtml = totalPages > 1 ? `
                 <div class="px-4 py-2.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
                     <button onclick="goLedgerPage(${curPage - 1})" ${curPage === 0 ? 'disabled' : ''}
                         class="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all
                         ${curPage === 0 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 shadow-sm'}">
-                        <i data-lucide="chevron-left" class="w-3 h-3"></i> \u0e01\u0e48\u0e2d\u0e19\u0e2b\u0e19\u0e49\u0e32
+                        <i data-lucide="chevron-left" class="w-3 h-3"></i> ก่อนหน้า
                     </button>
                     <span class="text-[10px] font-bold text-slate-500">
-                        \u0e2b\u0e19\u0e49\u0e32 <span class="text-emerald-600">${curPage + 1}</span> / ${totalPages}
+                        หน้า <span class="text-emerald-600">${curPage + 1}</span> / ${totalPages}
                         <span class="text-slate-400 ml-1">(${start + 1}–${Math.min(start + LEDGER_PAGE_SIZE, total)} จาก ${total})</span>
                     </span>
                     <button onclick="goLedgerPage(${curPage + 1})" ${curPage >= totalPages - 1 ? 'disabled' : ''}
                         class="flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all
                         ${curPage >= totalPages - 1 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 shadow-sm'}">
-                        \u0e2b\u0e19\u0e49\u0e32\u0e16\u0e31\u0e14\u0e44\u0e1b <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                        หน้าถัดไป <i data-lucide="chevron-right" class="w-3 h-3"></i>
                     </button>
                 </div>` : '';
 
@@ -2621,22 +2591,22 @@
                 <div class="flex flex-col border border-slate-100 rounded-2xl overflow-hidden shadow-sm bg-white">
                     <div class="bg-slate-50 border-b border-slate-100 px-4 py-3 flex items-center justify-between shrink-0">
                         <h4 class="text-[11px] font-bold text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
-                            <i data-lucide="list" class="w-3 h-3"></i> \u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e2d\u0e2d\u0e40\u0e14\u0e2d\u0e23\u0e4c\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14
+                            <i data-lucide="list" class="w-3 h-3"></i> รายการออเดอร์ทั้งหมด
                         </h4>
-                        <span class="text-[9px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-md font-bold">${total} \u0e23\u0e32\u0e22\u0e01\u0e32\u0e23</span>
+                        <span class="text-[9px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-md font-bold">${total} รายการ</span>
                     </div>
                     <div class="overflow-x-auto hide-scrollbar">
                         <table class="min-w-max w-full text-[10px] text-left">
                             <thead class="text-slate-400 uppercase tracking-tighter bg-white sticky top-0 z-10 shadow-sm border-b border-slate-50 font-black italic">
                                 <tr>
-                                    <th class="py-2 px-2 whitespace-nowrap">\u0e27\u0e31\u0e19\u0e17\u0e35\u0e48\u0e43\u0e0a\u0e49</th>
-                                    <th class="py-2 px-2 whitespace-nowrap">\u0e27\u0e31\u0e19\u0e02\u0e36\u0e49\u0e19\u0e02\u0e2d\u0e07</th>
-                                    <th class="py-2 px-2 whitespace-nowrap">\u0e40\u0e25\u0e02\u0e17\u0e35\u0e48 CO/Line</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">วันที่ใช้</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">วันขึ้นของ</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">เลขที่ CO/Line</th>
                                     <th class="py-2 px-2">Description/Item</th>
-                                    <th class="py-2 px-2 whitespace-nowrap">\u0e25\u0e39\u0e01\u0e04\u0e49\u0e32/\u0e1d\u0e48\u0e32\u0e22\u0e02\u0e32\u0e22</th>
+                                    <th class="py-2 px-2 whitespace-nowrap">ลูกค้า/ฝ่ายขาย</th>
                                     <th class="py-2 px-2 whitespace-nowrap">Item Group</th>
                                     <th class="py-2 px-2 whitespace-nowrap">Plant</th>
-                                    <th class="py-2 px-2 text-right whitespace-nowrap">\u0e15\u0e31\u0e14\u0e2a\u0e15\u0e47\u0e2d\u0e01</th>
+                                    <th class="py-2 px-2 text-right whitespace-nowrap">ตัดสต็อก</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">${rowsHtml}</tbody>
@@ -2648,7 +2618,7 @@
         };
 
         function goLedgerPage(page) {
-            window.renderLedgerList(_ledgerAllJobs, '\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e2d\u0e2d\u0e40\u0e14\u0e2d\u0e23\u0e4c\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14', page);
+            window.renderLedgerList(_ledgerAllJobs, 'รายการออเดอร์ทั้งหมด', page);
         }
 
 
@@ -2696,31 +2666,11 @@
                 timeline = fullTimeline.slice(0, currentChartTimeframe);
             }
 
-            let minLimit = 0;
-            let maxLimit = 0;
-            let hasMinMaxCtrl = false;
-
-            if (fjobs && fjobs.length > 0) {
-                const rawMinStr = String(fjobs[0]['Min'] || fjobs[0]['min'] || '').trim();
-                const rawMaxStr = String(fjobs[0]['Max'] || fjobs[0]['max'] || '').trim();
-                hasMinMaxCtrl = rawMinStr !== '' || rawMaxStr !== '';
-                if (hasMinMaxCtrl) {
-                    minLimit = parseNum(rawMinStr);
-                    maxLimit = parseNum(rawMaxStr);
-                }
-            }
-            const midPoint = hasMinMaxCtrl ? (minLimit + maxLimit) / 2 : 0;
+            const { hasMinMaxCtrl, minLimit, maxLimit, midPoint } = getMinMaxCtrl(fjobs || []);
+            const leadTimeDays = fjobs && fjobs.length > 0 ? calcLeadTimeDays(fjobs) : 1;
 
             const labels = timeline.map(t => `${t.date.getDate()}/${t.date.getMonth() + 1}`);
             const data = timeline.map(t => t.bal);
-
-            // 1. Calculate Lead Time for Safe Buffer
-            const todayForLead = new Date();
-            const validJobs = fjobs ? fjobs.filter(j => j._dateObj.getFullYear() !== 2099) : [];
-            const finalOrderDate = validJobs.length > 0 ? new Date(Math.max(...validJobs.map(j => j._dateObj))) : todayForLead;
-            const msDiff = finalOrderDate.getTime() - todayForLead.getTime();
-            let leadTimeDays = Math.ceil(msDiff / (1000 * 3600 * 24));
-            if (leadTimeDays < 1) leadTimeDays = 1;
 
             const bgColors = data.map(v => v < 0 ? 'rgba(244, 63, 94, 0.2)' : 'rgba(16, 185, 129, 0.2)');
 
@@ -2989,8 +2939,8 @@
     </script>
 
     <!-- User Manual Modal -->
-    <div id="manualModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4 py-8 pointer-events-none sm:pointer-events-auto">
+    <div id="manualModal" onclick="if(event.target===this)closeManualModal()"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 px-4 py-8 pointer-events-auto">
         <div id="manualModalContent"
             class="bg-[#f8fafc] w-full max-w-4xl h-full sm:h-auto sm:max-h-[85vh] rounded-none sm:rounded-[2rem] shadow-2xl flex flex-col transform translate-y-10 sm:translate-y-10 transition-transform duration-300 pointer-events-auto overflow-hidden">
 
