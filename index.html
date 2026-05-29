@@ -923,6 +923,17 @@
 
         const parseNum = (v) => parseFloat(String(v || '0').replace(/,/g, '')) || 0;
 
+        // Safe serialiser for onclick attribute arguments — prevents JS/HTML injection
+        const jsArg = v => JSON.stringify(v).replace(/"/g, '&quot;');
+
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            if (!el) return;
+            el.textContent = msg;
+            el.style.opacity = '1';
+            setTimeout(() => { el.style.opacity = '0'; }, 2500);
+        }
+
         const dateParser = (dateStr) => {
             if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '' || dateStr === '-') return new Date(2099, 11, 31);
             const cleanStr = dateStr.trim().split(' ')[0];
@@ -1135,13 +1146,15 @@
                     console.error('[Preload] Both sources failed:', localErr);
                     if (bar) { bar.style.width = '40%'; bar.style.backgroundImage = 'linear-gradient(to right,#f43f5e,#e11d48)'; }
                     if (txt) txt.textContent = 'โหลดข้อมูลไม่สำเร็จ — ไม่พบไฟล์ข้อมูล';
-                    loadingPage.insertAdjacentHTML('beforeend',
-                        `<div class="mt-8 relative z-10 flex flex-col items-center gap-3">
-                            <p class="text-xs text-slate-400">Google Sheets: CORS blocked &bull; data.csv: not found</p>
-                            <button onclick="initWithLoading('${mode}')" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl shadow-lg">
-                                ลองใหม่อีกครั้ง
-                            </button>
-                        </div>`);
+                    if (!document.getElementById('preload-retry-container')) {
+                        loadingPage.insertAdjacentHTML('beforeend',
+                            `<div id="preload-retry-container" class="mt-8 relative z-10 flex flex-col items-center gap-3">
+                                <p class="text-xs text-slate-400">Google Sheets: CORS blocked &bull; data.csv: not found</p>
+                                <button onclick="initWithLoading(${jsArg(mode)})" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl shadow-lg">
+                                    ลองใหม่อีกครั้ง
+                                </button>
+                            </div>`);
+                    }
                     return; // ❌ GUARD: do NOT navigate
                 }
             }
@@ -1331,7 +1344,7 @@
             }
 
             sugg.innerHTML = scored.map((x, i) => `
-                <button onclick="selectFabricItem('${x.id.replace(/'/g, "\\'")}')"
+                <button onclick="selectFabricItem(${jsArg(x.id)})"
                     class="w-full text-left flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-50 transition-colors border-b border-slate-50 last:border-0 group">
                     <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 text-[9px] font-black flex items-center justify-center shrink-0">${i + 1}</span>
                     <div class="min-w-0">
@@ -1536,7 +1549,7 @@
 
             const sorted = Object.entries(groups).sort((a, b) => b[1].total - a[1].total);
             container.innerHTML = sorted.map(([name, data]) => `
-                <div onclick="drilldownGroup('${name}')" class="glass-card p-6 active:scale-[0.98] transition-all cursor-pointer group hover:bg-white shadow-md flex flex-col h-full ring-1 ring-slate-100">
+                <div onclick="drilldownGroup(${jsArg(name)})" class="glass-card p-6 active:scale-[0.98] transition-all cursor-pointer group hover:bg-white shadow-md flex flex-col h-full ring-1 ring-slate-100">
                     <div class="flex justify-between items-start mb-6">
                         <h3 class="font-bold text-slate-800 group-hover:text-emerald-600 transition-colors text-lg uppercase font-jakarta line-clamp-1 leading-none tracking-tight">${name}</h3>
                         <span class="text-[9px] bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full font-black italic border border-emerald-100 uppercase tracking-tighter shrink-0">${data.items} รายการ</span>
@@ -1780,6 +1793,7 @@
 
         let currentRecTab = 'sales';
         let recRoleSelection = null; // Store the selected name (e.g. Sales person name or Plant name)
+        let _recRoleRetryCount = 0;
 
         let activeRecGroup = 'ทั้งหมด';
         let activeRecSales = 'ทั้งหมด';
@@ -1806,11 +1820,17 @@
 
         function openRecRoleSelection() {
             if (!rawData || rawData.length === 0) {
-                // Force fetch if data hasn't loaded
+                if (_recRoleRetryCount >= 5) {
+                    _recRoleRetryCount = 0;
+                    showToast('โหลดข้อมูลไม่สำเร็จ กรุณา refresh หน้า');
+                    return;
+                }
+                _recRoleRetryCount++;
                 refreshData();
-                setTimeout(openRecRoleSelection, 1000); // Try again in 1s
+                setTimeout(openRecRoleSelection, 1000);
                 return;
             }
+            _recRoleRetryCount = 0;
 
             navigate('rec-role-select');
             document.getElementById('rec-step-1').classList.remove('hidden');
@@ -1983,7 +2003,7 @@
             let groupFilterHtml = `<button onclick="setRecGroup('ทั้งหมด')" class="px-5 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all ${activeRecGroup === 'ทั้งหมด' ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'}">ทั้งหมด</button>`;
             Array.from(uniqueGroups).sort().forEach(g => {
                 const isActive = activeRecGroup === g;
-                groupFilterHtml += `<button onclick="setRecGroup('${g}')" class="px-5 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all ${isActive ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'}">${g}</button>`;
+                groupFilterHtml += `<button onclick="setRecGroup(${jsArg(g)})" class="px-5 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all ${isActive ? 'bg-slate-900 text-white shadow-md' : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'}">${g}</button>`;
             });
             document.getElementById('filter-rec-group').className = "flex flex-wrap items-center gap-2 max-w-full";
             document.getElementById('filter-rec-group').innerHTML = groupFilterHtml;
@@ -2036,13 +2056,13 @@
                     if (maxDrop > 0) {
                         predictiveSignalsList.push({
                             type: 'tsunami',
-                            html: `<button onclick="openRecommendationSpecPopup('${f.id}')" class="flex items-center gap-2 bg-rose-50 border border-rose-200 hover:border-rose-400 hover:bg-rose-100 transition-colors rounded-full pl-1.5 pr-4 py-1.5 shadow-sm active:scale-95 group"><div class="w-7 h-7 rounded-full bg-rose-200 text-rose-700 flex items-center justify-center shrink-0 group-hover:bg-rose-600 group-hover:text-white transition-colors"><i data-lucide="triangle" class="w-3.5 h-3.5 fill-current"></i></div><div class="text-left leading-tight"><strong class="text-[11px] text-rose-700 font-jakarta group-hover:text-rose-900">${f.id}</strong><br><span class="text-[9px] text-rose-500 font-bold uppercase tracking-tight group-hover:text-rose-700">ระวังออเดอร์มหาศาลจ่อคิวตัด</span></div></button>`
+                            html: `<button onclick="openRecommendationSpecPopup(${jsArg(f.id)})" class="flex items-center gap-2 bg-rose-50 border border-rose-200 hover:border-rose-400 hover:bg-rose-100 transition-colors rounded-full pl-1.5 pr-4 py-1.5 shadow-sm active:scale-95 group"><div class="w-7 h-7 rounded-full bg-rose-200 text-rose-700 flex items-center justify-center shrink-0 group-hover:bg-rose-600 group-hover:text-white transition-colors"><i data-lucide="triangle" class="w-3.5 h-3.5 fill-current"></i></div><div class="text-left leading-tight"><strong class="text-[11px] text-rose-700 font-jakarta group-hover:text-rose-900">${f.id}</strong><br><span class="text-[9px] text-rose-500 font-bold uppercase tracking-tight group-hover:text-rose-700">ระวังออเดอร์มหาศาลจ่อคิวตัด</span></div></button>`
                         });
                     }
                     if (hasDeadStock) {
                         predictiveSignalsList.push({
                             type: 'deadstock',
-                            html: `<button onclick="openRecommendationSpecPopup('${f.id}')" class="flex items-center gap-2 bg-slate-50 border border-slate-200 hover:border-slate-400 hover:bg-slate-100 transition-colors rounded-full pl-1.5 pr-4 py-1.5 shadow-sm active:scale-95 group"><div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center shrink-0 group-hover:bg-slate-700 group-hover:text-white transition-colors"><i data-lucide="skull" class="w-3.5 h-3.5"></i></div><div class="text-left leading-tight"><strong class="text-[11px] text-slate-700 font-jakarta group-hover:text-slate-900">${f.id}</strong><br><span class="text-[9px] text-slate-500 font-bold uppercase tracking-tight group-hover:text-slate-700">สต็อกตายนิ่งสนิท >14 วัน</span></div></button>`
+                            html: `<button onclick="openRecommendationSpecPopup(${jsArg(f.id)})" class="flex items-center gap-2 bg-slate-50 border border-slate-200 hover:border-slate-400 hover:bg-slate-100 transition-colors rounded-full pl-1.5 pr-4 py-1.5 shadow-sm active:scale-95 group"><div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center shrink-0 group-hover:bg-slate-700 group-hover:text-white transition-colors"><i data-lucide="skull" class="w-3.5 h-3.5"></i></div><div class="text-left leading-tight"><strong class="text-[11px] text-slate-700 font-jakarta group-hover:text-slate-900">${f.id}</strong><br><span class="text-[9px] text-slate-500 font-bold uppercase tracking-tight group-hover:text-slate-700">สต็อกตายนิ่งสนิท >14 วัน</span></div></button>`
                         });
                     }
                 }
@@ -2103,7 +2123,7 @@
                         insufficientList.push({
                             sortVal: myFinalBalance, // Keep actual balance for sorting
                             html: `
-                            <button onclick="openRecommendationSpecPopup('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-rose-100 shadow-sm flex flex-col group hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-[0.98]">
+                            <button onclick="openRecommendationSpecPopup(${jsArg(f.id)})" class="w-full text-left p-4 rounded-2xl bg-white border border-rose-100 shadow-sm flex flex-col group hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-[0.98]">
                                 <div class="flex justify-between items-start w-full mb-2">
                                     <div class="w-[65%]">
                                         <div class="flex items-center gap-2 mb-1 flex-wrap">
@@ -2142,7 +2162,7 @@
                             abundantList.push({
                                 sortVal: myFinalBalance,
                                 html: `
-                                <button onclick="openRecommendationSpecPopup('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-emerald-100 shadow-sm flex flex-col group hover:bg-emerald-50 hover:border-emerald-300 transition-all active:scale-[0.98]">
+                                <button onclick="openRecommendationSpecPopup(${jsArg(f.id)})" class="w-full text-left p-4 rounded-2xl bg-white border border-emerald-100 shadow-sm flex flex-col group hover:bg-emerald-50 hover:border-emerald-300 transition-all active:scale-[0.98]">
                                     <div class="flex justify-between items-start w-full">
                                         <div class="w-[65%]">
                                             <div class="flex items-center gap-2 mb-1 flex-wrap">
@@ -2217,7 +2237,7 @@
                         insufficientList.push({
                             sortVal: runningSim.minBalance,
                             html: `
-                            <button onclick="openRecommendationSpecPopup('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-rose-100 shadow-sm flex flex-col group hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-[0.98]">
+                            <button onclick="openRecommendationSpecPopup(${jsArg(f.id)})" class="w-full text-left p-4 rounded-2xl bg-white border border-rose-100 shadow-sm flex flex-col group hover:bg-rose-50 hover:border-rose-300 transition-all active:scale-[0.98]">
                                 <div class="flex justify-between items-start w-full mb-2">
                                     <div class="w-[65%]">
                                         <div class="flex items-center gap-2 mb-1 flex-wrap">
@@ -2261,7 +2281,7 @@
                             abundantList.push({
                                 sortVal: runningSim.minBalance,
                                 html: `
-                                <button onclick="openRecommendationSpecPopup('${f.id}')" class="w-full text-left p-4 rounded-2xl bg-white border border-emerald-100 shadow-sm flex flex-col group hover:bg-emerald-50 hover:border-emerald-300 transition-all active:scale-[0.98]">
+                                <button onclick="openRecommendationSpecPopup(${jsArg(f.id)})" class="w-full text-left p-4 rounded-2xl bg-white border border-emerald-100 shadow-sm flex flex-col group hover:bg-emerald-50 hover:border-emerald-300 transition-all active:scale-[0.98]">
                                     <div class="flex justify-between items-start w-full">
                                         <div class="w-[65%]">
                                             <div class="flex items-center gap-2 mb-1 flex-wrap">
