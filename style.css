@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+
+body {
+    font-family: 'Kanit', sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    color: #334155;
+    letter-spacing: -0.01em;
+    min-height: 100vh;
+}
+
+.page-active {
+    display: flex;
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+}
+
+.btn-gradient {
+    background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
+    color: white;
+    transition: all 0.3s;
+}
+
+.btn-gradient:active {
+    transform: scale(0.96);
+}
+
+select {
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.collapsible-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-out, opacity 0.3s;
+    opacity: 0;
+}
+
+.collapsible-content.show {
+    max-height: 5000px;
+    opacity: 1;
+}
+
+.font-jakarta {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.layout-container {
+    transition: max-width 0.4s ease;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.view-mobile .layout-container {
+    max-width: 100%;
+}
+
+.view-desktop .layout-container {
+    max-width: 85rem;
+}
+
+@media (max-width: 640px) {
+    .ledger-table {
+        font-size: 9px;
+    }
+
+    .mobile-stack {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .hide-on-mobile {
+        display: none;
+    }
+
+    .ledger-row td {
+        padding: 8px 4px !important;
+    }
+
+    th {
+        padding: 8px 4px !important;
+        font-size: 8px !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .collapsible-table {
+        font-size: 8px !important;
+    }
+
+    .collapsible-table td,
+    .collapsible-table th {
+        padding: 4px 2px !important;
+    }
+}
