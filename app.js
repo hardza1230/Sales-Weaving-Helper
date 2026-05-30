@@ -787,7 +787,8 @@ function drilldownGroup(groupName) {
         if (isShort) {
             let targetStock = hasMinMaxCtrl ? minLimit : 0;
             const deficit = targetStock - sim.minBalance;
-            const extraMcNeeded = Math.ceil(deficit / (METERS_PER_MC_PER_DAY * leadTimeDays));
+            const daysToShortage = Math.max(1, sim.minBalanceDayIndex || leadTimeDays);
+            const extraMcNeeded = Math.ceil(deficit / (METERS_PER_MC_PER_DAY * daysToShortage));
             recommendationHtml = `
             <div class="mb-5 p-3 rounded-xl bg-rose-50 border border-rose-100 flex items-center gap-3">
                  <div class="bg-white p-2 rounded-lg shadow-sm border border-rose-100 shrink-0">
@@ -795,7 +796,7 @@ function drilldownGroup(groupName) {
                  </div>
                  <div>
                       <h5 class="text-[10px] font-bold text-rose-700 uppercase tracking-widest mb-0.5">สถานะคิวทอ: วิกฤต</h5>
-                      <p class="text-[9px] font-bold text-rose-600/80 leading-tight"> เครื่องรันไม่พอส่ง (เปิดอยู่ ${data.maxMc}) ควรเพิ่มอีก +${extraMcNeeded} เครื่อง สำหรับช่วง ${leadTimeDays} วันนี้</p>
+                      <p class="text-[9px] font-bold text-rose-600/80 leading-tight">วิกฤตในอีก ${daysToShortage} วัน | เปิดอยู่ ${data.maxMc} M/C → ควรเพิ่มอีก +${extraMcNeeded} M/C</p>
                  </div>
             </div>`;
         } else {
@@ -1047,7 +1048,7 @@ function calculateDailyRunningBalance(jobs, startBalance, currentMachines, activ
         }
         return true;
     });
-    if (validJobs.length === 0) return { minBalance: startBalance, isBottleneck: startBalance < 0, totalDemand: 0, timeline: [] };
+    if (validJobs.length === 0) return { minBalance: startBalance, minBalanceDayIndex: 0, isBottleneck: startBalance < 0, totalDemand: 0, timeline: [] };
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -1055,6 +1056,7 @@ function calculateDailyRunningBalance(jobs, startBalance, currentMachines, activ
 
     let currentBalance = startBalance;
     let minBalance = startBalance;
+    let minBalanceDayIndex = 0;
     let totalDemand = 0;
     let simDate = new Date(today);
     let timeline = [];
@@ -1078,7 +1080,10 @@ function calculateDailyRunningBalance(jobs, startBalance, currentMachines, activ
         });
 
         currentBalance -= dailyDrain;
-        minBalance = Math.min(minBalance, currentBalance);
+        if (currentBalance < minBalance) {
+            minBalance = currentBalance;
+            minBalanceDayIndex = timeline.length + 1;
+        }
 
         timeline.push({
             date: new Date(simDate),
@@ -1090,7 +1095,7 @@ function calculateDailyRunningBalance(jobs, startBalance, currentMachines, activ
         simDate.setDate(simDate.getDate() + 1);
     }
 
-    return { minBalance, isBottleneck: minBalance < 0, totalDemand, timeline };
+    return { minBalance, minBalanceDayIndex, isBottleneck: minBalance < 0, totalDemand, timeline };
 }
 
 function renderStockRecommendations() {
@@ -1326,11 +1331,10 @@ function renderStockRecommendations() {
                 criticalCount++;
                 metricSum += f.maxMc; // Count total active machines trying to fight fires
 
-                // The deficit is either the amount below 0, or the amount below Min. Let's aim to reach Min (or 0)
                 let targetStock = hasMinMaxCtrl ? minLimit : 0;
                 const deficit = targetStock - runningSim.minBalance;
-
-                const extraMcNeeded = Math.ceil(deficit / (METERS_PER_MC_PER_DAY * leadTimeDays));
+                const daysToShortage = Math.max(1, runningSim.minBalanceDayIndex || leadTimeDays);
+                const extraMcNeeded = Math.ceil(deficit / (METERS_PER_MC_PER_DAY * daysToShortage));
                 maxCapacityDeficit += extraMcNeeded;
 
                 const impactedNames = Array.from(new Set(f.jobs.map(j => j['Name'] || j['ฝ่ายขาย']).filter(n => n && n !== '-')));
@@ -1360,7 +1364,7 @@ function renderStockRecommendations() {
                                 <i data-lucide="users" class="w-3 h-3"></i> กระทบลูกค้า: <span class="text-slate-800">${impactText}</span>
                             </div>
                              <div class="mt-2 flex items-center gap-1.5 text-[9px] font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-lg border border-rose-100">
-                                 <i data-lucide="settings-2" class="w-3 h-3"></i> เครื่องรันไม่พอ (เป้า ${leadTimeDays} วัน) เปิดอยู่ ${f.maxMc} / ควรเพิ่มราว +${extraMcNeeded}
+                                 <i data-lucide="settings-2" class="w-3 h-3"></i> วิกฤตในอีก ${daysToShortage} วัน | เปิดอยู่ ${f.maxMc} M/C → ควรเพิ่มอีก +${extraMcNeeded} M/C
                              </div>
                         </div>
                     </button>
@@ -1380,6 +1384,9 @@ function renderStockRecommendations() {
                 // If it's between Min/Max, and machines are running, it's considered "Normal/Safe", we don't list it in Abundant unless it breaks Max.
 
                 if (isSurplus) {
+                    const targetMin = hasMinMaxCtrl ? midPoint : 50000;
+                    const excessMeters = runningSim.minBalance - targetMin;
+                    const reduceMc = Math.max(1, Math.min(f.maxMc - 1, Math.floor(excessMeters / (METERS_PER_MC_PER_DAY * leadTimeDays))));
                     abundantList.push({
                         sortVal: runningSim.minBalance,
                         html: `
@@ -1401,7 +1408,7 @@ function renderStockRecommendations() {
                             </div>
                             <div class="w-full pt-2 mt-2 border-t border-dashed border-emerald-100">
                                 <div class="flex items-center gap-1.5 text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">
-                                    <i data-lucide="power-off" class="w-3 h-3"></i> เกินเป้าหมาย! แนะนำลดเครื่องทอลง -${f.maxMc} เครื่อง
+                                    <i data-lucide="power-off" class="w-3 h-3"></i> สต็อกล้น! ลดเครื่องได้ -${reduceMc} เครื่อง (${f.maxMc} → ${f.maxMc - reduceMc} M/C)
                                 </div>
                             </div>
                         </button>
